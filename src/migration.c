@@ -1,6 +1,5 @@
 // src/example.c
 #include "wasmig/migration.h"
-#include <fcntl.h>
 
 const PAGE_SIZE = 64 * 1024;
 
@@ -120,4 +119,82 @@ int checkpoint_pc(uint32_t func_idx, uint32_t offset) {
     fwrite(&func_idx, sizeof(uint32_t), 1, fp);
     fwrite(&offset, sizeof(uint32_t), 1, fp);
     fclose(fp);
+}
+
+uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_size, bool is_return_address) {
+    FILE *tablemap_func = fopen("tablemap_func", "rb");
+    if (!tablemap_func) printf("not found tablemap_func\n");
+    FILE *tablemap_offset = fopen("tablemap_offset", "rb");
+    if (!tablemap_func) printf("not found tablemap_offset\n");
+    FILE *type_table = fopen("type_table", "rb");
+    if (!tablemap_func) printf("not found type_table\n");
+    
+    /// tablemap_func
+    fseek(tablemap_func, fidx*sizeof(uint32_t)*3, SEEK_SET);
+    uint32_t ffidx;
+    uint64_t tablemap_offset_addr;
+    fread(&ffidx, sizeof(uint32_t), 1, tablemap_func);
+    if (fidx != ffidx) {
+        perror("tablemap_funcがおかしい\n");
+        exit(1);
+    }
+    fread(&tablemap_offset_addr, sizeof(uint64_t), 1, tablemap_func);
+
+    /// tablemap_offset
+    fseek(tablemap_offset, tablemap_offset_addr, SEEK_SET);
+    // 関数fidxのローカルを取得
+    uint32_t locals_size;
+    fread(&locals_size, sizeof(uint32_t), 1, tablemap_offset);
+    uint8_t locals[locals_size];
+    fread(locals, sizeof(uint8_t), locals_size, tablemap_offset);
+    // 対応するoffsetまで移動
+    uint32_t ooffset;
+    uint64_t type_table_addr, pre_type_table_addr;
+    while(!feof(tablemap_offset)) {
+       fread(&ooffset, sizeof(uint32_t), 1, tablemap_offset); 
+       fread(&type_table_addr, sizeof(uint64_t), 1, tablemap_offset); 
+       if (offset == ooffset) break;
+       pre_type_table_addr = type_table_addr;
+    }
+    if (feof(tablemap_offset)) {
+        perror("tablemap_offsetがおかしい\n");
+        exit(1);
+    }
+    // type_table_addr = pre_type_table_addr;
+
+    /// type_table
+    fseek(type_table, type_table_addr, SEEK_SET);
+    uint32_t stack_size;
+    fread(&stack_size, sizeof(uint32_t), 1, type_table);
+    uint8_t stack[stack_size];
+    fread(stack, sizeof(uint8_t), stack_size, type_table);
+
+    if (is_return_address) {
+        fread(&stack_size, sizeof(uint32_t), 1, type_table);
+        fread(stack, sizeof(uint8_t), stack_size, type_table);
+    }
+
+    // uint8 type_stack[locals_size + stack_size];
+    uint8_t* type_stack = malloc(locals_size + stack_size);
+    for (uint32_t i = 0; i < locals_size; ++i) type_stack[i] = locals[i];
+    for (uint32_t i = 0; i < stack_size; ++i) type_stack[locals_size + i] = stack[i];
+
+    // printf("new type stack: [");
+    // for (uint32 i = 0; i < locals_size + stack_size; ++i) {
+    //     if (i+1 == locals_size + stack_size)printf("%d", type_stack[i]);
+    //     else                                printf("%d, ", type_stack[i]);
+    // }
+    // printf("]\n");
+
+    fclose(tablemap_func);
+    fclose(tablemap_offset);
+    fclose(type_table);
+
+    *type_stack_size = locals_size + stack_size;
+    return type_stack;
+}
+
+
+int checkpoint_stack(CodePos *ret_addr, Array8 *type_stack, Array32 *value_stack, LabelStack *label_stack) {
+
 }
