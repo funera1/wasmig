@@ -15,17 +15,17 @@ typedef struct codepos {
     uint32_t offset;
 } CodePos;
 
-typedef struct array {
+typedef struct array8 {
     uint32_t size;
     uint8_t *contents;
 } Array8;
 
-typedef struct array {
+typedef struct array32 {
     uint32_t size;
     uint32_t *contents;
 } Array32;
 
-typedef struct array {
+typedef struct labels {
     uint32_t size;
     uint32_t *begins;
     uint32_t *targets;
