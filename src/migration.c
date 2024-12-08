@@ -216,6 +216,7 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     fwrite(value_stack->contents, sizeof(uint32_t), value_stack->size, fp);
 
     // 制御スタック
+    fwrite(&label_stack->size, sizeof(uint32_t), 1, fp);
     for (int i = 0; i < label_stack->size; ++i) {
         // uint8 *begin_addr;
         // label_stack->begins[i] = get_addr_offset(csp->begin_addr, ip_start);
