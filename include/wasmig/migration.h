@@ -36,7 +36,7 @@ typedef struct array {
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page);
 int checkpoint_global(uint64_t* values, uint32_t* types, int len);
 int checkpoint_pc(uint32_t func_idx, uint32_t offset);
-int checkpoint_stack(CodePos *ret_addr, Array8 *type_stack, Array32 *value_stack, LabelStack *label_stack);
+int checkpoint_stack(uint32_t entry_fidx, CodePos *ret_addr, Array8 *type_stack, Array32 *value_stack, LabelStack *label_stack);
 
 uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_size, bool is_return_address);
 #endif

@@ -195,6 +195,6 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
 }
 
 
-int checkpoint_stack(CodePos *ret_addr, Array8 *type_stack, Array32 *value_stack, LabelStack *label_stack) {
+int checkpoint_stack(uint32_t entry_fidx, CodePos *ret_addr, Array8 *type_stack, Array32 *value_stack, LabelStack *label_stack) {
 
 }
