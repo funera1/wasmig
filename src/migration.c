@@ -66,8 +66,8 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
         }
 
         // dirty pageのみdump
-        // if (is_dirty(pagemap_entry)) {
-        if (is_soft_dirty(pagemap_entry)) {
+        // if (is_page_dirty(pagemap_entry)) {
+        if (is_page_soft_dirty(pagemap_entry)) {
             // printf("[%x, %x]: dirty page\n", i*PAGE_SIZE, (i+1)*PAGE_SIZE);
             uint32_t offset = (uint64_t)addr - (uint64_t)memory_data;
             // printf("i: %d\n", offset);
