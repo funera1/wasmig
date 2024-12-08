@@ -16,11 +16,11 @@ static FILE* open_image(const char* file, const char* flag) {
     return fp;
 }
 
-int is_dirty(uint64_t pagemap_entry) {
+int is_page_dirty(uint64_t pagemap_entry) {
     return (pagemap_entry>>62&1) | (pagemap_entry>>63&1);
 }
 
-int is_soft_dirty(uint64_t pagemap_entry) {
+int is_page_soft_dirty(uint64_t pagemap_entry) {
     return (pagemap_entry >> 55 & 1);
 }
 
