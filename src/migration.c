@@ -82,12 +82,14 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
 }
 
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
+    FILE *mem_fp = open_image("memory.img", "wb");
     FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
 
-    write_dirty_memory(memory, cur_page);
-    // fwrite(memory, sizeof(uint8_t), PAGE_SIZE * cur_page, memory_fp);
+    // write_dirty_memory(memory, cur_page);
+    fwrite(memory, sizeof(uint8_t), PAGE_SIZE * cur_page, mem_fp);
     fwrite(&cur_page, sizeof(uint32_t), 1, mem_size_fp);
 
+    fclose(mem_fp);
     fclose(mem_size_fp);
 }
 
