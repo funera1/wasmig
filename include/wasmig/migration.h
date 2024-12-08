@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdbool.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 void hello_world();
 
