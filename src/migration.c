@@ -1,5 +1,6 @@
 // src/example.c
 #include "wasmig/migration.h"
+#include <fcntl.h>
 
 const PAGE_SIZE = 64 * 1024;
 
@@ -16,17 +17,77 @@ static FILE* open_image(const char* file, const char* flag) {
     return fp;
 }
 
-int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
+int is_dirty(uint64_t pagemap_entry) {
+    return (pagemap_entry>>62&1) | (pagemap_entry>>63&1);
+}
+
+int is_soft_dirty(uint64_t pagemap_entry) {
+    return (pagemap_entry >> 55 & 1);
+}
+
+int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
+    const int PAGEMAP_LENGTH = 8;
+    const int PAGE_SIZE = 4096;
     FILE *memory_fp = open_image("memory.img", "wb");
+    int fd;
+    uint64_t pagemap_entry;
+    // プロセスのpagemapを開く
+    fd = open("/proc/self/pagemap", O_RDONLY);
+    if (fd == -1) {
+        perror("Error opening pagemap");
+        return -1;
+    }
+
+    // pfnに対応するpagemapエントリを取得
+    unsigned long pfn = (unsigned long)memory / PAGE_SIZE;
+    off_t offset = sizeof(uint64_t) * pfn;
+    if (lseek(fd, offset, SEEK_SET) == -1) {
+        perror("Error seeking to pagemap entry");
+        close(fd);
+        return -1;
+    }
+
+    uint8_t* memory_data = memory;
+    uint8_t* memory_data_end = memory + (cur_page * PAGE_SIZE);
+    int i = 0;
+    for (uint8_t* addr = memory; addr < memory_data_end; addr += PAGE_SIZE, ++i) {
+        unsigned long pfn = (unsigned long)addr / PAGE_SIZE;
+        off_t offset = sizeof(uint64_t) * pfn;
+        if (lseek(fd, offset, SEEK_SET) == -1) {
+            perror("Error seeking to pagemap entry");
+            close(fd);
+            return -1;
+        }
+
+        if (read(fd, &pagemap_entry, PAGEMAP_LENGTH) != PAGEMAP_LENGTH) {
+            perror("Error reading pagemap entry");
+            close(fd);
+            return -1;
+        }
+
+        // dirty pageのみdump
+        // if (is_dirty(pagemap_entry)) {
+        if (is_soft_dirty(pagemap_entry)) {
+            // printf("[%x, %x]: dirty page\n", i*PAGE_SIZE, (i+1)*PAGE_SIZE);
+            uint32_t offset = (uint64_t)addr - (uint64_t)memory_data;
+            // printf("i: %d\n", offset);
+            fwrite(&offset, sizeof(uint32_t), 1, memory_fp);
+            fwrite(addr, PAGE_SIZE, 1, memory_fp);
+        }
+    }
+
+    close(fd);
+    fclose(memory_fp);
+    return 0;
+}
+
+int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
 
-    // WASMMemoryInstance *memory = module->default_memory;
-    fwrite(memory, sizeof(uint8_t), PAGE_SIZE * cur_page, memory_fp);
-
-    // printf("page_count: %d\n", memory->cur_page_count);
+    write_dirty_memory(memory, cur_page);
+    // fwrite(memory, sizeof(uint8_t), PAGE_SIZE * cur_page, memory_fp);
     fwrite(&cur_page, sizeof(uint32_t), 1, mem_size_fp);
 
-    fclose(memory_fp);
     fclose(mem_size_fp);
 }
 
