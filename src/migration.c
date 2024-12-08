@@ -111,3 +111,10 @@ int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
 
     fclose(fp);
 }
+
+int checkpoint_pc(uint32_t func_idx, uint32_t offset) {
+    FILE *fp = open_image("program_counter.img", "wb");
+    fwrite(&func_idx, sizeof(uint32_t), 1, fp);
+    fwrite(&offset, sizeof(uint32_t), 1, fp);
+    fclose(fp);
+}
