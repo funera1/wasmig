@@ -195,6 +195,44 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
 }
 
 
-int checkpoint_stack(uint32_t entry_fidx, CodePos *ret_addr, Array8 *type_stack, Array32 *value_stack, LabelStack *label_stack) {
+int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
+    CodePos *ret_addr, CodePos *cur_addr, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
+    char file[32];
+    sprintf(file, "stack%d.img", call_stack_id);
 
+    FILE *fp = open_image(file, "wb");
+    fwrite(&entry_fidx, sizeof(uint32_t), 1, fp);
+
+    fwrite(&ret_addr->fidx, sizeof(uint32_t), 1, fp);
+    fwrite(&ret_addr->offset, sizeof(uint32_t), 1, fp);
+
+    // 型スタック
+    uint32_t type_stack_size;
+    uint8_t* type_stack = get_type_stack(cur_addr->fidx, cur_addr->offset, &type_stack_size, !is_top);
+    fwrite(&type_stack_size, sizeof(uint32_t), 1, fp);
+    fwrite(type_stack, sizeof(uint8_t), type_stack_size, fp);
+
+    // 値スタック
+    fwrite(value_stack->contents, sizeof(uint32_t), value_stack->size, fp);
+
+    // 制御スタック
+    for (int i = 0; i < label_stack->size; ++i) {
+        // uint8 *begin_addr;
+        // label_stack->begins[i] = get_addr_offset(csp->begin_addr, ip_start);
+        fwrite(&label_stack->begins[i], sizeof(uint32_t), 1, fp);
+
+        // uint8 *target_addr;
+        // targets[i] = get_addr_offset(csp->target_addr, ip_start);
+        fwrite(&label_stack->targets[i], sizeof(uint32_t), 1, fp);
+
+        // uint32 *frame_sp;
+        // stack_pointers[i] = get_addr_offset(csp->frame_sp, frame->sp_bottom);
+        fwrite(&label_stack->stack_pointers[i], sizeof(uint32_t), 1, fp);
+
+        // uint32 cell_num;
+        // cell_nums[i] = csp->cell_num;
+        fwrite(&label_stack->cell_nums[i], sizeof(uint32_t), 1, fp);
+    }
+
+    fclose(fp);
 }

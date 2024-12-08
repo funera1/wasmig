@@ -27,16 +27,17 @@ typedef struct array {
 
 typedef struct array {
     uint32_t size;
-    uint8_t **begin_addr;
-    uint8_t **target_addr;
-    uint32_t **frame_sp;
-    uint32_t *cell_num;
+    uint32_t *begins;
+    uint32_t *targets;
+    uint32_t *stack_pointers;
+    uint32_t *cell_nums;
 } LabelStack;
 
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page);
 int checkpoint_global(uint64_t* values, uint32_t* types, int len);
 int checkpoint_pc(uint32_t func_idx, uint32_t offset);
-int checkpoint_stack(uint32_t entry_fidx, CodePos *ret_addr, Array8 *type_stack, Array32 *value_stack, LabelStack *label_stack);
+int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
+    CodePos *ret_addr, CodePos *cur_addr, Array32 *value_stack, LabelStack *label_stack, bool is_top);
 
 uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_size, bool is_return_address);
 #endif
