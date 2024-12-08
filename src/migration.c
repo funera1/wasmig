@@ -237,3 +237,9 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
 
     fclose(fp);
 }
+
+int checkpoint_call_stack_size(uint32_t call_stack_size) {
+    FILE *fp = open_image("frame.img", "wb");
+    fwrite(&call_stack_size, sizeof(uint32_t), 1, fp);
+    fclose(fp);
+}
