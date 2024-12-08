@@ -25,6 +25,7 @@ int is_soft_dirty(uint64_t pagemap_entry) {
     return (pagemap_entry >> 55 & 1);
 }
 
+// TODO: バグってるので修正
 int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
     const int PAGEMAP_LENGTH = 8;
     const int PAGE_SIZE = 4096;
