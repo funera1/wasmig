@@ -197,7 +197,7 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
 
 
 int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
-    CodePos *ret_addr, CodePos *cur_addr, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
+    CodePos *ret_addr, CodePos *cur_addr, Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
     char file[32];
     sprintf(file, "stack%d.img", call_stack_id);
 
@@ -214,6 +214,7 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     fwrite(type_stack, sizeof(uint8_t), type_stack_size, fp);
 
     // 値スタック
+    fwrite(locals->contents, sizeof(uint32_t), locals->size, fp);
     fwrite(value_stack->contents, sizeof(uint32_t), value_stack->size, fp);
 
     // 制御スタック
