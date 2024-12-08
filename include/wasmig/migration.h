@@ -40,5 +40,5 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     CodePos *ret_addr, CodePos *cur_addr, Array32 *value_stack, LabelStack *label_stack, bool is_top);
 int checkpoint_call_stack_size(uint32_t call_stack_size);
 
-uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_size, bool is_return_address);
+// uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_size, bool is_return_address);
 #endif
