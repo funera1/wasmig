@@ -8,3 +8,4 @@ name = "wasmig"
 crate-type = ["staticlib"]
 
 [dependencies]
+rustix = { version = "0.38.42", features = ["procfs"] }
