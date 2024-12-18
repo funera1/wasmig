@@ -44,9 +44,8 @@ int checkpoint_call_stack_size(uint32_t call_stack_size);
 
 
 typedef struct {
-    int func_idx;
-    size_t offset;
-    void* address;
+    CodePos codepos;
+    uintptr_t address;
 } TableEntry;
 typedef struct {
     TableEntry* entries;
@@ -55,5 +54,10 @@ typedef struct {
 } Table;
 
 Table* global_table = NULL;
+
+int t_alloc(uint32_t func_idx);
+int t_destroy(uint32_t func_idx);
+int t_register(uint32_t func_idx, uint64_t offset, uintptr_t addoress);
+CodePos t_get(uintptr_t address);
 
 #endif
