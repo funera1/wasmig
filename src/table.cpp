@@ -23,11 +23,6 @@
 // }
 
 int tab_set(uint32_t func_idx, uint64_t offset, uintptr_t address) {
-    // gtable[func_idx]が確保されているかcheck
-    // if (!is_allocated(func_idx)) {
-    //     return 1;
-    // }
-
     gtable[address] = CodePos(func_idx, offset);
     return 0;
 }
