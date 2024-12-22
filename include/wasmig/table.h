@@ -3,7 +3,6 @@
 
 #include "migration.h"
 
-static uint32_t cur_fidx;
 
 // extern "C" int tab_alloc(uint32_t func_idx);
 // extern "C" int tab_destroy();

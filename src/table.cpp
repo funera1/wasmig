@@ -1,6 +1,7 @@
 #include "wasmig/table.h"
 #include <map>
 
+static uint32_t cur_fidx;
 static std::map<uintptr_t, CodePos> gtable;
 
 extern "C" int tab_set(uint32_t func_idx, uint64_t offset, uintptr_t address) {
