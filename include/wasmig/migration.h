@@ -14,7 +14,7 @@ void hello_world();
 
 typedef struct codepos {
     uint32_t fidx;
-    uint32_t offset;
+    uint64_t offset;
 } CodePos;
 
 typedef struct array8 {

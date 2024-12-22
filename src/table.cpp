@@ -4,7 +4,10 @@
 static std::map<uintptr_t, CodePos> gtable;
 
 extern "C" int tab_set(uint32_t func_idx, uint64_t offset, uintptr_t address) {
-    gtable[address] = CodePos(func_idx, offset);
+    gtable[address] = CodePos{
+        func_idx, 
+        offset
+    };
     return 0;
 }
 
