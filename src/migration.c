@@ -1,7 +1,7 @@
 // src/example.c
 #include "wasmig/migration.h"
 
-const WASM_PAGE_SIZE = 0x10000;
+const uint32_t WASM_PAGE_SIZE = 0x10000;
 
 void hello_world() {
     printf("Hello, World!\n");

@@ -1,4 +1,4 @@
-#include "table.h"
+#include "wasmig/table.h"
 #include <map>
 
 static std::map<uintptr_t, CodePos> gtable;

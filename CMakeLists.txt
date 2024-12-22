@@ -4,6 +4,7 @@ project(MyLibrary)
 # ライブラリのヘッダーとソースを指定
 add_library(migration STATIC
     src/migration.c
+    src/table.cpp
 )
 
 # ヘッダーファイルの公開ディレクトリを設定
