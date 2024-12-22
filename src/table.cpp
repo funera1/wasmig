@@ -11,3 +11,12 @@ extern "C" int tab_set(uint32_t func_idx, uint64_t offset, uintptr_t address) {
 extern "C" CodePos tab_get(uintptr_t address) {
     return gtable[address];
 }
+
+int set_cur_fidx(uint32_t fidx) {
+    cur_fidx = fidx;
+    return 0;
+}
+
+uint32_t get_cur_fidx() {
+    return cur_fidx;
+}
