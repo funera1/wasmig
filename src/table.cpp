@@ -13,8 +13,15 @@ extern "C" {
         return 0;
     }
 
-    CodePos tab_get(uintptr_t address) {
-        return gtable[address];
+    bool tab_get(uintptr_t address, CodePos *out) {
+        // check exist
+        auto it  = gtable.find(address);
+        if (it == gtable.end()) {
+            return false;
+        }
+
+        *out = it->second;
+        return true;
     }
 
     int set_cur_fidx(uint32_t fidx) {
