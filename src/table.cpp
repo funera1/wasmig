@@ -1,7 +1,7 @@
 #include "wasmig/table.h"
 #include <map>
 
-static uint32_t cur_fidx;
+static uint32_t cur_fidx, cur_offset;
 static std::map<uintptr_t, CodePos> gtable;
 
 extern "C" {
@@ -31,5 +31,14 @@ extern "C" {
 
     uint32_t get_cur_fidx() {
         return cur_fidx;
+    }
+
+    int set_cur_offset(uint32_t offset) {
+        cur_offset = offset;
+        return 0;
+    }
+
+    uint32_t get_cur_offset() {
+        return cur_offset;
     }
 }
