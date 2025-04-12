@@ -1,25 +1,32 @@
 cmake_minimum_required(VERSION 3.10)
-project(MyLibrary)
+project(WASMIG)
 
 # ライブラリのヘッダーとソースを指定
-add_library(migration STATIC
+add_library(libwasmig STATIC
     src/migration.c
     src/table.cpp
+    src/stack_table.cpp
 )
+
+# msgpackの設定
+add_subdirectory(third_party/msgpack-c)
+target_link_libraries(libwasmig PUBLIC msgpack-cxx)
+
 
 # ヘッダーファイルの公開ディレクトリを設定
-target_include_directories(migration PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-# ライブラリのバージョン情報やインストール先の設定 (必要に応じて)
-set_target_properties(migration PROPERTIES
-    VERSION 1.0
-    SOVERSION 1
+target_include_directories(libwasmig 
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 # インストールターゲットの設定
-install(TARGETS migration
+install(TARGETS libwasmig
     ARCHIVE DESTINATION lib
 )
 install(DIRECTORY include/ DESTINATION include)
+
+# tests
+option(ENABLE_TESTS "Enable unit tests" ON)
+if (ENABLE_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
