@@ -12,6 +12,9 @@ add_library(libwasmig STATIC
 add_subdirectory(third_party/msgpack-c)
 target_link_libraries(libwasmig PUBLIC msgpack-cxx)
 
+# spdlogの設定
+add_subdirectory(third_party/spdlog)
+target_link_libraries(libwasmig PUBLIC spdlog::spdlog)
 
 # ヘッダーファイルの公開ディレクトリを設定
 target_include_directories(libwasmig 

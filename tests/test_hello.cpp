@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <wasmig/stack_table.h>
+#include <spdlog/spdlog.h>
 
 int sum(int a, int b) {
     return a + b;
@@ -15,7 +16,11 @@ TEST(TestCase, sum) {
 #endif
 
 TEST(TestCase, deserialize) {
+    spdlog::set_level(spdlog::level::info);
+    spdlog::info("deserialize test");
+
     fs::path path(TEST_DATA_DIR);
+    spdlog::info("path: {}", path.string());
     StackTable table = deserialize(path);
     EXPECT_EQ(table.entries.size(), 2);
     EXPECT_EQ(table.entries[0].offset, 0x1000);

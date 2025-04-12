@@ -1,6 +1,7 @@
 #pragma once
 #include <msgpack.hpp>
 #include <filesystem>
+#include <spdlog/spdlog.h>
 
 namespace fs = std::filesystem;
 
@@ -25,8 +26,11 @@ struct CompiledOp {
     static CompiledOp from_msgpack(const msgpack::object& obj) {
         CompiledOp out;
 
-        if (obj.type != msgpack::type::ARRAY || obj.via.array.size != 2)
-            throw std::runtime_error("Invalid CompiledOp");
+        // obj.typeがmapじゃなければ、Other
+        if (obj.type != msgpack::type::MAP || obj.via.map.size != 1) {
+            out.kind = OpKind::Other;
+            return out;
+        }
 
         std::string kind = obj.via.array.ptr[0].as<std::string>();
         const msgpack::object& val = obj.via.array.ptr[1];
@@ -94,9 +98,17 @@ struct StackTable {
     static StackTable from_msgpack(const msgpack::object& obj) {
         StackTable table;
 
-        for (uint32_t i = 0; i < obj.via.map.size; ++i) {
-            std::string key = obj.via.map.ptr[i].key.as<std::string>();
-            const msgpack::object& val = obj.via.map.ptr[i].val;
+        // トップレベルが配列か確認
+        if (obj.type != msgpack::type::ARRAY || obj.via.array.size == 0) {
+            throw std::runtime_error("Expected non-empty array at top level");
+        }
+
+        // 関数ごとにStackTableを持つ
+        for (uint32_t i = 0; i < obj.via.array.size; ++i) {
+            const msgpack::object& inner_obj = obj.via.array.ptr[i];
+            std::string key = inner_obj.via.map.ptr[0].key.as<std::string>();
+            const msgpack::object& val = inner_obj.via.map.ptr[i].val;
+            spdlog::info("Deserialized key: {}", key);
 
             if (key == "inner") {
                 for (uint32_t j = 0; j < val.via.array.size; ++j) {
