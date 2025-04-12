@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <stack_table.h>
+#include <wasmig/stack_table.h>
 
 int sum(int a, int b) {
     return a + b;
@@ -9,8 +9,13 @@ TEST(TestCase, sum) {
     EXPECT_EQ(2, sum(1, 1));
 }
 
+// TEST DATA DIR は CMake で定義される
+#ifndef TEST_DATA_DIR
+#define TEST_DATA_DIR "./test_data"
+#endif
+
 TEST(TestCase, deserialize) {
-    fs::path path = "test_data";
+    fs::path path(TEST_DATA_DIR);
     StackTable table = deserialize(path);
     EXPECT_EQ(table.entries.size(), 2);
     EXPECT_EQ(table.entries[0].offset, 0x1000);

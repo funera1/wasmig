@@ -4,7 +4,7 @@
 #include <sstream>
 #include <filesystem>
 #include <fstream>
-#include <stack_table.h>
+#include <wasmig/stack_table.h>
 
 using namespace std;
 
@@ -18,4 +18,5 @@ StackTable deserialize(fs::path path) {
 
     msgpack::object_handle oh = msgpack::unpack(data.data(), data.size());
     StackTable table = StackTable::from_msgpack(oh.get());
+    return table;
 }
