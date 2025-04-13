@@ -41,4 +41,10 @@ extern "C" {
     uint32_t get_cur_offset() {
         return cur_offset;
     }
+    
+    void print_table() {
+        for (auto it = gtable.begin(); it != gtable.end(); ++it) {
+            printf("address: %p, fidx: %d, offset: %lu\n", it->first, it->second.fidx, it->second.offset);
+        }
+    }
 }

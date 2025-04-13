@@ -19,6 +19,7 @@ int set_cur_fidx(uint32_t fidx);
 uint32_t get_cur_fidx();
 int set_cur_offset(uint32_t offset);
 uint32_t get_cur_offset();
+void print_table();
 
 #ifdef __cplusplus
 }
