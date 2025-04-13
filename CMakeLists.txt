@@ -5,7 +5,6 @@ project(WASMIG)
 add_library(libwasmig STATIC
     src/migration.c
     src/table.cpp
-    src/stack_table.cpp
 )
 
 # msgpackの設定
@@ -15,6 +14,10 @@ target_link_libraries(libwasmig PUBLIC msgpack-cxx)
 # spdlogの設定
 add_subdirectory(third_party/spdlog)
 target_link_libraries(libwasmig PUBLIC spdlog::spdlog)
+
+# spdlogの設定
+add_subdirectory(third_party/wcrn)
+target_link_libraries(libwasmig PUBLIC wcrn)
 
 # ヘッダーファイルの公開ディレクトリを設定
 target_include_directories(libwasmig 
