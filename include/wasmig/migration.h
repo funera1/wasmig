@@ -36,10 +36,10 @@ typedef struct labels {
 } LabelStack;
 
 typedef struct callstack_entry {
-    CodePos pc;
-    Array32 locals;
-    Array32 value_stack;
-    LabelStack label_stack;
+    CodePos *pc;
+    Array32 *locals;
+    Array32 *value_stack;
+    LabelStack *label_stack;
 } CallStackEntry;
 
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page);
