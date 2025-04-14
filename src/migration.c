@@ -245,3 +245,18 @@ int checkpoint_call_stack_size(uint32_t call_stack_size) {
     fwrite(&call_stack_size, sizeof(uint32_t), 1, fp);
     fclose(fp);
 }
+
+int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
+    // checkpoint call stack size
+    checkpoint_call_stack_size(size);
+    
+    for (int i = 0; i < size; ++i) {
+        CodePos cur_pos = call_stack[i].pc;
+        CodePos ret_pos;
+        if (i == 0) ret_pos = call_stack[i].pc;
+        else ret_pos = call_stack[i-1].pc;
+        // checkpoint stack
+        checkpoint_stack(i, call_stack[i].pc.fidx, &cur_pos, &ret_pos, 
+            &call_stack[i].locals, &call_stack[i].value_stack, &call_stack[i].label_stack, i == size-1);
+    }
+}
