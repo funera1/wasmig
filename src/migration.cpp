@@ -9,7 +9,7 @@ extern "C" {
 static FILE* open_image(const char* file, const char* flag) {
     FILE *fp = fopen(file, flag);
     if (fp == NULL) {
-        fprintf(stderr, "failed to open %s\n", file);
+        spdlog::error("faield to open file: {}", file);
         return NULL;
     }
     return fp;
@@ -273,6 +273,7 @@ int checkpoint_call_stack_size(uint32_t call_stack_size) {
     }
     fwrite(&call_stack_size, sizeof(uint32_t), 1, fp);
     fclose(fp);
+    return 0;
 }
 
 int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
