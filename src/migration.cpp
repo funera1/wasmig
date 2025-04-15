@@ -235,7 +235,7 @@ void print_type_stack(uint8_t* stack, uint32_t stack_size) {
     spdlog::debug("{}", output);  // spdlogで出力
 }
 
-void print_locals(Arra32 *type_stack, Array32 *locals) {
+void print_locals(Array32 *type_stack, Array32 *locals) {
     std::ostringstream oss;
     oss << "locals: [";
     for (int i = 0; i < locals->size; ++i) {
@@ -253,7 +253,7 @@ void print_locals(Arra32 *type_stack, Array32 *locals) {
     spdlog::debug("{}", output);  // spdlogで出力
 }
 
-void print_stack(Arra32 *type_stack, Array32 *stack) {
+void print_stack(Array32 *type_stack, Array32 *stack) {
     std::ostringstream oss;
     oss << "value stack: [";
     for (int i = 0; i < locals->size; ++i) {
