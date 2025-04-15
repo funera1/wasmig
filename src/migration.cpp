@@ -278,7 +278,7 @@ int checkpoint_call_stack_size(uint32_t call_stack_size) {
 int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
     // checkpoint call stack size
     int ret;
-    ret = intcheckpoint_call_stack_size(size);
+    ret = checkpoint_call_stack_size(size);
     if (ret) {
         spdlog::error("Error checkpointing call stack size");
         return -1;
