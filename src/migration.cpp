@@ -28,7 +28,7 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
     const int PAGEMAP_LENGTH = 8;
     const int OS_PAGE_SIZE = 4096;
     FILE *memory_fp = open_image("memory.img", "wb");
-    if (fp != NULL) {
+    if (memory_fp != NULL) {
         return -1;
     }
 
@@ -87,7 +87,7 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     // FILE *mem_fp = open_image("memory.img", "wb");
     FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
-    if (fp != NULL) {
+    if (mem_size_fp != NULL) {
         return -1;
     }
 
