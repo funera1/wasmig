@@ -28,7 +28,7 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
     const int PAGEMAP_LENGTH = 8;
     const int OS_PAGE_SIZE = 4096;
     FILE *memory_fp = open_image("memory.img", "wb");
-    if (memory_fp != NULL) {
+    if (memory_fp == NULL) {
         return -1;
     }
 
@@ -87,7 +87,7 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     // FILE *mem_fp = open_image("memory.img", "wb");
     FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
-    if (mem_size_fp != NULL) {
+    if (mem_size_fp == NULL) {
         return -1;
     }
 
@@ -104,7 +104,7 @@ int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
 
 int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
     FILE *fp = open_image("global.img", "wb");
-    if (fp != NULL) {
+    if (fp == NULL) {
         return -1;
     }
 
@@ -130,7 +130,7 @@ int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
 
 int checkpoint_pc(uint32_t func_idx, uint32_t offset) {
     FILE *fp = open_image("program_counter.img", "wb");
-    if (fp != NULL) {
+    if (fp == NULL) {
         return -1;
     }
     fwrite(&func_idx, sizeof(uint32_t), 1, fp);
@@ -220,7 +220,7 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     spdlog::info("checkpoint stack: {}", call_stack_id);
 
     FILE *fp = open_image(file, "wb");
-    if (fp != NULL) {
+    if (fp == NULL) {
         return -1;
     }
     fwrite(&entry_fidx, sizeof(uint32_t), 1, fp);
@@ -268,7 +268,7 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
 
 int checkpoint_call_stack_size(uint32_t call_stack_size) {
     FILE *fp = open_image("frame.img", "wb");
-    if (fp != NULL) {
+    if (fp == NULL) {
         return -1;
     }
     fwrite(&call_stack_size, sizeof(uint32_t), 1, fp);
