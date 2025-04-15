@@ -1,6 +1,10 @@
 // src/example.c
 #include "wasmig/migration.h"
 #include <spdlog/spdlog.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <cstdint>
 
 const uint32_t WASM_PAGE_SIZE = 0x10000;
 
@@ -213,6 +217,59 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
     return type_stack;
 }
 
+void print_type_stack(uint8_t* stack, uint32_t stack_size) {
+    std::ostringstream oss;
+    oss << "type stack: [";
+    for (uint32_t i = 0; i < stack_size; ++i) {
+        if (i != 0) oss << ", ";
+        switch (stack[i]) {
+            case 1: oss << "S32"; break;
+            case 2: oss << "S64"; break;
+            case 4: oss << "S128"; break;
+            default: oss << static_cast<int>(stack[i]); break; // その他の型はそのまま出力
+        }
+    }
+    oss << "]";
+
+    std::string output = oss.str();  // 一度文字列にする
+    spdlog::debug("{}", output);  // spdlogで出力
+}
+
+void print_locals(Arra32 *type_stack, Array32 *locals) {
+    std::ostringstream oss;
+    oss << "locals: [";
+    for (int i = 0; i < locals->size; ++i) {
+        if (i != 0) oss << ", ";
+        switch (type_stack->contents[i]) {
+            case 1: oss << (uint32_t)locals->contents[i]; break;
+            case 2: oss << (uint64_t)locals->contents[i]; i++; break;
+            case 4: spdlog::error("Not support S128"); break;
+            default: spdlog::error("Not found type"); break; // その他の型はそのまま出力
+        }
+    }
+    oss << "]";
+
+    std::string output = oss.str();  // 一度文字列にする
+    spdlog::debug("{}", output);  // spdlogで出力
+}
+
+void print_stack(Arra32 *type_stack, Array32 *stack) {
+    std::ostringstream oss;
+    oss << "value stack: [";
+    for (int i = 0; i < locals->size; ++i) {
+        if (i != 0) oss << ", ";
+        switch (type_stack->contents[i]) {
+            case 1: oss << (uint32_t)stack->contents[i]; break;
+            case 2: oss << (uint64_t)stack->contents[i]; i++; break;
+            case 4: spdlog::error("Not support S128"); break;
+            default: spdlog::error("Not found type"); break; // その他の型はそのまま出力
+        }
+    }
+    oss << "]";
+
+    std::string output = oss.str();  // 一度文字列にする
+    spdlog::debug("{}", output);  // spdlogで出力
+}
 
 int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
     CodePos *ret_addr, CodePos *cur_addr, Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
@@ -235,6 +292,11 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     uint8_t* type_stack = get_type_stack(cur_addr->fidx, cur_addr->offset, &type_stack_size, !is_top);
     fwrite(&type_stack_size, sizeof(uint32_t), 1, fp);
     fwrite(type_stack, sizeof(uint8_t), type_stack_size, fp);
+    
+    // debug print type stack
+    Array32 type_stack_array = (Array32){type_stack_size, type_stack};
+    print_type_stack(type_stack, type_stack_size);
+    print_locals(&type_stack_array, locals);
 
     // 値スタック
     fwrite(locals->contents, sizeof(uint32_t), locals->size, fp);
