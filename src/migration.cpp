@@ -81,7 +81,6 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
 }
 
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
-    spdlog::info("starting checkpoint memory...");
     // FILE *mem_fp = open_image("memory.img", "wb");
     FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
 
@@ -92,6 +91,8 @@ int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     // fclose(mem_fp);
     fclose(mem_size_fp);
     spdlog::info("checkpoint memory");
+    
+    return 0;
 }
 
 int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
@@ -114,6 +115,7 @@ int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
     }
 
     fclose(fp);
+    return 0;
 }
 
 int checkpoint_pc(uint32_t func_idx, uint32_t offset) {
@@ -121,6 +123,8 @@ int checkpoint_pc(uint32_t func_idx, uint32_t offset) {
     fwrite(&func_idx, sizeof(uint32_t), 1, fp);
     fwrite(&offset, sizeof(uint32_t), 1, fp);
     fclose(fp);
+
+    return 0;
 }
 
 uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_size, bool is_return_address) {
@@ -239,6 +243,8 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     }
 
     fclose(fp);
+
+    return 0;
 }
 
 int checkpoint_call_stack_size(uint32_t call_stack_size) {
@@ -267,6 +273,8 @@ int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
             return ret;
         }
     }
+            
+    return 0;
 }
 
 }
