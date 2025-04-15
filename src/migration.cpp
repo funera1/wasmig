@@ -256,7 +256,7 @@ void print_locals(Array32 *type_stack, Array32 *locals) {
 void print_stack(Array32 *type_stack, Array32 *stack) {
     std::ostringstream oss;
     oss << "value stack: [";
-    for (int i = 0; i < locals->size; ++i) {
+    for (int i = 0; i < stack->size; ++i) {
         if (i != 0) oss << ", ";
         switch (type_stack->contents[i]) {
             case 1: oss << (uint32_t)stack->contents[i]; break;
