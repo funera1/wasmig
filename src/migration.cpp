@@ -81,6 +81,7 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
 }
 
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
+    spdlog::info("starting checkpoint memory...");
     // FILE *mem_fp = open_image("memory.img", "wb");
     FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
 
@@ -90,6 +91,7 @@ int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
 
     // fclose(mem_fp);
     fclose(mem_size_fp);
+    spdlog::info("checkpoint memory");
 }
 
 int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
