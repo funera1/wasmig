@@ -283,9 +283,11 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
         return -1;
     }
     fwrite(&entry_fidx, sizeof(uint32_t), 1, fp);
+    spdlog::debug("dump entry_fidx: {}", entry_fidx);
 
     fwrite(&ret_addr->fidx, sizeof(uint32_t), 1, fp);
     fwrite(&ret_addr->offset, sizeof(uint32_t), 1, fp);
+    spdlog::debug("dump return address: ({}, {})", ret_addr->fidx, ret_addr->offset);
 
     // 型スタック
     uint32_t type_stack_size;
