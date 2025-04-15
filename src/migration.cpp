@@ -296,7 +296,7 @@ int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
         Array32 *value_stack = &call_stack[i].value_stack;
         LabelStack *label_stack = &call_stack[i].label_stack;
         // checkpoint stack
-        int ret = checkpoint_stack(i, cur_pos->fidx, cur_pos, ret_pos, 
+        int ret = checkpoint_stack(i+1, cur_pos->fidx, cur_pos, ret_pos, 
             locals, value_stack, label_stack, i == size-1);
         if (ret != 0) {
             spdlog::error("Error checkpointing stack {}", i);
