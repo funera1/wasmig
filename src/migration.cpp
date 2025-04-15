@@ -1,11 +1,10 @@
 // src/example.c
 #include "wasmig/migration.h"
+#include <spdlog/spdlog.h>
 
 const uint32_t WASM_PAGE_SIZE = 0x10000;
 
-void hello_world() {
-    printf("Hello, World!\n");
-}
+extern "C" {
 
 static FILE* open_image(const char* file, const char* flag) {
     FILE *fp = fopen(file, flag);
@@ -176,7 +175,7 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
     }
 
     // uint8 type_stack[locals_size + stack_size];
-    uint8_t* type_stack = malloc(locals_size + stack_size);
+    uint8_t* type_stack = (uint8_t *)malloc(locals_size + stack_size);
     for (uint32_t i = 0; i < locals_size; ++i) type_stack[i] = locals[i];
     for (uint32_t i = 0; i < stack_size; ++i) type_stack[locals_size + i] = stack[i];
 
@@ -199,7 +198,7 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
 int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
     CodePos *ret_addr, CodePos *cur_addr, Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
     char file[32];
-    sprintf(file, "stack%d.img", call_stack_id);
+    spdlog::info("checkpoint stack: {}", call_stack_id);
 
     FILE *fp = open_image(file, "wb");
     fwrite(&entry_fidx, sizeof(uint32_t), 1, fp);
@@ -259,7 +258,13 @@ int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
         Array32 *value_stack = call_stack[i].value_stack;
         LabelStack *label_stack = call_stack[i].label_stack;
         // checkpoint stack
-        checkpoint_stack(i, cur_pos->fidx, cur_pos, ret_pos, 
+        int ret = checkpoint_stack(i, cur_pos->fidx, cur_pos, ret_pos, 
             locals, value_stack, label_stack, i == size-1);
+        if (ret != 0) {
+            fprintf(stderr, "Error checkpointing stack\n");
+            return ret;
+        }
     }
+}
+
 }

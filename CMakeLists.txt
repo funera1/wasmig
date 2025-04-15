@@ -3,7 +3,7 @@ project(WASMIG)
 
 # ライブラリのヘッダーとソースを指定
 add_library(libwasmig STATIC
-    src/migration.c
+    src/migration.cpp
     src/table.cpp
     src/stack_tables.cpp
 )
