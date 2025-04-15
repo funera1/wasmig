@@ -235,7 +235,7 @@ void print_type_stack(uint8_t* stack, uint32_t stack_size) {
     spdlog::debug("{}", output);  // spdlogで出力
 }
 
-void print_locals(Array32 *type_stack, Array32 *locals) {
+void print_locals(Array8 *type_stack, Array32 *locals) {
     std::ostringstream oss;
     oss << "locals: [";
     for (int i = 0; i < locals->size; ++i) {
@@ -253,7 +253,7 @@ void print_locals(Array32 *type_stack, Array32 *locals) {
     spdlog::debug("{}", output);  // spdlogで出力
 }
 
-void print_stack(Array32 *type_stack, Array32 *stack) {
+void print_stack(Array8 *type_stack, Array32 *stack) {
     std::ostringstream oss;
     oss << "value stack: [";
     for (int i = 0; i < stack->size; ++i) {
@@ -294,7 +294,7 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     fwrite(type_stack, sizeof(uint8_t), type_stack_size, fp);
     
     // debug print type stack
-    Array32 type_stack_array = (Array32){type_stack_size, type_stack};
+    Array8 type_stack_array = (Array8){type_stack_size, type_stack};
     print_type_stack(type_stack, type_stack_size);
     print_locals(&type_stack_array, locals);
 
