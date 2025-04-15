@@ -277,7 +277,12 @@ int checkpoint_call_stack_size(uint32_t call_stack_size) {
 
 int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
     // checkpoint call stack size
-    checkpoint_call_stack_size(size);
+    int ret;
+    ret = intcheckpoint_call_stack_size(size);
+    if (ret) {
+        spdlog::error("Error checkpointing call stack size");
+        return -1;
+    }
     
     for (int i = 0; i < size; ++i) {
         CodePos *cur_pos = &call_stack[i].pc;
@@ -291,7 +296,7 @@ int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
         int ret = checkpoint_stack(i, cur_pos->fidx, cur_pos, ret_pos, 
             locals, value_stack, label_stack, i == size-1);
         if (ret != 0) {
-            fprintf(stderr, "Error checkpointing stack\n");
+            spdlog::error("Error checkpointing stack {}", i);
             return ret;
         }
     }
