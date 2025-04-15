@@ -217,6 +217,7 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
 int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
     CodePos *ret_addr, CodePos *cur_addr, Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
     char file[32];
+    snprintf(file, sizeof(file), "stack_%d.img", call_stack_id);
     spdlog::info("checkpoint stack: {}", call_stack_id);
 
     FILE *fp = open_image(file, "wb");
