@@ -23,7 +23,6 @@ target_link_libraries(libwasmig PUBLIC wcrn)
 # ヘッダーファイルの公開ディレクトリを設定
 target_include_directories(libwasmig 
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/wcrn/include
 )
 
 # インストールターゲットの設定
