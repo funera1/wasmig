@@ -4,14 +4,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
-enum Opcode {
+typedef enum {
     LOCAL_GET,
     I32_CONST,
     I64_CONST,
     F32_CONST,
     F64_CONST,
     Other,
-};
+} Opcode;
 typedef struct stack_table_entry {
     Opcode opcode;
     union Operand {
