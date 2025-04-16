@@ -20,7 +20,7 @@ typedef struct stack_table_entry {
         uint64_t i64;
         float f32;
         double f64;
-    };
+    } operand;
 } StackTableEntry;
 
 typedef struct stack_table {

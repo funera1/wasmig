@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+// TODO: 相対パスをincludeしないようにする
 #include "../../include/wasmig/stack_tables.h"
 
 #ifdef __cplusplus
