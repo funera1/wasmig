@@ -1,16 +1,23 @@
 // src/example.c
 #include "wasmig/migration.h"
+#include <spdlog/spdlog.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <cstdint>
 
 const uint32_t WASM_PAGE_SIZE = 0x10000;
 
-void hello_world() {
-    printf("Hello, World!\n");
-}
+extern "C" {
+
+void spdlog_debug() {
+    spdlog::set_level(spdlog::level::debug);
+} 
 
 static FILE* open_image(const char* file, const char* flag) {
     FILE *fp = fopen(file, flag);
     if (fp == NULL) {
-        fprintf(stderr, "failed to open %s\n", file);
+        spdlog::error("faield to open file: {}", file);
         return NULL;
     }
     return fp;
@@ -29,6 +36,10 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
     const int PAGEMAP_LENGTH = 8;
     const int OS_PAGE_SIZE = 4096;
     FILE *memory_fp = open_image("memory.img", "wb");
+    if (memory_fp == NULL) {
+        return -1;
+    }
+
     int fd;
     uint64_t pagemap_entry;
     // プロセスのpagemapを開く
@@ -84,6 +95,9 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     // FILE *mem_fp = open_image("memory.img", "wb");
     FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
+    if (mem_size_fp == NULL) {
+        return -1;
+    }
 
     write_dirty_memory(memory, cur_page);
     // fwrite(memory, sizeof(uint8_t), WASM_PAGE_SIZE * cur_page, mem_fp);
@@ -91,10 +105,16 @@ int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
 
     // fclose(mem_fp);
     fclose(mem_size_fp);
+    spdlog::info("checkpoint memory");
+    
+    return 0;
 }
 
 int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
     FILE *fp = open_image("global.img", "wb");
+    if (fp == NULL) {
+        return -1;
+    }
 
     for (int i = 0; i < len; i++) {
         fwrite(&values[i], types[i], 1, fp);
@@ -113,13 +133,19 @@ int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
     }
 
     fclose(fp);
+    return 0;
 }
 
 int checkpoint_pc(uint32_t func_idx, uint32_t offset) {
     FILE *fp = open_image("program_counter.img", "wb");
+    if (fp == NULL) {
+        return -1;
+    }
     fwrite(&func_idx, sizeof(uint32_t), 1, fp);
     fwrite(&offset, sizeof(uint32_t), 1, fp);
     fclose(fp);
+
+    return 0;
 }
 
 uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_size, bool is_return_address) {
@@ -176,7 +202,7 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
     }
 
     // uint8 type_stack[locals_size + stack_size];
-    uint8_t* type_stack = malloc(locals_size + stack_size);
+    uint8_t* type_stack = (uint8_t *)malloc(locals_size + stack_size);
     for (uint32_t i = 0; i < locals_size; ++i) type_stack[i] = locals[i];
     for (uint32_t i = 0; i < stack_size; ++i) type_stack[locals_size + i] = stack[i];
 
@@ -195,30 +221,99 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
     return type_stack;
 }
 
+void print_type_stack(uint8_t* stack, uint32_t stack_size) {
+    std::ostringstream oss;
+    oss << "type stack: [";
+    for (uint32_t i = 0; i < stack_size; ++i) {
+        if (i != 0) oss << ", ";
+        switch (stack[i]) {
+            case 1: oss << "S32"; break;
+            case 2: oss << "S64"; break;
+            case 4: oss << "S128"; break;
+            default: oss << static_cast<int>(stack[i]); break; // その他の型はそのまま出力
+        }
+    }
+    oss << "]";
+
+    std::string output = oss.str();  // 一度文字列にする
+    spdlog::debug("{}", output);  // spdlogで出力
+}
+
+void print_locals(Array8 *type_stack, Array32 *locals) {
+    std::ostringstream oss;
+    oss << "locals: [";
+    for (int i = 0; i < locals->size; ++i) {
+        if (i != 0) oss << ", ";
+        switch (type_stack->contents[i]) {
+            case 1: oss << (uint32_t)locals->contents[i]; break;
+            case 2: oss << (uint64_t)locals->contents[i]; i++; break;
+            case 4: spdlog::error("Not support S128"); break;
+            default: spdlog::error("Not found type"); break; // その他の型はそのまま出力
+        }
+    }
+    oss << "]";
+
+    std::string output = oss.str();  // 一度文字列にする
+    spdlog::debug("{}", output);  // spdlogで出力
+}
+
+void print_stack(Array8 *type_stack, Array32 *stack) {
+    std::ostringstream oss;
+    oss << "value stack: [";
+    for (int i = 0; i < stack->size; ++i) {
+        if (i != 0) oss << ", ";
+        switch (type_stack->contents[i]) {
+            case 1: oss << (uint32_t)stack->contents[i]; break;
+            case 2: oss << (uint64_t)stack->contents[i]; i++; break;
+            case 4: spdlog::error("Not support S128"); break;
+            default: spdlog::error("Not found type"); break; // その他の型はそのまま出力
+        }
+    }
+    oss << "]";
+
+    std::string output = oss.str();  // 一度文字列にする
+    spdlog::debug("{}", output);  // spdlogで出力
+}
 
 int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
     CodePos *ret_addr, CodePos *cur_addr, Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
     char file[32];
-    sprintf(file, "stack%d.img", call_stack_id);
+    // TODO: stack_%d.imgに変更する
+    snprintf(file, sizeof(file), "stack%d.img", call_stack_id);
+    spdlog::info("checkpoint stack: {}", call_stack_id);
 
     FILE *fp = open_image(file, "wb");
+    if (fp == NULL) {
+        return -1;
+    }
     fwrite(&entry_fidx, sizeof(uint32_t), 1, fp);
+    spdlog::debug("dump entry_fidx: {}", entry_fidx);
 
     fwrite(&ret_addr->fidx, sizeof(uint32_t), 1, fp);
     fwrite(&ret_addr->offset, sizeof(uint32_t), 1, fp);
+    spdlog::debug("dump return address: ({}, {})", ret_addr->fidx, ret_addr->offset);
 
     // 型スタック
     uint32_t type_stack_size;
     uint8_t* type_stack = get_type_stack(cur_addr->fidx, cur_addr->offset, &type_stack_size, !is_top);
     fwrite(&type_stack_size, sizeof(uint32_t), 1, fp);
     fwrite(type_stack, sizeof(uint8_t), type_stack_size, fp);
+    
+    // debug print type stack
+    Array8 type_stack_array = (Array8){type_stack_size, type_stack};
+    print_type_stack(type_stack, type_stack_size);
+    print_locals(&type_stack_array, locals);
+    print_stack(&type_stack_array, value_stack);
 
     // 値スタック
     fwrite(locals->contents, sizeof(uint32_t), locals->size, fp);
     fwrite(value_stack->contents, sizeof(uint32_t), value_stack->size, fp);
 
     // 制御スタック
-    fwrite(&label_stack->size, sizeof(uint32_t), 1, fp);
+    fwrite(&label_stack->size, sizeof(uint32_t), 1, fp);    // CodePos poses[cs_size];
+    // Array32 locals[cs_size];
+    // Array32 stack[cs_size];
+    // LabelStack labels_stack[cs_size];
     for (int i = 0; i < label_stack->size; ++i) {
         // uint8 *begin_addr;
         // label_stack->begins[i] = get_addr_offset(csp->begin_addr, ip_start);
@@ -238,28 +333,46 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     }
 
     fclose(fp);
+
+    return 0;
 }
 
 int checkpoint_call_stack_size(uint32_t call_stack_size) {
     FILE *fp = open_image("frame.img", "wb");
+    if (fp == NULL) {
+        return -1;
+    }
     fwrite(&call_stack_size, sizeof(uint32_t), 1, fp);
     fclose(fp);
+    return 0;
 }
 
 int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
     // checkpoint call stack size
-    checkpoint_call_stack_size(size);
+    int ret;
+    ret = checkpoint_call_stack_size(size);
+    if (ret) {
+        spdlog::error("Error checkpointing call stack size");
+        return -1;
+    }
     
     for (int i = 0; i < size; ++i) {
-        CodePos *cur_pos = call_stack[i].pc;
         CodePos *ret_pos;
-        Array32 *locals = call_stack->locals;
-        Array32 *stack = call_stack->value_stack;
-        LabelStack *label_stack = call_stack->label_stack;
-        if (i == 0) ret_pos = call_stack[i].pc;
-        else ret_pos = call_stack[i-1].pc;
+        if (i == 0) ret_pos = &call_stack[i].pc;
+        else ret_pos = &call_stack[i-1].pc;
+        Array32 *locals = &call_stack[i].locals;
+        Array32 *value_stack = &call_stack[i].value_stack;
+        LabelStack *label_stack = &call_stack[i].label_stack;
         // checkpoint stack
-        checkpoint_stack(i, cur_pos->fidx, cur_pos, ret_pos, 
-            locals, stack, &call_stack[i].label_stack, i == size-1);
+        int ret = checkpoint_stack(i+1, cur_pos->fidx, cur_pos, ret_pos, 
+            locals, value_stack, label_stack, i == size-1);
+        if (ret != 0) {
+            spdlog::error("Error checkpointing stack {}", i);
+            return ret;
+        }
     }
+            
+    return 0;
+}
+
 }

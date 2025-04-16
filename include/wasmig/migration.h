@@ -42,6 +42,12 @@ typedef struct callstack_entry {
     LabelStack *label_stack;
 } CallStackEntry;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void spdlog_debug();
+
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page);
 int checkpoint_global(uint64_t* values, uint32_t* types, int len);
 int checkpoint_pc(uint32_t func_idx, uint32_t offset);
@@ -50,5 +56,8 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
 int checkpoint_call_stack_size(uint32_t call_stack_size);
 int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
