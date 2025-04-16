@@ -357,6 +357,7 @@ int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
     }
     
     for (int i = 0; i < size; ++i) {
+        CodePos *cur_pos = &call_stack[i].pc;
         CodePos *ret_pos;
         if (i == 0) ret_pos = &call_stack[i].pc;
         else ret_pos = &call_stack[i-1].pc;
