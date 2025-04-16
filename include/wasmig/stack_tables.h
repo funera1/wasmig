@@ -14,6 +14,7 @@ typedef enum {
 } Opcode;
 typedef struct stack_table_entry {
     Opcode opcode;
+    uint8_t ty;
     union Operand {
         uint32_t local_idx;
         uint32_t i32;

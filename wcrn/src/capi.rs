@@ -29,6 +29,7 @@ union Operand {
 #[repr(C)]
 pub struct StackTableEntry {
     pub opcode: Opcode,
+    pub ty: u8,
     pub operand: Operand,
 }
 
@@ -59,7 +60,7 @@ pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
         .expect("failed to get stack");
     let size = stack.len();
     let entries = stack.iter()
-        .map(|(op, _)| {
+        .map(|(op, ty)| {
             let (opcode, operand) = match op {
                 CompiledOp::LocalGet(idx) => (Opcode::LocalGet, Operand{local_idx: *idx}),
                 CompiledOp::I32Const(val) => (Opcode::I32Const, Operand{i32_const: *val}),
@@ -70,6 +71,7 @@ pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
             };
             StackTableEntry {
                 opcode,
+                ty: ty.size(),
                 operand,
             }
         })
