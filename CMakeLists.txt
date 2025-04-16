@@ -17,7 +17,7 @@ add_subdirectory(third_party/spdlog)
 target_link_libraries(libwasmig PUBLIC spdlog::spdlog)
 
 # spdlogの設定
-add_subdirectory(third_party/wcrn)
+add_subdirectory(wcrn)
 target_link_libraries(libwasmig PUBLIC wcrn)
 
 # ヘッダーファイルの公開ディレクトリを設定

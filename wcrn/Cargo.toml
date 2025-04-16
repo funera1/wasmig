@@ -1,0 +1,11 @@
+[package]
+name = "wcrn"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+anyhow = "1.0.97"
+wacret = { git = "https://github.com/funera1/Wacret", branch = "create-table-v2" }
