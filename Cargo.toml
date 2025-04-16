@@ -1,0 +1,11 @@
+[package]
+name = "wasmig"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "wasmig"
+crate-type = ["staticlib"]
+
+[dependencies]
+rustix = { version = "0.38.42", features = ["procfs"] }
