@@ -32,7 +32,6 @@ typedef struct stack_table {
 extern "C" {
 #endif
 
-#include <wcrn.h>
 size_t get_stack_size(uint32_t fidx, uint64_t offset);
 StackTable get_stack_table(uint32_t fidx, uint64_t offset);
 
