@@ -79,8 +79,6 @@ pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
         size,
         entries: entries.as_ptr(),
     };
-
-    // mem::forget
     mem::forget(entries);
     
     return ret;
