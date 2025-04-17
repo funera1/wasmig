@@ -5,6 +5,7 @@
 #include <stddef.h>
 // TODO: 相対パスをincludeしないようにする
 #include "../../include/wasmig/stack_tables.h"
+#include "../../include/wasmig/migration.h"
 
 #ifdef __cplusplus
 extern "C" {
