@@ -67,7 +67,7 @@ pub extern "C" fn wcrn_get_local_types(fidx: u32) -> Array8 {
     let locals_vec = stack_tables.get_locals(fidx as usize)
         .expect("failed to get locals")
         .into_iter()
-        .map(|ty| ty.size() as u8)
+        .map(|ty| ty.size()/mem::size_of::<u32>() as u8)
         .collect::<Vec<_>>();
     
     let locals = unsafe {
