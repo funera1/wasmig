@@ -248,7 +248,7 @@ void print_locals(Array8 *type_stack, Array32 *locals) {
             case 1: oss << (uint32_t)locals->contents[i]; break;
             case 2: oss << (uint64_t)locals->contents[i]; i++; break;
             case 4: spdlog::error("Not support S128"); break;
-            default: spdlog::error("Not found type"); break; // その他の型はそのまま出力
+            default: spdlog::error("Not found type: {}", type_stack->contents[i]); break; // その他の型はそのまま出力
         }
     }
     oss << "]";
@@ -266,7 +266,7 @@ void print_stack(Array8 *type_stack, Array32 *stack) {
             case 1: oss << (uint32_t)stack->contents[i]; break;
             case 2: oss << (uint64_t)stack->contents[i]; i++; break;
             case 4: spdlog::error("Not support S128"); break;
-            default: spdlog::error("Not found type"); break; // その他の型はそのまま出力
+            default: spdlog::error("Not found type: {}", type_stack->contents[i]); break; // その他の型はそのまま出力
         }
     }
     oss << "]";
