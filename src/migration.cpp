@@ -1,8 +1,8 @@
 // src/example.c
 #include "wasmig/migration.h"
+#include <wasmig/internal/debug.hpp>
 #include <spdlog/spdlog.h>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <cstdint>
 
@@ -217,77 +217,21 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
     return type_stack;
 }
 
-void print_type_stack(uint8_t* stack, uint32_t stack_size) {
-    std::ostringstream oss;
-    oss << "type stack: [";
-    for (uint32_t i = 0; i < stack_size; ++i) {
-        if (i != 0) oss << ", ";
-        switch (stack[i]) {
-            case 1: oss << "S32"; break;
-            case 2: oss << "S64"; break;
-            case 4: oss << "S128"; break;
-            default: oss << static_cast<int>(stack[i]); break; // その他の型はそのまま出力
-        }
-    }
-    oss << "]";
-
-    std::string output = oss.str();  // 一度文字列にする
-    spdlog::debug("{}", output);  // spdlogで出力
-}
-
-void print_locals(Array8 *type_stack, Array32 *locals) {
-    std::ostringstream oss;
-    oss << "locals: [";
-    for (int i = 0; i < locals->size; ++i) {
-        if (i != 0) oss << ", ";
-        switch (type_stack->contents[i]) {
-            case 1: oss << (uint32_t)locals->contents[i]; break;
-            case 2: oss << (uint64_t)locals->contents[i]; i++; break;
-            case 4: spdlog::error("Not support S128"); break;
-            default: spdlog::error("Not found type: {}", type_stack->contents[i]); break; // その他の型はそのまま出力
-        }
-    }
-    oss << "]";
-
-    std::string output = oss.str();  // 一度文字列にする
-    spdlog::debug("{}", output);  // spdlogで出力
-}
-
-void print_stack(Array8 *type_stack, Array32 *stack) {
-    std::ostringstream oss;
-    oss << "value stack: [";
-    for (int i = 0; i < stack->size; ++i) {
-        if (i != 0) oss << ", ";
-        switch (type_stack->contents[i]) {
-            case 1: oss << (uint32_t)stack->contents[i]; break;
-            case 2: oss << (uint64_t)stack->contents[i]; i++; break;
-            case 4: spdlog::error("Not support S128"); break;
-            default: spdlog::error("Not found type: {}", type_stack->contents[i]); break; // その他の型はそのまま出力
-        }
-    }
-    oss << "]";
-
-    std::string output = oss.str();  // 一度文字列にする
-    spdlog::debug("{}", output);  // spdlogで出力
-}
 
 int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
     CodePos *ret_addr, CodePos *cur_addr, Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
     char file[32];
     // TODO: stack_%d.imgに変更する
     snprintf(file, sizeof(file), "stack%d.img", call_stack_id);
-    spdlog::info("checkpoint stack: {}", call_stack_id);
 
     FILE *fp = open_image(file, "wb");
     if (fp == NULL) {
         return -1;
     }
     fwrite(&entry_fidx, sizeof(uint32_t), 1, fp);
-    spdlog::debug("dump entry_fidx: {}", entry_fidx);
 
     fwrite(&ret_addr->fidx, sizeof(uint32_t), 1, fp);
     fwrite(&ret_addr->offset, sizeof(uint32_t), 1, fp);
-    spdlog::debug("dump return address: ({}, {})", ret_addr->fidx, ret_addr->offset);
 
     // 型スタック
     uint32_t type_stack_size;
