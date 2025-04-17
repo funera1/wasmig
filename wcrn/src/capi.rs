@@ -64,7 +64,7 @@ pub extern "C" fn wcrn_get_stack_size(fidx: u32, offset: u32) -> usize {
 pub extern "C" fn wcrn_get_local_types(fidx: u32) -> Array8 {
     let stack_tables = stack_tables::deserialize_stack_table("./")
         .expect("failed to deserialize stack table");
-    let locals = stack_tables.get_locals(fidx as usize)
+    let locals_vec = stack_tables.get_locals(fidx as usize)
         .expect("failed to get locals")
         .into_iter()
         .map(|ty| ty.size() as u8)
@@ -72,11 +72,11 @@ pub extern "C" fn wcrn_get_local_types(fidx: u32) -> Array8 {
     
     let locals = unsafe {
         Array8 {
-            size: locals.len(),
-            contents: locals.as_ptr(),
+            size: locals_vec.len(),
+            contents: locals_vec.as_ptr(),
         }
     };
-    mem::forget(locals);
+    mem::forget(locals_vec);
 
     return locals;
 }
