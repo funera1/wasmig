@@ -1,4 +1,4 @@
-#include "log.h"
+#include "wasmig/log.h"
 #include <spdlog/spdlog.h>
 #include <stdio.h>
 #include <stdarg.h>
