@@ -19,8 +19,9 @@ std::string type_stack_to_string(uint8_t* stack, uint32_t stack_size) {
     return oss.str();
 }
 
-std::string array32_to_string(std::ostringstream &oss, Array8 *type_stack, Array32 *array, std::string name) {
+ArrayStringResult array32_to_string(std::ostringstream &oss, Array8 *type_stack, Array32 *array, std::string name) {
     oss << name << ": [";
+    std::string error = "";
     uint32_t *sp = array->contents;
     for (int i = 0; i < array->size; ++i) {
         if (i != 0) oss << ", ";
@@ -39,41 +40,50 @@ std::string array32_to_string(std::ostringstream &oss, Array8 *type_stack, Array
                 break;
             }
             case 4:
-                spdlog::error("Not support S128");
+                error = "Not support S128";
+                spdlog::error(error);
                 oss << "(S128)";
                 break;
             default:
-                spdlog::error("Unknown type {}", type_stack->contents[i]);
+                error = "Unknown type " + std::to_string(type_stack->contents[i]);
+                spdlog::error(error);
                 oss << "(unknown)";
                 break;
         }
     }
     oss << "]";
-    return oss.str();
+    return ArrayStringResult(oss.str(), error);
 }
 
-std::string locals_to_string(Array8 *type_stack, Array32 *locals) {
+ArrayStringResult locals_to_string(Array8 *type_stack, Array32 *locals) {
     std::ostringstream oss;
     return array32_to_string(oss, type_stack, locals, "locals");
 }
 
-std::string value_stack_to_string(Array8 *type_stack, Array32 *value_stack) {
+ArrayStringResult value_stack_to_string(Array8 *type_stack, Array32 *value_stack) {
     std::ostringstream oss;
     return array32_to_string(oss, type_stack, value_stack, "value stack");
 }
-
 
 void print_type_stack(uint8_t* stack, uint32_t stack_size) {
     std::string output = type_stack_to_string(stack, stack_size);
     spdlog::debug("{}", output);  // spdlogで出力
 }
 
-void print_locals(Array8 *type_stack, Array32 *locals) {
-    std::string output = locals_to_string(type_stack, locals);
-    spdlog::debug("{}", output);  // spdlogで出力
+void print_locals(CodePos &pos, Array8 *type_stack, Array32 *locals) {
+    ArrayStringResult result = locals_to_string(type_stack, locals);
+    if (result.error.empty()) {
+        spdlog::debug("{}", result.output);  // spdlogで出力
+    } else {
+        spdlog::debug("({}, {}): {}", pos.fidx, pos.offset, result.output);  // spdlogで出力
+    }
 }
 
-void print_stack(Array8 *type_stack, Array32 *stack) {
-    std::string output = value_stack_to_string(type_stack, stack);
-    spdlog::debug("{}", output);  // spdlogで出力
+void print_stack(CodePos &pos, Array8 *type_stack, Array32 *stack) {
+    ArrayStringResult result = value_stack_to_string(type_stack, stack);
+    if (result.error.empty()) {
+        spdlog::debug("{}", result.output);  // spdlogで出力
+    } else {
+        spdlog::debug("({}, {}): {}", pos.fidx, pos.offset, result.output);  // spdlogで出力
+    }
 }

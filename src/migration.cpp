@@ -242,8 +242,8 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     // debug print type stack
     Array8 type_stack_array = (Array8){type_stack_size, type_stack};
     print_type_stack(type_stack, type_stack_size);
-    print_locals(&type_stack_array, locals);
-    print_stack(&type_stack_array, value_stack);
+    print_locals(*cur_addr, &type_stack_array, locals);
+    print_stack(*cur_addr, &type_stack_array, value_stack);
 
     // 値スタック
     fwrite(locals->contents, sizeof(uint32_t), locals->size, fp);

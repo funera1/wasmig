@@ -32,8 +32,8 @@ TEST(TestCase, locals_to_string) {
     
     Array8 type_stack_array = {type_stack_size, type_stack};
     Array32 locals_array = {locals_size, locals};
-    std::string out = locals_to_string(&type_stack_array, &locals_array);
-    ASSERT_EQ(out, "locals: [100, 200, 300]");
+    ArrayStringResult out = locals_to_string(&type_stack_array, &locals_array);
+    ASSERT_EQ(out.output, "locals: [100, 200, 300]");
 }
 
 // TEST(TestCase, deserialize) {
