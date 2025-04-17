@@ -10,10 +10,6 @@ const uint32_t WASM_PAGE_SIZE = 0x10000;
 
 extern "C" {
 
-void spdlog_debug() {
-    spdlog::set_level(spdlog::level::debug);
-} 
-
 static FILE* open_image(const char* file, const char* flag) {
     FILE *fp = fopen(file, flag);
     if (fp == NULL) {

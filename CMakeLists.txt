@@ -6,6 +6,7 @@ add_library(libwasmig STATIC
     src/migration.cpp
     src/table.cpp
     src/stack_tables.cpp
+    src/log.cpp
 )
 
 # msgpackの設定
