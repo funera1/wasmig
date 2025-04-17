@@ -41,13 +41,11 @@ ArrayStringResult array32_to_string(std::ostringstream &oss, Array8 *type_stack,
             }
             case 4:
                 error = "Not support S128";
-                spdlog::error(error);
                 oss << "(S128)";
                 break;
             default:
                 error = "Unknown type " + std::to_string(type_stack->contents[i]);
-                spdlog::error(error);
-                oss << "(unknown)";
+                oss << "(Unknown: " << static_cast<int>(type_stack->contents[i]) << ")";
                 break;
         }
     }
@@ -75,7 +73,7 @@ void print_locals(CodePos &pos, Array8 *type_stack, Array32 *locals) {
     if (result.error.empty()) {
         spdlog::debug("{}", result.output);  // spdlogで出力
     } else {
-        spdlog::debug("({}, {}): {}", pos.fidx, pos.offset, result.output);  // spdlogで出力
+        spdlog::error("(fidx={}, offset={}): {}", pos.fidx, pos.offset, result.output);  // spdlogで出力
     }
 }
 
@@ -84,6 +82,6 @@ void print_stack(CodePos &pos, Array8 *type_stack, Array32 *stack) {
     if (result.error.empty()) {
         spdlog::debug("{}", result.output);  // spdlogで出力
     } else {
-        spdlog::debug("({}, {}): {}", pos.fidx, pos.offset, result.output);  // spdlogで出力
+        spdlog::error("(fidx={}, offset={}): {}", pos.fidx, pos.offset, result.output);  // spdlogで出力
     }
 }
