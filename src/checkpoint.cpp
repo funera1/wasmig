@@ -1,6 +1,7 @@
 // src/example.c
 #include "wasmig/migration.h"
 #include "wasmig/stack_tables.h"
+#include "wasmig/utils.h"
 #include <wasmig/internal/debug.hpp>
 #include <spdlog/spdlog.h>
 #include <iostream>
@@ -8,26 +9,7 @@
 #include <cstdint>
 #include <wcrn.h>
 
-const uint32_t WASM_PAGE_SIZE = 0x10000;
-
 extern "C" {
-
-static FILE* open_image(const char* file, const char* flag) {
-    FILE *fp = fopen(file, flag);
-    if (fp == NULL) {
-        spdlog::error("faield to open file: {}", file);
-        return NULL;
-    }
-    return fp;
-}
-
-int is_page_dirty(uint64_t pagemap_entry) {
-    return (pagemap_entry>>62&1) | (pagemap_entry>>63&1);
-}
-
-int is_page_soft_dirty(uint64_t pagemap_entry) {
-    return (pagemap_entry >> 55 & 1);
-}
 
 // TODO: バグってるので修正
 int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
