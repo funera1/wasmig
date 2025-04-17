@@ -69,6 +69,12 @@ void print_type_stack(uint8_t* stack, uint32_t stack_size) {
 }
 
 void print_locals(CodePos &pos, Array8 *type_stack, Array32 *locals) {
+    if (type_stack->size < locals->size) {
+        spdlog::error("(fidx={}, offset={}): type stack size is smaller than locals size", pos.fidx, pos.offset);
+        spdlog::error("type stack size: {}, locals size: {}", type_stack->size, locals->size);
+        return;
+    }
+
     ArrayStringResult result = locals_to_string(type_stack, locals);
     if (result.error.empty()) {
         spdlog::debug("{}", result.output);  // spdlogで出力
@@ -78,6 +84,12 @@ void print_locals(CodePos &pos, Array8 *type_stack, Array32 *locals) {
 }
 
 void print_stack(CodePos &pos, Array8 *type_stack, Array32 *stack) {
+    if (type_stack->size < stack->size) {
+        spdlog::error("(fidx={}, offset={}): type stack size is smaller than locals size", pos.fidx, pos.offset);
+        spdlog::error("type stack size: {}, locals size: {}", type_stack->size, stack->size);
+        return;
+    }
+
     ArrayStringResult result = value_stack_to_string(type_stack, stack);
     if (result.error.empty()) {
         spdlog::debug("{}", result.output);  // spdlogで出力
