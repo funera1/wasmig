@@ -10,7 +10,7 @@ typedef enum {
     I64_CONST,
     F32_CONST,
     F64_CONST,
-    Call,
+    WASMIG_Call,
     Other,
 } Opcode;
 typedef struct stack_table_entry {

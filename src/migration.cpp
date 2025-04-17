@@ -225,7 +225,7 @@ Array8 get_type_stack_v2(uint32_t fidx, uint32_t offset, bool is_call_stack_top)
     int stack_size = table.size;
     if (is_call_stack_top) {
         int opcode = table.data[table.size - 1].opcode;
-        if (opcode == Opcode::Call) stack_size -= table.data[table.size - 1].operand.call_result_type;
+        if (opcode == Opcode::WASMIG_Call) stack_size -= table.data[table.size - 1].operand.call_result_type;
     }
     uint8_t* type_stack = (uint8_t *)malloc(stack_size);
     for (size_t i = 0; i < stack_size; ++i) {
