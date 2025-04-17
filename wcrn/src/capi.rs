@@ -41,6 +41,12 @@ pub struct StackTable {
     pub entries: *const StackTableEntry,
 }
 
+#[repr(C)]
+pub struct Array8 {
+    pub size: usize,
+    pub contents: *const u8,
+}
+
 #[no_mangle]
 pub extern "C" fn wcrn_rust_function() -> i32 {
     // Example function that returns an integer
@@ -54,6 +60,28 @@ pub extern "C" fn wcrn_get_stack_size(fidx: u32, offset: u32) -> usize {
         .expect("failed to get stack size ({fidx}, {offset})")
 }
 
+#[no_mangle]
+pub extern "C" fn wcrn_get_local_types(fidx: u32) -> Array8 {
+    let stack_tables = stack_tables::deserialize_stack_table("./")
+        .expect("failed to deserialize stack table");
+    let locals = stack_tables.get_locals(fidx as usize)
+        .expect("failed to get locals")
+        .into_iter()
+        .map(|ty| ty.size() as u8)
+        .collect::<Vec<_>>();
+    
+    let locals = unsafe {
+        Array8 {
+            size: locals.len(),
+            contents: locals.as_ptr(),
+        }
+    };
+    mem::forget(locals);
+
+    return locals;
+}
+
+// TODO: 関数分割する
 #[no_mangle]
 pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
     let stack_tables = stack_tables::deserialize_stack_table("./")

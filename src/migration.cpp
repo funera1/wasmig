@@ -220,18 +220,36 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
 }
 
 Array8 get_type_stack_v2(uint32_t fidx, uint32_t offset, bool is_return_address) {
-    // deserialize stack table
+    // ローカル変数の型を取得
+    Array8 local_types = wcrn_get_local_types(fidx);
+
+    // スタックテーブルの取得
     StackTable table = wcrn_get_stack_table(fidx, offset);
-    int stack_size = table.size;
-    if (is_return_address) {
-        int opcode = table.data[table.size - 1].opcode;
-        if (opcode == Opcode::WASMIG_Call) stack_size -= table.data[table.size - 1].operand.call_result_type;
+    uint32_t effective_stack_size = table.size;
+
+    // 戻りアドレスなら、最後の命令の戻り型を削る
+    if (is_return_address && table.size > 0) {
+        StackTableEntry last_entry = table.data[table.size - 1];
+        if (last_entry.opcode == Opcode::WASMIG_Call) {
+            effective_stack_size -= last_entry.operand.call_result_type;
+        }
     }
-    uint8_t* type_stack = (uint8_t *)malloc(stack_size);
-    for (size_t i = 0; i < stack_size; ++i) {
-        type_stack[i] = table.data[i].ty;
+
+    // 結合後の型スタック全体のサイズを計算
+    uint32_t total_size = local_types.size + effective_stack_size;
+
+    // 配列を確保
+    uint8_t* type_stack = (uint8_t*)malloc(total_size * sizeof(uint8_t));
+
+    // ローカル型をコピー
+    memcpy(type_stack, local_types.contents, local_types.size * sizeof(uint8_t));
+
+    // スタック型をコピー
+    for (uint32_t i = 0; i < effective_stack_size; ++i) {
+        type_stack[local_types.size + i] = table.data[i].ty;
     }
-    return (Array8){table.size, type_stack};
+
+    return (Array8){ .size = total_size, .contents = type_stack };
 }
 
 

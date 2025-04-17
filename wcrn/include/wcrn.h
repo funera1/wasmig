@@ -15,6 +15,7 @@ int wcrn_rust_function(); // Example function
 size_t wcrn_get_stack_size(uint32_t fidx, uint32_t offset);
 // TODO: deserializeを何回もしないようにする
 StackTable wcrn_get_stack_table(uint32_t fidx, uint32_t offset);
+Array8 wcrn_get_local_types(uint32_t fidx);
 
 
 #ifdef __cplusplus
