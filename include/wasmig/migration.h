@@ -9,38 +9,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-void hello_world();
-
-typedef struct codepos {
-    uint32_t fidx;
-    uint64_t offset;
-} CodePos;
-
-typedef struct array8 {
-    uint32_t size;
-    uint8_t *contents;
-} Array8;
-
-typedef struct array32 {
-    uint32_t size;
-    uint32_t *contents;
-} Array32;
-
-typedef struct labels {
-    uint32_t size;
-    uint32_t *begins;
-    uint32_t *targets;
-    uint32_t *stack_pointers;
-    uint32_t *cell_nums;
-} LabelStack;
-
-typedef struct callstack_entry {
-    CodePos pc;
-    Array32 locals;
-    Array32 value_stack;
-    LabelStack label_stack;
-} CallStackEntry;
+#include <wasmig/utils.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,6 +22,10 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     CodePos *ret_addr, CodePos *cur_addr, Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top);
 int checkpoint_call_stack_size(uint32_t call_stack_size);
 int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack);
+
+Array8 restore_memory();
+CodePos restore_pc();
+CallStackEntry* restore_stack(uint32_t *call_stack_size);
 
 #ifdef __cplusplus
 }
