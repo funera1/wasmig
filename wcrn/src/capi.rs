@@ -14,6 +14,7 @@ pub enum Opcode {
     I64Const,
     F32Const,
     F64Const,
+    Call,
     Other,
 }
 
@@ -24,6 +25,7 @@ union Operand {
     pub i64_const: i64,
     pub f32_const: u32,
     pub f64_const: u64,
+    pub call_result_size: u32,
 }
 
 #[repr(C)]
@@ -67,6 +69,7 @@ pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
                 CompiledOp::I64Const(val) => (Opcode::I64Const, Operand{i64_const: *val}),
                 CompiledOp::F32Const(val) => (Opcode::F32Const, Operand{f32_const: *val}),
                 CompiledOp::F64Const(val) => (Opcode::F64Const, Operand{f64_const: *val}),
+                CompiledOp::Call(val) => (Opcode::Call, Operand{call_result_size: *val}),
                 _ => (Opcode::Other, Operand{local_idx: 0}), // Handle other cases
             };
             StackTableEntry {

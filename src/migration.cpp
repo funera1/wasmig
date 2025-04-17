@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <cstdint>
+#include <wcrn.h>
 
 const uint32_t WASM_PAGE_SIZE = 0x10000;
 
@@ -217,6 +218,21 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
     return type_stack;
 }
 
+Array8 get_type_stack_v2(uint32_t fidx, uint32_t offset, bool is_call_stack_top) {
+    // deserialize stack table
+    StackTable table = wcrn_get_stack_table(fidx, offset);
+    int stack_size = table.size;
+    if (is_call_stack_top) {
+        int opcode = table.data[table.size - 1].opcode;
+        if (opcode == Call) stack_size -= table.data[table.size - 1].operand.call_result_type;
+    }
+    uint8_t* type_stack = (uint8_t *)malloc(stack_size);
+    for (size_t i = 0; i < stack_size; ++i) {
+        type_stack[i] = table.data[i].ty;
+    }
+    return (Array8){table.size, type_stack};
+}
+
 
 // TODO: ポインタわたしじゃなく、参照渡しにする
 int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
@@ -239,16 +255,14 @@ int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx,
     fwrite(&ret_addr->offset, sizeof(uint32_t), 1, fp);
 
     // 型スタック
-    uint32_t type_stack_size;
-    uint8_t* type_stack = get_type_stack(cur_addr->fidx, cur_addr->offset, &type_stack_size, !is_top);
-    fwrite(&type_stack_size, sizeof(uint32_t), 1, fp);
-    fwrite(type_stack, sizeof(uint8_t), type_stack_size, fp);
+    Array8 type_stack = get_type_stack_v2(cur_addr->fidx, cur_addr->offset, !is_top);
+    fwrite(&type_stack.size, sizeof(uint32_t), 1, fp);
+    fwrite(type_stack.contents, sizeof(uint8_t), type_stack.size, fp);
     
     // debug print type stack
-    Array8 type_stack_array = (Array8){type_stack_size, type_stack};
-    print_type_stack(type_stack, type_stack_size);
-    print_locals(*cur_addr, &type_stack_array, locals);
-    print_stack(*cur_addr, &type_stack_array, value_stack);
+    print_type_stack(type_stack.contents, type_stack.size);
+    print_locals(*cur_addr, &type_stack, locals);
+    print_stack(*cur_addr, &type_stack, value_stack);
 
     // 値スタック
     fwrite(locals->contents, sizeof(uint32_t), locals->size, fp);

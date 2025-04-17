@@ -10,6 +10,7 @@ typedef enum {
     I64_CONST,
     F32_CONST,
     F64_CONST,
+    Call,
     Other,
 } Opcode;
 typedef struct stack_table_entry {
@@ -21,6 +22,7 @@ typedef struct stack_table_entry {
         uint64_t i64;
         float f32;
         double f64;
+        uint32_t call_result_type;
     } operand;
 } StackTableEntry;
 
