@@ -219,11 +219,11 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
     return type_stack;
 }
 
-Array8 get_type_stack_v2(uint32_t fidx, uint32_t offset, bool is_call_stack_top) {
+Array8 get_type_stack_v2(uint32_t fidx, uint32_t offset, bool is_return_address) {
     // deserialize stack table
     StackTable table = wcrn_get_stack_table(fidx, offset);
     int stack_size = table.size;
-    if (is_call_stack_top) {
+    if (is_return_address) {
         int opcode = table.data[table.size - 1].opcode;
         if (opcode == Opcode::WASMIG_Call) stack_size -= table.data[table.size - 1].operand.call_result_type;
     }
