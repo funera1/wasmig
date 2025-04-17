@@ -28,6 +28,11 @@ typedef struct array64 {
     uint64_t *contents;
 } Array64;
 
+typedef struct typed_array {
+    Array8 types;
+    Array32 values;
+} TypedArray;
+
 typedef struct labels {
     uint32_t size;
     uint32_t *begins;
@@ -38,6 +43,8 @@ typedef struct labels {
 
 typedef struct callstack_entry {
     CodePos pc;
+    // TypedArray locals;
+    // TypedArray value_stack;
     Array32 locals;
     Array32 value_stack;
     LabelStack label_stack;

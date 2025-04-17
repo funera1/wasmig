@@ -98,18 +98,6 @@ int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
 
     for (int i = 0; i < len; i++) {
         fwrite(&values[i], types[i], 1, fp);
-        // if (types[i] == 1) {
-        //     fwrite(&values[i], sizeof(uint32_t), 1, fp);
-        // }
-        // else if (types[i] == 2) {
-        //     fwrite(&values[i], sizeof(uint32_t), 2, fp);
-        // }
-        // else if (types[i] == 4) {
-        //     fwrite(&values[i], sizeof(uint32_t), 4, fp);
-        // }
-        // else {
-        //     printf("Error: invalid type\n");
-        // }
     }
 
     fclose(fp);

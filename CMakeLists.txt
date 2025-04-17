@@ -20,9 +20,20 @@ target_link_libraries(libwasmig PUBLIC msgpack-cxx)
 add_subdirectory(third_party/spdlog)
 target_link_libraries(libwasmig PUBLIC spdlog::spdlog)
 
-# spdlogの設定
+# wcrnの設定
 add_subdirectory(wcrn)
 target_link_libraries(libwasmig PUBLIC wcrn)
+
+# protobufの設定
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+link_directories(${GTEST_LIBRARIES})
+# add_subdirectory(third_party/protobuf)
+add_subdirectory(third_party/protobuf-c/build-cmake)
+
+# protoの設定
+add_subdirectory(proto)
+target_link_libraries(libwasmig PUBLIC proto_lib)
 
 # ヘッダーファイルの公開ディレクトリを設定
 target_include_directories(libwasmig 
@@ -34,7 +45,9 @@ install(TARGETS libwasmig
     ARCHIVE DESTINATION lib
 )
 install(DIRECTORY include/ DESTINATION include)
-
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+link_directories(${GTEST_LIBRARIES})
 # tests
 option(ENABLE_TESTS "Enable unit tests" ON)
 if (ENABLE_TESTS)
