@@ -218,11 +218,16 @@ uint8_t* get_type_stack(uint32_t fidx, uint32_t offset, uint32_t* type_stack_siz
 }
 
 
+// TODO: ポインタわたしじゃなく、参照渡しにする
 int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
-    CodePos *ret_addr, CodePos *cur_addr, Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
+    CodePos *cur_addr, CodePos *ret_addr,Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
     char file[32];
     // TODO: stack_%d.imgに変更する
     snprintf(file, sizeof(file), "stack%d.img", call_stack_id);
+
+    spdlog::info("entry_fidx: {}", entry_fidx);
+    spdlog::info("cur_addr: (fidx={}, offset={})", cur_addr->fidx, cur_addr->offset);
+    spdlog::info("ret_addr: (fidx={}, offset={})", ret_addr->fidx, ret_addr->offset);
 
     FILE *fp = open_image(file, "wb");
     if (fp == NULL) {
