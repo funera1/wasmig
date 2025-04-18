@@ -156,16 +156,32 @@ CallStack deserialize_call_stack(Array8 *buf) {
     return ret;
 }
 
+void print_typed_array(TypedArray *typed_array) {
+    std::string types_str = "types: ";
+    for (int j = 0; j < typed_array->types.size; ++j) {
+        types_str += std::to_string(typed_array->types.contents[j]) + " ";
+    }
+    spdlog::debug("  {}", types_str);
+
+    std::string values_str = "values: ";
+    for (int j = 0; j < typed_array->values.size; ++j) {
+        values_str += std::to_string(typed_array->values.contents[j]) + " ";
+    }
+    spdlog::debug("  {}", values_str);
+}
+
 void print_call_stack_entry(CallStackEntry *entry) {
     spdlog::debug("CallStackEntry: fidx={}, offset={}", entry->pc.fidx, entry->pc.offset);
     spdlog::debug("locals: ");
-    for (int j = 0; j < entry->locals.values.size; ++j) {
-        spdlog::debug("  {}", entry->locals.values.contents[j]);
-    }
+    print_typed_array(&entry->locals);
+    // for (int j = 0; j < entry->locals.values.size; ++j) {
+    //     spdlog::debug("  {}", entry->locals.values.contents[j]);
+    // }
     spdlog::debug("value_stack: ");
-    for (int j = 0; j < entry->value_stack.values.size; ++j) {
-        spdlog::debug("  {}", entry->value_stack.values.contents[j]);
-    }
+    print_typed_array(&entry->value_stack);
+    // for (int j = 0; j < entry->value_stack.values.size; ++j) {
+    //     spdlog::debug("  {}", entry->value_stack.values.contents[j]);
+    // }
 }
 void print_call_stack(CallStack *cs) {
     spdlog::debug("call_stack size: {}", cs->size);
