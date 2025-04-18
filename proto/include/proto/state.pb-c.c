@@ -467,7 +467,7 @@ static const ProtobufCFieldDescriptor state__array32__field_descriptors[1] =
     offsetof(State__Array32, contents),
     NULL,
     NULL,
-    PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
+    0 | PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
@@ -505,7 +505,7 @@ static const ProtobufCFieldDescriptor state__array64__field_descriptors[1] =
     offsetof(State__Array64, contents),
     NULL,
     NULL,
-    PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
+    0 | PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
@@ -594,7 +594,7 @@ static const ProtobufCFieldDescriptor state__label_stack__field_descriptors[4] =
     offsetof(State__LabelStack, begins),
     NULL,
     NULL,
-    PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
+    0 | PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
@@ -606,7 +606,7 @@ static const ProtobufCFieldDescriptor state__label_stack__field_descriptors[4] =
     offsetof(State__LabelStack, targets),
     NULL,
     NULL,
-    PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
+    0 | PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
@@ -618,7 +618,7 @@ static const ProtobufCFieldDescriptor state__label_stack__field_descriptors[4] =
     offsetof(State__LabelStack, stack_pointers),
     NULL,
     NULL,
-    PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
+    0 | PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
@@ -630,7 +630,7 @@ static const ProtobufCFieldDescriptor state__label_stack__field_descriptors[4] =
     offsetof(State__LabelStack, cell_nums),
     NULL,
     NULL,
-    PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
+    0 | PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };

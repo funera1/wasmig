@@ -87,12 +87,64 @@ CodePos* to_code_pos(State__CodePos *code_pos_proto) {
     return code_pos;
 }
 
+State__LabelStack* from_label_stack(LabelStack *label_stack) {
+    State__LabelStack* label_stack_proto = (State__LabelStack *)malloc(sizeof(State__LabelStack));
+    state__label_stack__init(label_stack_proto);
+
+    size_t size = label_stack->size;
+    size_t bytes = sizeof(uint32_t) * size;
+
+    // begins
+    label_stack_proto->n_begins = size;
+    label_stack_proto->begins = (uint32_t *)malloc(bytes);
+    memcpy(label_stack_proto->begins, label_stack->begins, bytes);
+
+    // targets
+    label_stack_proto->n_targets = size;
+    label_stack_proto->targets = (uint32_t *)malloc(bytes);
+    memcpy(label_stack_proto->targets, label_stack->targets, bytes);
+
+    // stack pointers
+    label_stack_proto->n_stack_pointers = size;
+    label_stack_proto->stack_pointers = (uint32_t *)malloc(bytes);
+    memcpy(label_stack_proto->stack_pointers, label_stack->stack_pointers, bytes);
+
+    // cell nums
+    label_stack_proto->n_cell_nums = size;
+    label_stack_proto->cell_nums = (uint32_t *)malloc(bytes);
+    memcpy(label_stack_proto->cell_nums, label_stack->cell_nums, bytes);
+    
+    return label_stack_proto;
+}
+
+LabelStack* to_label_stack(State__LabelStack *label_stack_proto) {
+    LabelStack *label_stack = (LabelStack *)malloc(sizeof(LabelStack));
+    label_stack->size = label_stack_proto->n_begins;
+    size_t bytes = label_stack->size * sizeof(uint32_t);
+
+    // begins
+    label_stack->begins = (uint32_t *)malloc(bytes);
+    memcpy(label_stack->begins, label_stack_proto->begins, bytes);
+    // targets
+    label_stack->targets = (uint32_t *)malloc(bytes);
+    memcpy(label_stack->targets, label_stack_proto->targets, bytes);
+    // stack pointers
+    label_stack->begins = (uint32_t *)malloc(bytes);
+    memcpy(label_stack->stack_pointers, label_stack_proto->stack_pointers, bytes);
+    // cell nums
+    label_stack->begins = (uint32_t *)malloc(bytes);
+    memcpy(label_stack->cell_nums, label_stack_proto->cell_nums, bytes);
+    
+    return label_stack;
+}
+
 State__CallStackEntry* from_call_stack_entry(CallStackEntry *entry) {
     State__CallStackEntry* entry_proto = (State__CallStackEntry*)malloc(sizeof(State__CallStackEntry));
     state__call_stack_entry__init(entry_proto);
     entry_proto->pc = from_code_pos(&entry->pc);
     entry_proto->locals = from_typed_array(&entry->locals);
     entry_proto->value_stack = from_typed_array(&entry->value_stack);
+    entry_proto->label_stack = from_label_stack(&entry->label_stack);
     return entry_proto;
 }
 CallStackEntry* to_call_stack_entry(State__CallStackEntry *entry_proto) {
@@ -100,6 +152,7 @@ CallStackEntry* to_call_stack_entry(State__CallStackEntry *entry_proto) {
     entry->pc = *to_code_pos(entry_proto->pc);
     entry->locals = *to_typed_array(entry_proto->locals);
     entry->value_stack = *to_typed_array(entry_proto->value_stack);
+    entry->label_stack = *to_label_stack(entry_proto->label_stack);
     return entry;
 }
 
