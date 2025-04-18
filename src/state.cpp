@@ -118,7 +118,7 @@ CallStack to_call_stack(State__CallStack *call_stack_proto) {
     call_stack.size = call_stack_proto->n_entries;
     call_stack.entries = (CallStackEntry*)malloc(sizeof(CallStackEntry) * call_stack.size);
     for (uint32_t i = 0; i < call_stack.size; ++i) {
-        call_stack.entries[i] = to_call_stack_entry(call_stack_proto->entries[i]);
+        call_stack.entries[i] = *to_call_stack_entry(call_stack_proto->entries[i]);
     }
     return call_stack;
 }
