@@ -97,9 +97,9 @@ State__CallStackEntry* from_call_stack_entry(CallStackEntry *entry) {
 }
 CallStackEntry* to_call_stack_entry(State__CallStackEntry *entry_proto) {
     CallStackEntry *entry = (CallStackEntry *)malloc(sizeof(CallStackEntry));
-    entry->pc = to_code_pos(entry_proto->pc);
-    entry->locals = to_typed_array(entry_proto->locals);
-    entry->value_stack = to_typed_array(entry_proto->value_stack);
+    entry->pc = *to_code_pos(entry_proto->pc);
+    entry->locals = *to_typed_array(entry_proto->locals);
+    entry->value_stack = *to_typed_array(entry_proto->value_stack);
     return entry;
 }
 
