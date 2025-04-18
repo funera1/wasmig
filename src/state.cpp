@@ -17,11 +17,11 @@ State__Array8* from_array8(Array8 *array) {
     return array_proto;
 }
 
-Array8 to_array8(State__Array8 *array_proto) {
-    Array8 array;
-    array.size = array_proto->contents.len;
-    array.contents = (uint8_t*)malloc(sizeof(uint8_t) * array.size);
-    memcpy(array.contents, array_proto->contents.data, sizeof(uint8_t) * array.size);
+Array8* to_array8(State__Array8 *array_proto) {
+    Array8* array = (Array8*)malloc(sizeof(Array8));
+    array->size = array_proto->contents.len;
+    array->contents = (uint8_t*)malloc(array->size);
+    memcpy(array->contents, array_proto->contents.data, array->size);
     return array;
 }
 
@@ -34,11 +34,11 @@ State__Array32* from_array32(Array32 *array) {
     return array_proto;
 }
 
-Array32 to_array32(State__Array32 *array_proto) {
-    Array32 array;
-    array.size = array_proto->n_contents;
-    array.contents = (uint32_t*)malloc(array.size);
-    memcpy(array.contents, array_proto->contents, array.size);
+Array32* to_array32(State__Array32 *array_proto) {
+    Array32* array = (Array32*)malloc(sizeof(Array32));
+    array->size = array_proto->n_contents;
+    array->contents = (uint32_t*)malloc(array->size);
+    memcpy(array->contents, array_proto->contents, array->size);
     return array;
 }
 
@@ -50,11 +50,11 @@ State__Array64* from_array64(Array64 *array) {
     memcpy(array_proto->contents, array->contents, array->size);
     return array_proto;
 }
-Array64 to_array64(State__Array64 *array_proto) {
-    Array64 array;
-    array.size = array_proto->n_contents;
-    array.contents = (uint64_t*)malloc(array.size);
-    memcpy(array.contents, array_proto->contents, array.size);
+Array64* to_array64(State__Array64 *array_proto) {
+    Array64* array = (Array64*)malloc(sizeof(Array64));
+    array->size = array_proto->n_contents;
+    array->contents = (uint64_t*)malloc(array->size);
+    memcpy(array->contents, array_proto->contents, array->size);
     return array;
 }
 
@@ -66,10 +66,10 @@ State__TypedArray* from_typed_array(TypedArray *typed_array) {
     return typed_array_proto;
 }
 
-TypedArray to_typed_array(State__TypedArray *typed_array_proto) {
-    TypedArray typed_array;
-    typed_array.types = to_array8(typed_array_proto->types);
-    typed_array.values = to_array32(typed_array_proto->values);
+TypedArray* to_typed_array(State__TypedArray *typed_array_proto) {
+    TypedArray* typed_array = (TypedArray*)malloc(sizeof(TypedArray));
+    typed_array->types = *to_array8(typed_array_proto->types);
+    typed_array->values = *to_array32(typed_array_proto->values);
     return typed_array;
 }
 
@@ -80,10 +80,10 @@ State__CodePos* from_code_pos(CodePos *code_pos) {
     code_pos_proto->offset = code_pos->offset;
     return code_pos_proto;
 }
-CodePos to_code_pos(State__CodePos *code_pos_proto) {
-    CodePos code_pos;
-    code_pos.fidx = code_pos_proto->fidx;
-    code_pos.offset = code_pos_proto->offset;
+CodePos* to_code_pos(State__CodePos *code_pos_proto) {
+    CodePos *code_pos = (CodePos*)malloc(sizeof(CodePos));
+    code_pos->fidx = code_pos_proto->fidx;
+    code_pos->offset = code_pos_proto->offset;
     return code_pos;
 }
 
@@ -95,11 +95,11 @@ State__CallStackEntry* from_call_stack_entry(CallStackEntry *entry) {
     entry_proto->value_stack = from_typed_array(&entry->value_stack);
     return entry_proto;
 }
-CallStackEntry to_call_stack_entry(State__CallStackEntry *entry_proto) {
-    CallStackEntry entry;
-    entry.pc = to_code_pos(entry_proto->pc);
-    entry.locals = to_typed_array(entry_proto->locals);
-    entry.value_stack = to_typed_array(entry_proto->value_stack);
+CallStackEntry* to_call_stack_entry(State__CallStackEntry *entry_proto) {
+    CallStackEntry *entry = (CallStackEntry *)malloc(sizeof(CallStackEntry));
+    entry->pc = to_code_pos(entry_proto->pc);
+    entry->locals = to_typed_array(entry_proto->locals);
+    entry->value_stack = to_typed_array(entry_proto->value_stack);
     return entry;
 }
 
@@ -136,7 +136,7 @@ Array8 serialize_array32(Array32 *array) {
 
 Array32 deserialize_array32(Array8 *buf) {
     State__Array32 *array_proto = state__array32__unpack(NULL, buf->size, buf->contents);
-    Array32 ret = to_array32(array_proto);
+    Array32 ret = *to_array32(array_proto);
     state__array32__free_unpacked(array_proto, NULL);
     return ret;
 }
