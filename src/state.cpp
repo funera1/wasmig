@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <cstdio>
 
+extern "C" {
+
 // TODO: 各構造体にfree関数を用意
 State__Array8* from_array8(Array8 *array) {
     State__Array8* array_proto = (State__Array8*)malloc(sizeof(State__Array8));
@@ -189,4 +191,6 @@ void print_call_stack(CallStack *cs) {
         CallStackEntry *entry = &cs->entries[i];
         print_call_stack_entry(entry);
     }
+}
+
 }
