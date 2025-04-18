@@ -40,10 +40,8 @@ typedef struct labels {
 
 typedef struct callstack_entry {
     CodePos pc;
-    // TypedArray locals;
-    // TypedArray value_stack;
-    Array32 locals;
-    Array32 value_stack;
+    TypedArray locals;
+    TypedArray value_stack;
     LabelStack label_stack;
 } CallStackEntry;
 
@@ -56,5 +54,7 @@ typedef struct callstack {
 int serialize_array32(FILE *fp, Array32 *array);
 Array32 deserialize_array32(FILE *fp);
 
+int serialize_call_stack(FILE *fp, CallStack *cs);
+CallStack deserialize_call_stack(FILE *fp);
 
 #endif

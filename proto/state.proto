@@ -10,7 +10,7 @@ message CodePos {
 
 // Array8 に対応
 message Array8 {
-  repeated uint32 contents = 1; // uint8 は bytes でもいいが、扱いやすさを優先して repeated uint32 に
+  bytes contents = 1; // uint8 は bytes でもいいが、扱いやすさを優先して repeated uint32 に
 }
 
 // Array32 に対応
