@@ -3,7 +3,7 @@ set(PROTO_FILES
     state.proto
 )
 set(PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(PROTO_OUT_DIR ${CMAKE_SOURCE_DIR}/include/wasmig/proto)
+set(PROTO_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/proto)
 message(STATUS "PROTO_DIR: ${PROTO_DIR}")
 message(STATUS "PROTO_OUT_DIR: ${PROTO_OUT_DIR}")
 

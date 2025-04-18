@@ -4,7 +4,7 @@
 #include "wasmig/utils.h"
 #include "wasmig/state.h"
 #include "wasmig/internal/debug.hpp"
-#include "wasmig/proto/state.pb-c.h"
+#include "proto/state.pb-c.h"
 #include <spdlog/spdlog.h>
 #include <iostream>
 #include <string>

@@ -1,6 +1,6 @@
 #include "wasmig/state.h"
 #include "wasmig/utils.h"
-#include "wasmig/proto/state.pb-c.h"
+#include "proto/state.pb-c.h"
 #include "spdlog/spdlog.h"
 #include <unistd.h>
 #include <cstdio>
