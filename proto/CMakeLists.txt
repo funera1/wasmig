@@ -3,6 +3,9 @@ set(PROTO_FILES
     state.proto
 )
 set(PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(PROTO_OUT_DIR ${CMAKE_SOURCE_DIR}/include/wasmig/proto)
+message(STATUS "PROTO_DIR: ${PROTO_DIR}")
+message(STATUS "PROTO_OUT_DIR: ${PROTO_OUT_DIR}")
 
 # protobuf-cのコンパイラを指定
 # set(PROTOC_EXECUTABLE /usr/local/bin/protoc)
@@ -15,16 +18,16 @@ find_program(PROTOC_GEN_C_EXECUTABLE protoc-gen-c REQUIRED)
 foreach(PROTO_FILE ${PROTO_FILES})
     get_filename_component(PROTO_NAME ${PROTO_FILE} NAME_WE)
     add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PROTO_NAME}.pb-c.c ${CMAKE_CURRENT_BINARY_DIR}/${PROTO_NAME}.pb-c.h
+        OUTPUT ${PROTO_OUT_DIR}/${PROTO_NAME}.pb-c.c ${PROTO_OUT_DIR}/${PROTO_NAME}.pb-c.h
         COMMAND ${PROTOC_EXECUTABLE}
         ARGS --proto_path=${PROTO_DIR}
              --plugin=protoc-gen-c=${PROTOC_GEN_C_EXECUTABLE}
-             --c_out=${CMAKE_CURRENT_BINARY_DIR}
+             --c_out=${PROTO_OUT_DIR}
              ${PROTO_FILE}
-        WORKING_DIRECTORY ${PROTO_DIR}  # ここがポイント！
+        WORKING_DIRECTORY ${PROTO_DIR}
         DEPENDS ${PROTO_DIR}/${PROTO_FILE}
     )
-    list(APPEND PROTO_SRC_FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROTO_NAME}.pb-c.c)
+    list(APPEND PROTO_SRC_FILES ${PROTO_OUT_DIR}/${PROTO_NAME}.pb-c.c)
 endforeach()
 
 # protobuf-cのライブラリをリンク
