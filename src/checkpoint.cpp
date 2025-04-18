@@ -75,14 +75,15 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
 }
 
 int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
-    // FILE *mem_fp = open_image("memory.img", "wb");
+    FILE *mem_fp = open_image("memory.img", "wb");
     FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
-    if (mem_size_fp == NULL) {
+    if (mem_fp == NULL || mem_size_fp == NULL) {
+        spdlog::error("failed to open memory file");
         return -1;
     }
 
-    write_dirty_memory(memory, cur_page);
-    // fwrite(memory, sizeof(uint8_t), WASM_PAGE_SIZE * cur_page, mem_fp);
+    // write_dirty_memory(memory, cur_page);
+    fwrite(memory, sizeof(uint8_t), WASM_PAGE_SIZE * cur_page, mem_fp);
     fwrite(&cur_page, sizeof(uint32_t), 1, mem_size_fp);
 
     // fclose(mem_fp);

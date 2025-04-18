@@ -9,7 +9,7 @@ void restore_dirty_memory(uint8_t *memory, FILE* memory_fp) {
         uint32_t offset;
         uint32_t len;
         len = fread(&offset, sizeof(uint32_t), 1, memory_fp);
-        if (len == 0) break;
+        if (len == 0) continue;
         len = fread(memory, PAGE_SIZE, 1, memory_fp);
     }
 }
@@ -28,7 +28,8 @@ Array8 restore_memory() {
     
     // restore memory
     uint8_t* memory = (uint8_t*)malloc(WASM_PAGE_SIZE * page_count);
-    restore_dirty_memory(memory, memory_fp);
+    // restore_dirty_memory(memory, memory_fp);
+    fread(memory, WASM_PAGE_SIZE, page_count, memory_fp);
     
     return Array8{.size = WASM_PAGE_SIZE*page_count, .contents = memory};
 }
