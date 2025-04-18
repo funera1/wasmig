@@ -87,7 +87,7 @@ pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
     let stack_tables = stack_tables::deserialize_stack_table("./")
         .expect("failed to deserialize stack table ({fidx}, {offset})");
     let stack = stack_tables.get_stack(fidx as usize, offset)
-        .expect("failed to get stack");
+        .expect("failed to get stack at ({fidx}, {offset})");
     let size = stack.len();
     let entries = stack.iter()
         .map(|(op, ty)| {
