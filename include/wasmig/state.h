@@ -2,7 +2,6 @@
 #define WASMIG_STATE_H
 
 #include <unistd.h>
-#include <cstdio>
 #include <stdint.h>
 #include <wasmig/proto/state.pb-c.h>
 

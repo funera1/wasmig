@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <cstdio>
+#include <stdio.h>
 
 const uint32_t WASM_PAGE_SIZE = 0x10000;
 
