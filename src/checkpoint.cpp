@@ -326,6 +326,7 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
         CodePos *cur_pos = &call_stack[i].pc;
         Array32 *locals = &call_stack[i].locals;
         Array32 *value_stack = &call_stack[i].value_stack;
+        spdlog::debug("checkpoint stack: (fidx={}, offset={})", cur_pos->fidx, cur_pos->offset);
 
         // 型スタック
         Array8 locals_types = wcrn_get_local_types(cur_pos->fidx);
