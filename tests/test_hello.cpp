@@ -36,6 +36,31 @@ TEST(TestCase, locals_to_string) {
     ASSERT_EQ(out.output, "locals: [100, 200, 300]");
 }
 
+TEST(TestCase, protobuf_array32) {
+    spdlog::set_level(spdlog::level::info);
+    spdlog::info("serialize test");
+
+    // array32: [1, 2, 3]
+    Array32 array;
+    array.size = 3;
+    array.contents = (uint32_t*)malloc(sizeof(uint32_t) * array.size);
+    array.contents[0] = 1;
+    array.contents[1] = 2;
+    array.contents[2] = 3;
+
+    // serialize
+    int ret = serialize_array32(&array);
+    
+    // deserialize
+    Array32 array2 = deserialize_array32();
+    ASSERT_EQ(array2.size, 3);
+    ASSERT_EQ(array2.contents[0], 1);
+    ASSERT_EQ(array2.contents[1], 2);
+    ASSERT_EQ(array2.contents[2], 3);
+
+    free(array.contents);
+}
+
 // TEST(TestCase, deserialize) {
 //     spdlog::set_level(spdlog::level::info);
 //     spdlog::info("deserialize test");
