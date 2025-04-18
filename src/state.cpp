@@ -125,15 +125,19 @@ LabelStack* to_label_stack(State__LabelStack *label_stack_proto) {
     // begins
     label_stack->begins = (uint32_t *)malloc(bytes);
     memcpy(label_stack->begins, label_stack_proto->begins, bytes);
+    spdlog::info("memcpy begins");
     // targets
     label_stack->targets = (uint32_t *)malloc(bytes);
     memcpy(label_stack->targets, label_stack_proto->targets, bytes);
+    spdlog::info("memcpy targets");
     // stack pointers
-    label_stack->begins = (uint32_t *)malloc(bytes);
+    label_stack->stack_pointers = (uint32_t *)malloc(bytes);
     memcpy(label_stack->stack_pointers, label_stack_proto->stack_pointers, bytes);
+    spdlog::info("memcpy stackpointers");
     // cell nums
-    label_stack->begins = (uint32_t *)malloc(bytes);
+    label_stack->cell_nums = (uint32_t *)malloc(bytes);
     memcpy(label_stack->cell_nums, label_stack_proto->cell_nums, bytes);
+    spdlog::info("memcpy cell nums");
     
     return label_stack;
 }
