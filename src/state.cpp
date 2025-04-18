@@ -156,3 +156,20 @@ CallStack deserialize_call_stack(Array8 *buf) {
     return ret;
 }
 
+void print_call_stack_entry(CallStackEntry *entry) {
+    spdlog::debug("CallStackEntry: fidx={}, offset={}", entry->pc.fidx, entry->pc.offset);
+    spdlog::debug("locals: ");
+    for (int j = 0; j < entry->locals.values.size; ++j) {
+        spdlog::debug("  {}", entry->locals.values.contents[j]);
+    }
+    spdlog::debug("value_stack: ");
+    for (int j = 0; j < entry->value_stack.values.size; ++j) {
+        spdlog::debug("  {}", entry->value_stack.values.contents[j]);
+    }
+}
+void print_call_stack(CallStack *cs) {
+    for (int i = 0; i < cs->size; ++i) {
+        CallStackEntry *entry = &cs->entries[i];
+        print_call_stack_entry(entry);
+    }
+}

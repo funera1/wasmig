@@ -62,5 +62,6 @@ Array32 deserialize_array32(Array8 *buf);
 Array8 serialize_call_stack(CallStack *cs);
 CallStack deserialize_call_stack(Array8 *buf);
 
+void print_call_stack(CallStack *cs);
 
 #endif
