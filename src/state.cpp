@@ -253,28 +253,29 @@ void print_label_stack(LabelStack* label_stack) {
     spdlog::debug("  size: {}", size);
     
     // begins
-    std::string str = "  begins: ";
+    std::string str;
+    str = "  begins: ";
     for (int j = 0; j < size; ++j) {
         str += std::to_string(label_stack->begins[j]) + " ";
     }
     spdlog::debug("  {}", str);
 
     // targets
-    std::string str = "  targets: ";
+    str = "  targets: ";
     for (int j = 0; j < size; ++j) {
         str += std::to_string(label_stack->targets[j]) + " ";
     }
     spdlog::debug("  {}", str);
 
     // stack_pointers
-    std::string str = "  stack_pointers: ";
+    str = "  stack_pointers: ";
     for (int j = 0; j < size; ++j) {
         str += std::to_string(label_stack->stack_pointers[j]) + " ";
     }
     spdlog::debug("  {}", str);
 
     // cell nums
-    std::string str = "  cell_nums: ";
+    str = "  cell_nums: ";
     for (int j = 0; j < size; ++j) {
         str += std::to_string(label_stack->cell_nums[j]) + " ";
     }
