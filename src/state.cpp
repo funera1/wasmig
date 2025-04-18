@@ -227,8 +227,21 @@ void print_typed_array(TypedArray *typed_array) {
     spdlog::debug("  {}", types_str);
 
     std::string values_str = "values: ";
-    for (int j = 0; j < typed_array->values.size; ++j) {
-        values_str += std::to_string(typed_array->values.contents[j]) + " ";
+    for (int j = 0; j < typed_array->types.size; ++j) {
+        uint8_t ty = typed_array->types.contents[j];
+        switch (ty) {
+            case 1:
+                uint32_t value = typed_array->values.contents[j];
+                values_str += std::to_string(value) + " ";
+                break;
+            case 2:
+                uint32_t high = typed_array->values.contents[j];
+                uint32_t low = typed_array->values.contents[j+1];
+                uint64_t value = ((uint64_t)high << 32) | low;
+                values_str += std::to_string(value) + " ";
+                j += 1;
+                break;
+        }
     }
     spdlog::debug("  {}", values_str);
 }
