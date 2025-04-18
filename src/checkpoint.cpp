@@ -360,7 +360,7 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
     }
     uint32_t len = serialized_call_stack.size;
     uint8_t *buf = serialized_call_stack.contents;
-    fwrite(buf, sizeof(uint8_t), len, fp);
+    fwrite(buf, 1, len, fp);
     fclose(fp);
     
             
