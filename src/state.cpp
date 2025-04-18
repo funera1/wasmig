@@ -125,11 +125,11 @@ CallStack to_call_stack(State__CallStack *call_stack_proto) {
 
 Array8 serialize_array32(Array32 *array) {
     State__Array32 *array_proto = from_array32(array);
-    size_t size = state__array32__get_packed_size(array_proto);
+    uint32_t size = state__array32__get_packed_size(array_proto);
     uint8_t *buf = (uint8_t*)malloc(size);
-    uint32_t len = state__array32__pack(array_proto, buf);
+    state__array32__pack(array_proto, buf);
     return Array8 {
-        .size = len,
+        .size = size,
         .contents = buf
     };
 }
@@ -143,11 +143,11 @@ Array32 deserialize_array32(Array8 *buf) {
 
 Array8 serialize_call_stack(CallStack *cs) {
     State__CallStack *call_stack_proto = from_call_stack(cs);
-    size_t size = state__call_stack__get_packed_size(call_stack_proto);
+    uint32_t size = state__call_stack__get_packed_size(call_stack_proto);
     uint8_t *buf = (uint8_t*)malloc(size);
-    uint32_t len = state__call_stack__pack(call_stack_proto, buf);
+    state__call_stack__pack(call_stack_proto, buf);
     return Array8 {
-        .size = len,
+        .size = size,
         .contents = buf
     };
 }
