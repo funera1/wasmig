@@ -50,14 +50,10 @@ TEST(TestCase, protobuf_array32) {
     array.contents[2] = 3;
 
     // serialize
-    FILE *w = fopen("array32.img", "wb");
-    int ret = serialize_array32(w, &array);
-    fclose(w);
+    Array8 ret = serialize_array32(&array);
     
     // deserialize
-    FILE *r = fopen("array32.img", "rb");
-    Array32 array2 = deserialize_array32(r);
-    fclose(r);
+    Array32 array2 = deserialize_array32(&ret);
     ASSERT_EQ(array2.size, 3);
     ASSERT_EQ(array2.contents[0], 1);
     ASSERT_EQ(array2.contents[1], 2);

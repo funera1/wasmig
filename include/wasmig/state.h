@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <cstdio>
 #include <stdint.h>
+#include <wasmig/proto/state.pb-c.h>
 
 typedef struct codepos {
     uint32_t fidx;
@@ -38,6 +39,13 @@ typedef struct labels {
     uint32_t *cell_nums;
 } LabelStack;
 
+typedef struct base_callstack_entry {
+    CodePos pc;
+    Array32 locals;
+    Array32 value_stack;
+    LabelStack label_stack;
+} BaseCallStackEntry;
+
 typedef struct callstack_entry {
     CodePos pc;
     TypedArray locals;
@@ -51,10 +59,24 @@ typedef struct callstack {
 } CallStack;
 
 
-int serialize_array32(FILE *fp, Array32 *array);
-Array32 deserialize_array32(FILE *fp);
+Array8 serialize_array32(Array32 *array);
+Array32 deserialize_array32(Array8 *buf);
+Array8 serialize_call_stack(CallStack *cs);
+CallStack deserialize_call_stack(Array8 *buf);
 
-int serialize_call_stack(FILE *fp, CallStack *cs);
-CallStack deserialize_call_stack(FILE *fp);
+State__Array8* from_array8(Array8 *array);
+Array8 to_array8(State__Array8 *array_proto);
+State__Array32* from_array32(Array32 *array);
+Array32 to_array32(State__Array32 *array_proto);
+State__Array64* from_array64(Array64 *array);
+Array64 to_array64(State__Array64 *array_proto);
+State__TypedArray* from_typed_array(TypedArray *typed_array);
+TypedArray to_typed_array(State__TypedArray *typed_array_proto);
+State__CodePos* from_code_pos(CodePos *code_pos);
+CodePos to_code_pos(State__CodePos *code_pos_proto);
+State__CallStackEntry* from_call_stack_entry(CallStackEntry *entry);
+CallStackEntry to_call_stack_entry(State__CallStackEntry *entry_proto);
+State__CallStack* from_call_stack(CallStack *call_stack);
+CallStack to_call_stack(State__CallStack *call_stack_proto);
 
 #endif

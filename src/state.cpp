@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <cstdio>
 
+// TODO: 各構造体にfree関数を用意
 State__Array8* from_array8(Array8 *array) {
     State__Array8* array_proto = (State__Array8*)malloc(sizeof(State__Array8));
     state__array8__init(array_proto);
@@ -36,6 +37,22 @@ Array32 to_array32(State__Array32 *array_proto) {
     array.size = array_proto->n_contents;
     array.contents = (uint32_t*)malloc(sizeof(uint32_t) * array.size);
     memcpy(array.contents, array_proto->contents, sizeof(uint32_t) * array.size);
+    return array;
+}
+
+State__Array64* from_array64(Array64 *array) {
+    State__Array64* array_proto = (State__Array64*)malloc(sizeof(State__Array64));
+    state__array64__init(array_proto);
+    array_proto->n_contents = array->size;
+    array_proto->contents = (uint64_t*)malloc(sizeof(uint64_t) * array->size);
+    memcpy(array_proto->contents, array->contents, sizeof(uint64_t) * array->size);
+    return array_proto;
+}
+Array64 to_array64(State__Array64 *array_proto) {
+    Array64 array;
+    array.size = array_proto->n_contents;
+    array.contents = (uint64_t*)malloc(sizeof(uint64_t) * array.size);
+    memcpy(array.contents, array_proto->contents, sizeof(uint64_t) * array.size);
     return array;
 }
 
@@ -104,124 +121,38 @@ CallStack to_call_stack(State__CallStack *call_stack_proto) {
     return call_stack;
 }
 
-int serialize_array32(FILE *fp, Array32 *array) {
-    if (fp == NULL) {
-        spdlog::error("failed to open array file");
-        return -1;
-    }
-    
+Array8 serialize_array32(Array32 *array) {
     State__Array32 *array_proto = from_array32(array);
-
-    // packed array32 and write to file
     size_t size = state__array32__get_packed_size(array_proto);
     uint8_t *buf = (uint8_t*)malloc(size);
-    size_t len = state__array32__pack(array_proto, buf);
-    spdlog::info("packed array size: {}", len);
-    fwrite(buf, sizeof(uint8_t), len, fp);
-    spdlog::info("write array to file");
-    
-    // free memory
-    free(buf);
-    spdlog::info("free buf");
-    free(array_proto->contents);
-    spdlog::info("free array contents");
-    free(array_proto);
-    spdlog::info("free array proto");
-    return 0;
+    uint32_t len = state__array32__pack(array_proto, buf);
+    return Array8 {
+        .size = len,
+        .contents = buf
+    };
 }
 
-Array32 deserialize_array32(FILE *fp) {
-    if (!fp) {
-        spdlog::error("failed to open file");
-        return (Array32){0, NULL};
-    }
-
-    fseek(fp, 0, SEEK_END);
-    size_t len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    uint8_t *buf = (uint8_t*)malloc(len);
-    fread(buf, sizeof(uint8_t), len, fp);
-
-    State__Array32 *array_proto;
-    array_proto = state__array32__unpack(NULL, len, buf);
-    Array32 array;
-    array.size = array_proto->n_contents;
-    array.contents = (uint32_t*)malloc(sizeof(uint32_t) * array.size);
-    memcpy(array.contents, array_proto->contents, sizeof(uint32_t) * array.size);
-
-    free(buf);
+Array32 deserialize_array32(Array8 *buf) {
+    State__Array32 *array_proto = state__array32__unpack(NULL, buf->size, buf->contents);
+    Array32 ret = to_array32(array_proto);
     state__array32__free_unpacked(array_proto, NULL);
-    
-    return array;
+    return ret;
 }
 
-
-int serialize_call_stack(FILE *fp, CallStack *cs) {
-/*     if (fp == NULL) {
-        spdlog::error("failed to open call stack file");
-        return -1;
-    }
-    
-    // State_CallStack 初期化
-    State__CallStack *call_stack_proto;
-    call_stack_proto = (State__CallStack*)malloc(sizeof(State__CallStack));
-    state__call_stack__init(call_stack_proto);
-    spdlog::info("init call stack proto");
-    call_stack_proto->n_entries = cs->size;
-    call_stack_proto->entries = (State__CallStackEntry**)malloc(sizeof(State__CallStackEntry*) * cs->size);
-    spdlog::info("init call stack entries");
-    for (uint32_t i = 0; i < cs->size; ++i) {
-        State__CallStackEntry *entry_proto;
-        // entry_protoの初期化
-        entry_proto = (State__CallStackEntry*)malloc(sizeof(State__CallStackEntry));
-        state__call_stack_entry__init(entry_proto);
-        spdlog::info("init call stack entry proto");
-        
-        // pc_protoの初期化
-        State__CodePos *pc_proto;
-        pc_proto = (State__CodePos*)malloc(sizeof(State__CodePos));
-        state__code_pos__init(pc_proto);
-        spdlog::info("init call stack entry pc proto");
-        pc_proto->fidx = cs->entries[i].pc.fidx;
-        pc_proto->offset = cs->entries[i].pc.offset;
-        entry_proto->pc = pc_proto;
-        
-        // localsの初期化
-        State__TypedArray *locals_proto;
-        locals_proto = (State__TypedArray*)malloc(sizeof(State__TypedArray));
-        state__typed_array__init(locals_proto);
-        spdlog::info("init call stack entry locals proto");
-        State__Array8 *locals_types_proto;
-        locals_types_proto = (State__Array8*)malloc(sizeof(State__Array8));
-        state__array8__init(locals_types_proto);
-        spdlog::info("init call stack entry locals types proto");
-        locals_types_proto->n_contents = cs->entries[i].locals.size;
-        locals_types_proto->contents = (uint8_t*)malloc(sizeof(uint8_t) * cs->entries[i].locals.size);
-        memcpy(locals_types_proto->contents, cs->entries[i].locals.types.contents, sizeof(uint8_t) * cs->entries[i].locals.size);
-        locals_proto->types.n_contents = cs->entries[i].locals.size;
-        locals_proto->types.contents = (uint8_t*)malloc(sizeof(uint8_t) * cs->entries[i].locals.size);
-        memcpy(locals_proto->types.contents, cs->entries[i].locals.types.contents, sizeof(uint8_t) * cs->entries[i].locals.size);
-        entry_proto->locals = locals_proto;
-        // entry_proto->locals.n_contents = cs->entries[i].locals.size;
-        // entry_proto->locals.contents = (uint32_t*)malloc(sizeof(uint32_t) * cs->entries[i].locals.size);
-        // memcpy(entry_proto->locals.contents, cs->entries[i].locals.contents, sizeof(uint32_t) * cs->entries[i].locals.size);
-        
-        // value_stackの初期化
-        entry_proto->value_stack.n_contents = cs->entries[i].value_stack.size;
-        entry_proto->value_stack.contents = (uint32_t*)malloc(sizeof(uint32_t) * cs->entries[i].value_stack.size);
-        memcpy(entry_proto->value_stack.contents, cs->entries[i].value_stack.contents, sizeof(uint32_t) * cs->entries[i].value_stack.size);
-
-        // label_stackの初期化
-        entry_proto->label_stack.n_begins = cs->entries[i].label_stack.size;
-        entry_proto->label_stack.begins = (uint32_t*)malloc(sizeof(uint32_t) * cs->entries[i].label_stack.size);
-        memcpy(entry_proto->label_stack.begins, cs->entries[i].label_stack.begins, sizeof(uint32_t) * cs->entries[i].label_stack.size);
-        
-        // entriesに追加
-        call_stack_proto->entries[i] = entry_proto;
-    }
- */
+Array8 serialize_call_stack(CallStack *cs) {
+    State__CallStack *call_stack_proto = from_call_stack(cs);
+    size_t size = state__call_stack__get_packed_size(call_stack_proto);
+    uint8_t *buf = (uint8_t*)malloc(size);
+    uint32_t len = state__call_stack__pack(call_stack_proto, buf);
+    return Array8 {
+        .size = len,
+        .contents = buf
+    };
+}
+CallStack deserialize_call_stack(Array8 *buf) {
+    State__CallStack *call_stack_proto = state__call_stack__unpack(NULL, buf->size, buf->contents);
+    CallStack ret = to_call_stack(call_stack_proto);
+    state__call_stack__free_unpacked(call_stack_proto, NULL);
+    return ret;
 }
 
-CallStack deserialize_call_stack(FILE *fp) {
-
-}

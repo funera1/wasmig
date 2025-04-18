@@ -224,116 +224,147 @@ Array8 get_type_stack_v2(uint32_t fidx, uint32_t offset, bool is_return_address)
     return (Array8){ .size = total_size, .contents = type_stack };
 }
 
+Array8 get_type_stack_v3(uint32_t fidx, uint32_t offset, bool is_return_address) {
+    // スタックテーブルの取得
+    StackTable table = wcrn_get_stack_table(fidx, offset);
+    uint32_t stack_size = table.size;
+
+    // 戻りアドレスなら、最後の命令の戻り型を削る
+    if (is_return_address && table.size > 0) {
+        StackTableEntry last_entry = table.data[table.size - 1];
+        if (last_entry.opcode == Opcode::WASMIG_Call) {
+            stack_size -= last_entry.operand.call_result_type;
+        }
+    }
+
+    // 配列を確保
+    uint8_t* type_stack = (uint8_t*)malloc(stack_size * sizeof(uint8_t));
+
+    return (Array8){ .size = stack_size, .contents = type_stack };
+}
+
 
 // TODO: ポインタわたしじゃなく、参照渡しにする
-// int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
-//     CodePos *cur_addr, CodePos *ret_addr,Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
-//     char file[32];
-//     // TODO: stack_%d.imgに変更する
-//     snprintf(file, sizeof(file), "stack%d.img", call_stack_id);
+int checkpoint_stack(uint32_t call_stack_id, uint32_t entry_fidx, 
+    CodePos *cur_addr, CodePos *ret_addr,Array32 *locals, Array32 *value_stack, LabelStack *label_stack, bool is_top) {
+    char file[32];
+    // TODO: stack_%d.imgに変更する
+    snprintf(file, sizeof(file), "stack%d.img", call_stack_id);
 
-//     spdlog::info("entry_fidx: {}", entry_fidx);
-//     spdlog::info("cur_addr: (fidx={}, offset={})", cur_addr->fidx, cur_addr->offset);
-//     spdlog::info("ret_addr: (fidx={}, offset={})", ret_addr->fidx, ret_addr->offset);
+    spdlog::info("entry_fidx: {}", entry_fidx);
+    spdlog::info("cur_addr: (fidx={}, offset={})", cur_addr->fidx, cur_addr->offset);
+    spdlog::info("ret_addr: (fidx={}, offset={})", ret_addr->fidx, ret_addr->offset);
 
-//     FILE *fp = open_image(file, "wb");
-//     if (fp == NULL) {
-//         return -1;
-//     }
-//     fwrite(&entry_fidx, sizeof(uint32_t), 1, fp);
+    FILE *fp = open_image(file, "wb");
+    if (fp == NULL) {
+        return -1;
+    }
+    fwrite(&entry_fidx, sizeof(uint32_t), 1, fp);
 
-//     fwrite(&ret_addr->fidx, sizeof(uint32_t), 1, fp);
-//     fwrite(&ret_addr->offset, sizeof(uint32_t), 1, fp);
+    fwrite(&ret_addr->fidx, sizeof(uint32_t), 1, fp);
+    fwrite(&ret_addr->offset, sizeof(uint32_t), 1, fp);
 
-//     // 型スタック
-//     Array8 type_stack = get_type_stack_v2(cur_addr->fidx, cur_addr->offset, !is_top);
-//     fwrite(&type_stack.size, sizeof(uint32_t), 1, fp);
-//     fwrite(type_stack.contents, sizeof(uint8_t), type_stack.size, fp);
+    // 型スタック
+    Array8 type_stack = get_type_stack_v2(cur_addr->fidx, cur_addr->offset, !is_top);
+    fwrite(&type_stack.size, sizeof(uint32_t), 1, fp);
+    fwrite(type_stack.contents, sizeof(uint8_t), type_stack.size, fp);
     
-//     // debug print type stack
-//     print_type_stack(type_stack.contents, type_stack.size);
-//     print_locals(*cur_addr, &type_stack, locals);
-//     print_stack(*cur_addr, &type_stack, value_stack);
+    // debug print type stack
+    print_type_stack(type_stack.contents, type_stack.size);
+    print_locals(*cur_addr, &type_stack, locals);
+    print_stack(*cur_addr, &type_stack, value_stack);
 
-//     // 値スタック
-//     fwrite(locals->contents, sizeof(uint32_t), locals->size, fp);
-//     fwrite(value_stack->contents, sizeof(uint32_t), value_stack->size, fp);
+    // 値スタック
+    fwrite(locals->contents, sizeof(uint32_t), locals->size, fp);
+    fwrite(value_stack->contents, sizeof(uint32_t), value_stack->size, fp);
 
-//     // 制御スタック
-//     fwrite(&label_stack->size, sizeof(uint32_t), 1, fp);    // CodePos poses[cs_size];
-//     // Array32 locals[cs_size];
-//     // Array32 stack[cs_size];
-//     // LabelStack labels_stack[cs_size];
-//     for (int i = 0; i < label_stack->size; ++i) {
-//         // uint8 *begin_addr;
-//         // label_stack->begins[i] = get_addr_offset(csp->begin_addr, ip_start);
-//         fwrite(&label_stack->begins[i], sizeof(uint32_t), 1, fp);
+    // 制御スタック
+    fwrite(&label_stack->size, sizeof(uint32_t), 1, fp);    // CodePos poses[cs_size];
+    // Array32 locals[cs_size];
+    // Array32 stack[cs_size];
+    // LabelStack labels_stack[cs_size];
+    for (int i = 0; i < label_stack->size; ++i) {
+        // uint8 *begin_addr;
+        // label_stack->begins[i] = get_addr_offset(csp->begin_addr, ip_start);
+        fwrite(&label_stack->begins[i], sizeof(uint32_t), 1, fp);
 
-//         // uint8 *target_addr;
-//         // targets[i] = get_addr_offset(csp->target_addr, ip_start);
-//         fwrite(&label_stack->targets[i], sizeof(uint32_t), 1, fp);
+        // uint8 *target_addr;
+        // targets[i] = get_addr_offset(csp->target_addr, ip_start);
+        fwrite(&label_stack->targets[i], sizeof(uint32_t), 1, fp);
 
-//         // uint32 *frame_sp;
-//         // stack_pointers[i] = get_addr_offset(csp->frame_sp, frame->sp_bottom);
-//         fwrite(&label_stack->stack_pointers[i], sizeof(uint32_t), 1, fp);
+        // uint32 *frame_sp;
+        // stack_pointers[i] = get_addr_offset(csp->frame_sp, frame->sp_bottom);
+        fwrite(&label_stack->stack_pointers[i], sizeof(uint32_t), 1, fp);
 
-//         // uint32 cell_num;
-//         // cell_nums[i] = csp->cell_num;
-//         fwrite(&label_stack->cell_nums[i], sizeof(uint32_t), 1, fp);
-//     }
+        // uint32 cell_num;
+        // cell_nums[i] = csp->cell_num;
+        fwrite(&label_stack->cell_nums[i], sizeof(uint32_t), 1, fp);
+    }
 
-//     fclose(fp);
+    fclose(fp);
 
-//     return 0;
-// }
-
-// int checkpoint_call_stack_size(uint32_t call_stack_size) {
-//     FILE *fp = open_image("frame.img", "wb");
-//     if (fp == NULL) {
-//         return -1;
-//     }
-//     fwrite(&call_stack_size, sizeof(uint32_t), 1, fp);
-//     fclose(fp);
-//     return 0;
-// }
-
-// int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
-//     // checkpoint call stack size
-//     int ret;
-//     ret = checkpoint_call_stack_size(size);
-//     if (ret) {
-//         spdlog::error("Error checkpointing call stack size");
-//         return -1;
-//     }
-    
-//     for (int i = 0; i < size; ++i) {
-//         CodePos *cur_pos = &call_stack[i].pc;
-//         CodePos *ret_pos;
-//         if (i == 0) ret_pos = &call_stack[i].pc;
-//         else ret_pos = &call_stack[i-1].pc;
-//         Array32 *locals = &call_stack[i].locals;
-//         Array32 *value_stack = &call_stack[i].value_stack;
-//         LabelStack *label_stack = &call_stack[i].label_stack;
-//         // checkpoint stack
-//         int ret = checkpoint_stack(i+1, cur_pos->fidx, cur_pos, ret_pos, 
-//             locals, value_stack, label_stack, i == size-1);
-//         if (ret != 0) {
-//             spdlog::error("Error checkpointing stack {}", i);
-//             return ret;
-//         }
-//     }
-            
-//     return 0;
-// }
-
-int checkpoint_stack_v3(size_t size, CallStackEntry *call_stack) {
-    State__CallStack *call_stack_proto;
-    call_stack_proto = (State__CallStack*)malloc(sizeof(State__CallStack));
-    state__call_stack__init(call_stack_proto);
-    
-    call_stack_proto->n_entries = size;
-    call_stack_proto->entries = (State__CallStackEntry**)malloc(sizeof(State__CallStackEntry*) * size);
-
+    return 0;
 }
+
+int checkpoint_call_stack_size(uint32_t call_stack_size) {
+    FILE *fp = open_image("frame.img", "wb");
+    if (fp == NULL) {
+        return -1;
+    }
+    fwrite(&call_stack_size, sizeof(uint32_t), 1, fp);
+    fclose(fp);
+    return 0;
+}
+
+
+
+int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
+    // checkpoint call stack size
+    CallStackEntry entry[size];
+    for (int i = 0; i < size; ++i) {
+        CodePos *cur_pos = &call_stack[i].pc;
+        Array32 *locals = &call_stack[i].locals;
+        Array32 *value_stack = &call_stack[i].value_stack;
+
+        // 型スタック
+        Array8 locals_types = wcrn_get_local_types(cur_pos->fidx);
+        Array8 stack_types = get_type_stack_v3(cur_pos->fidx, cur_pos->offset, (i == size-1));
+        TypedArray locals_typed_array = { .types = locals_types, .values = *locals };
+        TypedArray value_stack_typed_array = { .types = stack_types, .values = *value_stack };
+        
+        // CallStackEntryに変換
+        entry[i].pc = call_stack[i].pc;
+        entry[i].locals = locals_typed_array;
+        entry[i].value_stack = value_stack_typed_array;
+        entry[i].label_stack = call_stack[i].label_stack;
+    }
+    
+    // checkpoint call stack
+    CallStack cs = { .size = size, .entries = entry };
+    Array8 serialized_call_stack = serialize_call_stack(&cs);
+    FILE *fp = open_image("call_stack.img", "wb");
+    if (fp == NULL) {
+        return -1;
+    }
+    uint32_t len = serialized_call_stack.size;
+    uint8_t *buf = serialized_call_stack.contents;
+    fwrite(buf, sizeof(uint8_t), len, fp);
+    fclose(fp);
+    
+            
+    return 0;
+}
+
+// int checkpoint_stack_v3(CallStack cs) {
+//     Array8 serialized_call_stack = serialize_call_stack(&cs);
+//     FILE *fp = open_image("call_stack.img", "wb");
+//     if (fp == NULL) {
+//         return -1;
+//     }
+//     uint32_t len = serialized_call_stack.size;
+//     uint8_t *buf = serialized_call_stack.contents;
+//     fwrite(buf, sizeof(uint8_t), len, fp);
+//     // TODO: free cs
+// }
 
 }
