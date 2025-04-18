@@ -343,6 +343,7 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
     
     // checkpoint call stack
     CallStack cs = { .size = size, .entries = entry };
+    print_call_stack(&cs);
     Array8 serialized_call_stack = serialize_call_stack(&cs);
     FILE *fp = open_image("call_stack.img", "wb");
     if (fp == NULL) {
