@@ -1,7 +1,8 @@
 #ifndef WASM_TABLE_H
 #define WASM_TABLE_H
 
-#include "migration.h"
+#include "wasmig/migration.h"
+#include "wasmig/state.h"
 
 
 // extern "C" int tab_alloc(uint32_t func_idx);

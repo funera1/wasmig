@@ -1,4 +1,5 @@
 #include <wasmig/internal/debug.hpp>
+#include "wasmig/state.h"
 #include <iostream>
 #include <sstream>
 #include <spdlog/spdlog.h>

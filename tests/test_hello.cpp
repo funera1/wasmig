@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <wasmig/stack_tables.h>
 #include <wasmig/internal/debug.hpp>
+#include <wasmig/state.h>
 
 int sum(int a, int b) {
     return a + b;
@@ -49,10 +50,14 @@ TEST(TestCase, protobuf_array32) {
     array.contents[2] = 3;
 
     // serialize
-    int ret = serialize_array32(&array);
+    FILE *w = fopen("array32.img", "wb");
+    int ret = serialize_array32(w, &array);
+    fclose(w);
     
     // deserialize
-    Array32 array2 = deserialize_array32();
+    FILE *r = fopen("array32.img", "rb");
+    Array32 array2 = deserialize_array32(r);
+    fclose(r);
     ASSERT_EQ(array2.size, 3);
     ASSERT_EQ(array2.contents[0], 1);
     ASSERT_EQ(array2.contents[1], 2);

@@ -9,6 +9,7 @@ add_library(libwasmig STATIC
     src/stack_tables.cpp
     src/log.cpp
     src/utils.cpp
+    src/state.cpp
     src/debug.cpp
 )
 

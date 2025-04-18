@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
-#include <wasmig/migration.h>
+#include <wasmig/state.h>
 
 // TODO: test時だけinclude可能にする
 void print_type_stack(uint8_t* stack, uint32_t stack_size);

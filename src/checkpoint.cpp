@@ -2,6 +2,7 @@
 #include "wasmig/migration.h"
 #include "wasmig/stack_tables.h"
 #include "wasmig/utils.h"
+#include "wasmig/state.h"
 #include "wasmig/internal/debug.hpp"
 #include "wasmig/proto/state.pb-c.h"
 #include <spdlog/spdlog.h>
@@ -325,78 +326,14 @@ int checkpoint_stack_v2(size_t size, CallStackEntry *call_stack) {
     return 0;
 }
 
-int serialize_array32(Array32 *array) {
-    FILE *fp = open_image("array32.img", "wb");
-    if (fp == NULL) {
-        return -1;
-    }
-    spdlog::info("open array file");
-
-    // State__Array32 初期化
-    State__Array32 *array_proto;
-    array_proto = (State__Array32*)malloc(sizeof(State__Array32));
-    state__array32__init(array_proto);
-    spdlog::info("init array proto");
+int checkpoint_stack_v3(size_t size, CallStackEntry *call_stack) {
+    State__CallStack *call_stack_proto;
+    call_stack_proto = (State__CallStack*)malloc(sizeof(State__CallStack));
+    state__call_stack__init(call_stack_proto);
     
-    // intialize array_proto
-    array_proto->n_contents = array->size;
-    array_proto->contents = (uint32_t*)malloc(sizeof(uint32_t) * array->size);
-    memcpy(array_proto->contents, array->contents, sizeof(uint32_t) * array->size);
+    call_stack_proto->n_entries = size;
+    call_stack_proto->entries = (State__CallStackEntry**)malloc(sizeof(State__CallStackEntry*) * size);
 
-    // packed array32 and write to file
-    size_t size = state__array32__get_packed_size(array_proto);
-    uint8_t *buf = (uint8_t*)malloc(size);
-    size_t len = state__array32__pack(array_proto, buf);
-    spdlog::info("packed array size: {}", len);
-    fwrite(buf, sizeof(uint8_t), len, fp);
-    spdlog::info("write array to file");
-    
-    // free memory
-    free(buf);
-    spdlog::info("free buf");
-    fclose(fp);
-    spdlog::info("close array file");
-    free(array_proto->contents);
-    spdlog::info("free array contents");
-    free(array_proto);
-    spdlog::info("free array proto");
-    return 0;
 }
-
-Array32 deserialize_array32() {
-    FILE *fp = open_image("array32.img", "rb");
-    if (fp == NULL) {
-        spdlog::error("failed to open array file");
-        return {0, NULL};
-    }
-    fseek(fp, 0, SEEK_END);
-    size_t len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    uint8_t *buf = (uint8_t*)malloc(len);
-    fread(buf, sizeof(uint8_t), len, fp);
-    fclose(fp);
-
-    State__Array32 *array_proto;
-    array_proto = state__array32__unpack(NULL, len, buf);
-    Array32 array;
-    array.size = array_proto->n_contents;
-    array.contents = (uint32_t*)malloc(sizeof(uint32_t) * array.size);
-    memcpy(array.contents, array_proto->contents, sizeof(uint32_t) * array.size);
-
-    free(buf);
-    state__array32__free_unpacked(array_proto, NULL);
-    
-    return array;
-}
-
-// int checkpoint_stack_v3(size_t size, CallStackEntry *call_stack) {
-//     State__CallStack *call_stack_proto;
-//     call_stack_proto = (State__CallStack*)malloc(sizeof(State__CallStack));
-//     state__call_stack__init(call_stack_proto);
-    
-//     call_stack_proto->n_entries = size;
-//     call_stack_proto->entries = (State__CallStackEntry**)malloc(sizeof(State__CallStackEntry*) * size);
-
-// }
 
 }

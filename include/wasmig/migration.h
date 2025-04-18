@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <wasmig/utils.h>
+#include <wasmig/state.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,9 +25,6 @@ Array8 restore_memory();
 Array64 restore_global(Array8 types);
 CodePos restore_pc();
 CallStack restore_stack();
-
-int serialize_array32(Array32 *array);
-Array32 deserialize_array32();
 
 #ifdef __cplusplus
 }
