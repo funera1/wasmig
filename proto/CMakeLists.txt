@@ -5,10 +5,10 @@ set(PROTO_FILES
 set(PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 # protobuf-cのコンパイラを指定
-set(PROTOC_EXECUTABLE /usr/local/bin/protoc)
-set(PROTOC_GEN_C_EXECUTABLE /usr/local/bin/protoc-gen-c)
-# find_program(PROTOC_EXECUTABLE protoc REQUIRED)
-# find_program(PROTOC_GEN_C_EXECUTABLE protoc-gen-c REQUIRED)
+# set(PROTOC_EXECUTABLE /usr/local/bin/protoc)
+# set(PROTOC_GEN_C_EXECUTABLE /usr/local/bin/protoc-gen-c)
+find_program(PROTOC_EXECUTABLE protoc REQUIRED)
+find_program(PROTOC_GEN_C_EXECUTABLE protoc-gen-c REQUIRED)
 
 
 # .protoファイルをコンパイルしてCコードを生成
