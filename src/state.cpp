@@ -150,9 +150,13 @@ State__CallStackEntry* from_call_stack_entry(CallStackEntry *entry) {
 CallStackEntry* to_call_stack_entry(State__CallStackEntry *entry_proto) {
     CallStackEntry *entry = (CallStackEntry *)malloc(sizeof(CallStackEntry));
     entry->pc = *to_code_pos(entry_proto->pc);
+    spdlog::info("to_code_pos");
     entry->locals = *to_typed_array(entry_proto->locals);
+    spdlog::info("to_locals");
     entry->value_stack = *to_typed_array(entry_proto->value_stack);
+    spdlog::info("to_stack");
     entry->label_stack = *to_label_stack(entry_proto->label_stack);
+    spdlog::info("to_label stack");
     return entry;
 }
 
