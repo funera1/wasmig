@@ -29,8 +29,8 @@ State__Array32* from_array32(Array32 *array) {
     State__Array32* array_proto = (State__Array32*)malloc(sizeof(State__Array32));
     state__array32__init(array_proto);
     array_proto->n_contents = array->size;
-    array_proto->contents = (uint32_t*)malloc(array->size);
-    memcpy(array_proto->contents, array->contents, array->size);
+    array_proto->contents = (uint32_t*)malloc(array->size * sizeof(uint32_t));
+    memcpy(array_proto->contents, array->contents, array->size * sizeof(uint32_t));
     return array_proto;
 }
 
