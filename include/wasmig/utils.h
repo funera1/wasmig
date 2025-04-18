@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
-const uint32_t WASM_PAGE_SIZE = 0x10000;
+static const uint32_t WASM_PAGE_SIZE = 0x10000;
 
 FILE* open_image(const char* file, const char* flag);
 int is_page_dirty(uint64_t pagemap_entry);
