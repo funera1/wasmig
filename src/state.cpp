@@ -29,16 +29,16 @@ State__Array32* from_array32(Array32 *array) {
     State__Array32* array_proto = (State__Array32*)malloc(sizeof(State__Array32));
     state__array32__init(array_proto);
     array_proto->n_contents = array->size;
-    array_proto->contents = (uint32_t*)malloc(sizeof(uint32_t) * array->size);
-    memcpy(array_proto->contents, array->contents, sizeof(uint32_t) * array->size);
+    array_proto->contents = (uint32_t*)malloc(array->size);
+    memcpy(array_proto->contents, array->contents, array->size);
     return array_proto;
 }
 
 Array32 to_array32(State__Array32 *array_proto) {
     Array32 array;
     array.size = array_proto->n_contents;
-    array.contents = (uint32_t*)malloc(sizeof(uint32_t) * array.size);
-    memcpy(array.contents, array_proto->contents, sizeof(uint32_t) * array.size);
+    array.contents = (uint32_t*)malloc(array.size);
+    memcpy(array.contents, array_proto->contents, array.size);
     return array;
 }
 
@@ -46,15 +46,15 @@ State__Array64* from_array64(Array64 *array) {
     State__Array64* array_proto = (State__Array64*)malloc(sizeof(State__Array64));
     state__array64__init(array_proto);
     array_proto->n_contents = array->size;
-    array_proto->contents = (uint64_t*)malloc(sizeof(uint64_t) * array->size);
-    memcpy(array_proto->contents, array->contents, sizeof(uint64_t) * array->size);
+    array_proto->contents = (uint64_t*)malloc(array->size);
+    memcpy(array_proto->contents, array->contents, array->size);
     return array_proto;
 }
 Array64 to_array64(State__Array64 *array_proto) {
     Array64 array;
     array.size = array_proto->n_contents;
-    array.contents = (uint64_t*)malloc(sizeof(uint64_t) * array.size);
-    memcpy(array.contents, array_proto->contents, sizeof(uint64_t) * array.size);
+    array.contents = (uint64_t*)malloc(array.size);
+    memcpy(array.contents, array_proto->contents, array.size);
     return array;
 }
 
