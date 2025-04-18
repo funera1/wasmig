@@ -56,6 +56,9 @@ typedef struct callstack {
     CallStackEntry *entries;
 } CallStack;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 Array8 serialize_array32(Array32 *array);
 Array32 deserialize_array32(Array8 *buf);
@@ -63,5 +66,9 @@ Array8 serialize_call_stack(CallStack *cs);
 CallStack deserialize_call_stack(Array8 *buf);
 
 void print_call_stack(CallStack *cs);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
