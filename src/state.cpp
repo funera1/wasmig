@@ -248,18 +248,49 @@ void print_typed_array(TypedArray *typed_array) {
     spdlog::debug("  {}", values_str);
 }
 
+void print_label_stack(LabelStack* label_stack) {
+    size_t size = label_stack->size;
+    spdlog::debug("  size: {}", size);
+    
+    // begins
+    std::string str = "  begins: ";
+    for (int j = 0; j < size; ++j) {
+        str += std::to_string(label_stack->begins[j]) + " ";
+    }
+    spdlog::debug("  {}", str);
+
+    // targets
+    std::string str = "  targets: ";
+    for (int j = 0; j < size; ++j) {
+        str += std::to_string(label_stack->targets[j]) + " ";
+    }
+    spdlog::debug("  {}", str);
+
+    // stack_pointers
+    std::string str = "  stack_pointers: ";
+    for (int j = 0; j < size; ++j) {
+        str += std::to_string(label_stack->stack_pointers[j]) + " ";
+    }
+    spdlog::debug("  {}", str);
+
+    // cell nums
+    std::string str = "  cell_nums: ";
+    for (int j = 0; j < size; ++j) {
+        str += std::to_string(label_stack->cell_nums[j]) + " ";
+    }
+    spdlog::debug("  {}", str);
+}
+
 void print_call_stack_entry(CallStackEntry *entry) {
     spdlog::debug("CallStackEntry: fidx={}, offset={}", entry->pc.fidx, entry->pc.offset);
     spdlog::debug("locals: ");
     print_typed_array(&entry->locals);
-    // for (int j = 0; j < entry->locals.values.size; ++j) {
-    //     spdlog::debug("  {}", entry->locals.values.contents[j]);
-    // }
+
     spdlog::debug("value_stack: ");
     print_typed_array(&entry->value_stack);
-    // for (int j = 0; j < entry->value_stack.values.size; ++j) {
-    //     spdlog::debug("  {}", entry->value_stack.values.contents[j]);
-    // }
+
+    spdlog::debug("label stack: ");
+    print_label_stack(&entry->label_stack);
 }
 void print_call_stack(CallStack *cs) {
     spdlog::debug("call_stack size: {}", cs->size);
