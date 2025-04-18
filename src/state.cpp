@@ -168,6 +168,7 @@ void print_call_stack_entry(CallStackEntry *entry) {
     }
 }
 void print_call_stack(CallStack *cs) {
+    spdlog::debug("call_stack size: {}", cs->size);
     for (int i = 0; i < cs->size; ++i) {
         CallStackEntry *entry = &cs->entries[i];
         print_call_stack_entry(entry);
