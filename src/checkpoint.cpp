@@ -353,14 +353,17 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
     // checkpoint call stack
     CallStack cs = { .size = size, .entries = entry };
     print_call_stack(&cs);
+    spdlog::info("print call stack");
     Array8 serialized_call_stack = serialize_call_stack(&cs);
     FILE *fp = open_image("call_stack.img", "wb");
+    spdlog::info("open call stack file");
     if (fp == NULL) {
         return -1;
     }
     uint32_t len = serialized_call_stack.size;
     uint8_t *buf = serialized_call_stack.contents;
     fwrite(buf, 1, len, fp);
+    spdlog::info("write call stack file");
     fclose(fp);
     
             
