@@ -25,7 +25,7 @@ Array8* to_array8(State__Array8 *array_proto) {
     return array;
 }
 void free_array8_proto(State__Array8 *array_proto) {
-    free(array_proto->contents);
+    free(array_proto->contents.data);
     free(array_proto);
 }
 
