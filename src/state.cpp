@@ -225,7 +225,7 @@ void print_codepos(CodePos *pc) {
     str += ", ";
     str += std::to_string(pc->offset);
     str += ")";
-    printf("  %s\n", str);
+    printf("  %s\n", str.c_str());
 }
 
 void print_typed_array(TypedArray *typed_array) {
@@ -233,7 +233,7 @@ void print_typed_array(TypedArray *typed_array) {
     for (int j = 0; j < typed_array->types.size; ++j) {
         types_str += std::to_string(typed_array->types.contents[j]) + " ";
     }
-    printf("  %s\n", types_str);
+    printf("  %s\n", types_str.c_str());
 
     std::string values_str = "values: ";
     for (int j = 0; j < typed_array->types.size; ++j) {
@@ -254,7 +254,7 @@ void print_typed_array(TypedArray *typed_array) {
             }
         }
     }
-    printf("  %s\n", values_str);
+    printf("  %s\n", values_str.c_str());
 }
 
 void print_label_stack(LabelStack* label_stack) {
@@ -267,28 +267,28 @@ void print_label_stack(LabelStack* label_stack) {
     for (int j = 0; j < size; ++j) {
         str += std::to_string(label_stack->begins[j]) + " ";
     }
-    printf("  %s\n", str);
+    printf("  %s\n", str.c_str());
 
     // targets
     str = "  targets: ";
     for (int j = 0; j < size; ++j) {
         str += std::to_string(label_stack->targets[j]) + " ";
     }
-    printf("  %s\n", str);
+    printf("  %s\n", str.c_str());
 
     // stack_pointers
     str = "  stack_pointers: ";
     for (int j = 0; j < size; ++j) {
         str += std::to_string(label_stack->stack_pointers[j]) + " ";
     }
-    printf("  %s\n", str);
+    printf("  %s\n", str.c_str());
 
     // cell nums
     str = "  cell_nums: ";
     for (int j = 0; j < size; ++j) {
         str += std::to_string(label_stack->cell_nums[j]) + " ";
     }
-    printf("  %s\n", str);
+    printf("  %s\n", str.c_str());
 }
 
 void print_call_stack_entry(CallStackEntry *entry) {
