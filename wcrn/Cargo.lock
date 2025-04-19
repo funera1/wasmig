@@ -468,7 +468,7 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 [[package]]
 name = "wacret"
 version = "0.1.0"
-source = "git+https://github.com/funera1/Wacret?branch=create-table-v2#8e2a544d3e9d1a08d951c70318be458fa66326e6"
+source = "git+https://github.com/funera1/Wacret?branch=create-table-v2#35c1edcd1aa6d093880a2b6213bd0ca8ead98aad"
 dependencies = [
  "anyhow",
  "byteorder",
