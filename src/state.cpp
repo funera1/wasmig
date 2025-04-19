@@ -24,6 +24,10 @@ Array8* to_array8(State__Array8 *array_proto) {
     memcpy(array->contents, array_proto->contents.data, array->size);
     return array;
 }
+void free_array8_proto(State__Array8 *array_proto) {
+    free(array_proto->contents);
+    free(array_proto);
+}
 
 State__Array32* from_array32(Array32 *array) {
     State__Array32* array_proto = (State__Array32*)malloc(sizeof(State__Array32));
@@ -33,13 +37,16 @@ State__Array32* from_array32(Array32 *array) {
     memcpy(array_proto->contents, array->contents, array->size * sizeof(uint32_t));
     return array_proto;
 }
-
 Array32* to_array32(State__Array32 *array_proto) {
     Array32* array = (Array32*)malloc(sizeof(Array32));
     array->size = array_proto->n_contents;
     array->contents = (uint32_t*)malloc(array->size * sizeof(uint32_t));
     memcpy(array->contents, array_proto->contents, array->size * sizeof(uint32_t));
     return array;
+}
+void free_array32_proto(State__Array32 *array_proto) {
+    free(array_proto->contents);
+    free(array_proto);
 }
 
 State__Array64* from_array64(Array64 *array) {
@@ -57,6 +64,10 @@ Array64* to_array64(State__Array64 *array_proto) {
     memcpy(array->contents, array_proto->contents, array->size);
     return array;
 }
+void free_array64_proto(State__Array64 *array_proto) {
+    free(array_proto->contents);
+    free(array_proto);
+}
 
 State__TypedArray* from_typed_array(TypedArray *typed_array) {
     State__TypedArray* typed_array_proto = (State__TypedArray*)malloc(sizeof(State__TypedArray));
@@ -65,12 +76,16 @@ State__TypedArray* from_typed_array(TypedArray *typed_array) {
     typed_array_proto->values = from_array32(&typed_array->values);
     return typed_array_proto;
 }
-
 TypedArray* to_typed_array(State__TypedArray *typed_array_proto) {
     TypedArray* typed_array = (TypedArray*)malloc(sizeof(TypedArray));
     typed_array->types = *to_array8(typed_array_proto->types);
     typed_array->values = *to_array32(typed_array_proto->values);
     return typed_array;
+}
+void free_typed_array_proto(State__TypedArray *typed_array_proto) {
+    free_array8_proto(typed_array_proto->types);
+    free_array32_proto(typed_array_proto->values);
+    free(typed_array_proto);
 }
 
 State__CodePos* from_code_pos(CodePos *code_pos) {
@@ -85,6 +100,9 @@ CodePos* to_code_pos(State__CodePos *code_pos_proto) {
     code_pos->fidx = code_pos_proto->fidx;
     code_pos->offset = code_pos_proto->offset;
     return code_pos;
+}
+void free_code_pos_proto(State__CodePos *code_pos_proto) {
+    free(code_pos_proto);
 }
 
 State__LabelStack* from_label_stack(LabelStack *label_stack) {
@@ -125,21 +143,24 @@ LabelStack* to_label_stack(State__LabelStack *label_stack_proto) {
     // begins
     label_stack->begins = (uint32_t *)malloc(bytes);
     memcpy(label_stack->begins, label_stack_proto->begins, bytes);
-    spdlog::info("memcpy begins");
     // targets
     label_stack->targets = (uint32_t *)malloc(bytes);
     memcpy(label_stack->targets, label_stack_proto->targets, bytes);
-    spdlog::info("memcpy targets");
     // stack pointers
     label_stack->stack_pointers = (uint32_t *)malloc(bytes);
     memcpy(label_stack->stack_pointers, label_stack_proto->stack_pointers, bytes);
-    spdlog::info("memcpy stackpointers");
     // cell nums
     label_stack->cell_nums = (uint32_t *)malloc(bytes);
     memcpy(label_stack->cell_nums, label_stack_proto->cell_nums, bytes);
-    spdlog::info("memcpy cell nums");
     
     return label_stack;
+}
+void free_label_stack_proto(State__LabelStack *label_stack_proto) {
+    free(label_stack_proto->begins);
+    free(label_stack_proto->targets);
+    free(label_stack_proto->stack_pointers);
+    free(label_stack_proto->cell_nums);
+    free(label_stack_proto);
 }
 
 State__CallStackEntry* from_call_stack_entry(CallStackEntry *entry) {
@@ -154,14 +175,18 @@ State__CallStackEntry* from_call_stack_entry(CallStackEntry *entry) {
 CallStackEntry* to_call_stack_entry(State__CallStackEntry *entry_proto) {
     CallStackEntry *entry = (CallStackEntry *)malloc(sizeof(CallStackEntry));
     entry->pc = *to_code_pos(entry_proto->pc);
-    spdlog::info("to_code_pos");
     entry->locals = *to_typed_array(entry_proto->locals);
-    spdlog::info("to_locals");
     entry->value_stack = *to_typed_array(entry_proto->value_stack);
-    spdlog::info("to_stack");
     entry->label_stack = *to_label_stack(entry_proto->label_stack);
-    spdlog::info("to_label stack");
     return entry;
+}
+void free_call_stack_entry_proto(State__CallStackEntry *entry_proto) {
+    free_code_pos_proto(entry_proto->pc);
+    free_typed_array_proto(entry_proto->locals);
+    free_typed_array_proto(entry_proto->value_stack);
+    free_label_stack_proto(entry_proto->label_stack);
+
+    free(entry_proto);
 }
 
 State__CallStack* from_call_stack(CallStack *call_stack) {
@@ -182,6 +207,13 @@ CallStack to_call_stack(State__CallStack *call_stack_proto) {
         call_stack.entries[i] = *to_call_stack_entry(call_stack_proto->entries[i]);
     }
     return call_stack;
+}
+void free_call_stack_proto(State__CallStack *call_stack_proto) {
+    int size = call_stack_proto->n_entries;
+    for (uint32_t i = 0; i < size; ++i) {
+        free_call_stack_entry_proto(call_stack_proto->entries[i]);
+    }
+    free(call_stack_proto);
 }
 
 Array8 serialize_array32(Array32 *array) {
@@ -207,6 +239,7 @@ Array8 serialize_call_stack(CallStack *cs) {
     uint32_t size = state__call_stack__get_packed_size(call_stack_proto);
     uint8_t *buf = (uint8_t*)malloc(size);
     state__call_stack__pack(call_stack_proto, buf);
+    free_call_stack_proto(call_stack_proto);
     return Array8 {
         .size = size,
         .contents = buf
