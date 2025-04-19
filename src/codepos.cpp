@@ -7,12 +7,14 @@ extern "C" {
     CodePos prev_pc(CodePos pc) {
         Array32 offs = wcrn_offset_list(pc.fidx);
         for (int i = 0; i < offs.size; i++) {
-            if (pc.offset == offs[i]) {
-                if (i > 0) offset = offs[i-1];
-                else offset = offs[i];
+            if (pc.offset == offs.contents[i]) {
+                uint64_t offset;
+                if (i > 0) offset = offs.contents[i-1];
+                else offset = offs.contents[i];
+
                 return CodePos {
-                    .fidx: fidx
-                    .offset: offset
+                    .fidx = pc.fidx,
+                    .offset = offset,
                 };
             }
         }
@@ -22,11 +24,13 @@ extern "C" {
     CodePos next_pc(CodePos pc) {
         Array32 offs = wcrn_offset_list(pc.fidx);
         for (int i = 0; i < offs.size; i++) {
-            if (pc.offset == offs[i]) {
-                if (i > 0) offset = offs[i+1];
-                else offset = offs[i];
+            if (pc.offset == offs.contents[i]) {
+                uint64_t offset;
+                if (i > 0) offset = offs.contents[i+1];
+                else offset = offs.contents[i];
+
                 return CodePos {
-                    .fidx = fidx,
+                    .fidx = pc.fidx,
                     .offset = offset,
                 };
             }
