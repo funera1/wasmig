@@ -11,6 +11,7 @@ add_library(libwasmig STATIC
     src/utils.cpp
     src/state.cpp
     src/debug.cpp
+    src/codepos.cpp
 )
 
 # msgpackの設定

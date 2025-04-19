@@ -47,6 +47,12 @@ pub struct Array8 {
     pub contents: *const u8,
 }
 
+#[repr(C)]
+pub struct Array32 {
+    pub size: usize,
+    pub contents: *const u32,
+}
+
 #[no_mangle]
 pub extern "C" fn wcrn_rust_function() -> i32 {
     // Example function that returns an integer
@@ -109,6 +115,7 @@ pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
         })
         .collect::<Vec<_>>();
 
+    // TODO: unsafe
     let ret = StackTable {
         size,
         entries: entries.as_ptr(),
@@ -117,4 +124,28 @@ pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
     
     return ret;
     
+}
+
+#[no_mangle]
+pub extern "C" fn wcrn_offset_list(fidx: u32) -> Array32 {
+    let stack_tables = stack_tables::deserialize_stack_table("./")
+        .expect("failed to deserialize stack table ({fidx}, {offset})");
+    
+    let stack_table = stack_tables.0.get(fidx as usize)
+        .expect("failed to get stack_table at {fidx}");
+    
+    let offset_list: Vec<u32> = stack_table.inner()
+            .keys()
+            .map(|offset| *offset)
+            .collect();
+    
+    let ret = unsafe {
+        Array32 {
+            size: offset_list.len(),
+            contents: offset_list.as_ptr(),
+        }
+    };
+    mem::forget(offset_list);
+    
+    return ret;
 }
