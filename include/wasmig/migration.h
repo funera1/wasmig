@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <wasmig/utils.h>
 #include <wasmig/state.h>
+#include <wasmig/codepos.h>
 
 #ifdef __cplusplus
 extern "C" {
