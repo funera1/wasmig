@@ -10,27 +10,36 @@ message(STATUS "PROTO_OUT_DIR: ${PROTO_OUT_DIR}")
 # protobuf-cのコンパイラを指定
 # set(PROTOC_EXECUTABLE /usr/local/bin/protoc)
 # set(PROTOC_GEN_C_EXECUTABLE /usr/local/bin/protoc-gen-c)
+# find_program(PROTOC_EXECUTABLE protoc REQUIRED)
+# find_program(PROTOC_GEN_C_EXECUTABLE protoc-gen-c REQUIRED)
+
+# protoc を探す
 find_program(PROTOC_EXECUTABLE protoc REQUIRED)
-find_program(PROTOC_GEN_C_EXECUTABLE protoc-gen-c REQUIRED)
+find_package(Protobuf REQUIRED)
+
+file(GLOB ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
+PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${ProtoFiles})
+add_library(proto_lib STATIC ${ProtoSources} ${ProtoHeaders})
+target_link_libraries(proto_lib ${PROTOBUF_LIBRARY})
 
 
 # .protoファイルをコンパイルしてCコードを生成
-foreach(PROTO_FILE ${PROTO_FILES})
-    get_filename_component(PROTO_NAME ${PROTO_FILE} NAME_WE)
-    add_custom_command(
-        OUTPUT ${PROTO_OUT_DIR}/${PROTO_NAME}.pb-c.c ${PROTO_OUT_DIR}/${PROTO_NAME}.pb-c.h
-        COMMAND ${PROTOC_EXECUTABLE}
-        ARGS --proto_path=${PROTO_DIR}
-             --plugin=protoc-gen-c=${PROTOC_GEN_C_EXECUTABLE}
-             --c_out=${PROTO_OUT_DIR}
-             ${PROTO_FILE}
-        WORKING_DIRECTORY ${PROTO_DIR}
-        DEPENDS ${PROTO_DIR}/${PROTO_FILE}
-    )
-    list(APPEND PROTO_SRC_FILES ${PROTO_OUT_DIR}/${PROTO_NAME}.pb-c.c)
-endforeach()
+# foreach(PROTO_FILE ${PROTO_FILES})
+#     get_filename_component(PROTO_NAME ${PROTO_FILE} NAME_WE)
+#     add_custom_command(
+#         OUTPUT ${PROTO_OUT_DIR}/${PROTO_NAME}.pb-c.c ${PROTO_OUT_DIR}/${PROTO_NAME}.pb-c.h
+#         COMMAND ${PROTOC_EXECUTABLE}
+#         ARGS --proto_path=${PROTO_DIR}
+#              --plugin=protoc-gen-c=${PROTOC_GEN_C_EXECUTABLE}
+#              --c_out=${PROTO_OUT_DIR}
+#              ${PROTO_FILE}
+#         WORKING_DIRECTORY ${PROTO_DIR}
+#         DEPENDS ${PROTO_DIR}/${PROTO_FILE}
+#     )
+#     list(APPEND PROTO_SRC_FILES ${PROTO_OUT_DIR}/${PROTO_NAME}.pb-c.c)
+# endforeach()
 
 # protobuf-cのライブラリをリンク
-add_library(proto_lib STATIC ${PROTO_SRC_FILES})
-target_include_directories(proto_lib PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(proto_lib PUBLIC protobuf-c)
+# add_library(proto_lib STATIC ${PROTO_SRC_FILES})
+# target_include_directories(proto_lib PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+# target_link_libraries(proto_lib PUBLIC protobuf-c)

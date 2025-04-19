@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(WASMIG)
+project(WASMIG CXX)
 
 # ライブラリのヘッダーとソースを指定
 add_library(libwasmig STATIC
@@ -29,8 +29,9 @@ target_link_libraries(libwasmig PUBLIC wcrn)
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 link_directories(${GTEST_LIBRARIES})
+
 # add_subdirectory(third_party/protobuf)
-add_subdirectory(third_party/protobuf-c/build-cmake)
+# add_subdirectory(third_party/protobuf-c/build-cmake)
 
 # protoの設定
 add_subdirectory(proto)
