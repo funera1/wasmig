@@ -233,6 +233,7 @@ Array8 get_type_stack_v3(uint32_t fidx, uint32_t offset, bool is_return_address)
     // 戻りアドレスなら、最後の命令の戻り型を削る
     if (is_return_address && table.size > 0) {
         StackTableEntry last_entry = table.data[table.size - 1];
+        spdlog::info("({}, {}): opcode={}", fidx, offset, last_entry.opcode);
         if (last_entry.opcode == Opcode::WASMIG_Call) {
             spdlog::info("({}, {}): result size={}", fidx, offset, last_entry.operand.call_result_type);
             stack_size -= last_entry.operand.call_result_type;
