@@ -225,15 +225,15 @@ Array8 get_type_stack_v2(uint32_t fidx, uint32_t offset, bool is_return_address)
     return (Array8){ .size = total_size, .contents = type_stack };
 }
 
-Array8 get_type_stack_v3(uint32_t fidx, uint32_t offset, bool is_return_address) {
+Array8 get_type_stack_v3(uint32_t fidx, uint32_t offset, bool is_stack_top) {
     // スタックテーブルの取得
     StackTable table = wcrn_get_stack_table(fidx, offset);
     uint32_t stack_size = table.size;
 
     // 戻りアドレスなら、最後の命令の戻り型を削る
-    if (is_return_address && table.size > 0) {
+    if (!is_stack_top && table.size > 0) {
         StackTableEntry last_entry = table.data[table.size - 1];
-        spdlog::info("({}, {}): is_return_address & table.size > 0", fidx, offset);
+        spdlog::info("({}, {}): no stack top & table.size > 0", fidx, offset);
         if (last_entry.opcode == Opcode::WASMIG_Call) {
             spdlog::info("({}, {}): result size={}", fidx, offset, last_entry.operand.call_result_type);
             stack_size -= last_entry.operand.call_result_type;
