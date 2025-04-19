@@ -234,6 +234,7 @@ Array8 get_type_stack_v3(uint32_t fidx, uint32_t offset, bool is_return_address)
     if (is_return_address && table.size > 0) {
         StackTableEntry last_entry = table.data[table.size - 1];
         if (last_entry.opcode == Opcode::WASMIG_Call) {
+            spdlog::info("({}, {}): result size={}", fidx, offset, last_entry.operand.call_result_type);
             stack_size -= last_entry.operand.call_result_type;
         }
     }
