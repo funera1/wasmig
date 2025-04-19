@@ -364,6 +364,8 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
     uint8_t *buf = serialized_call_stack.contents;
     fwrite(buf, 1, len, fp);
     spdlog::info("write call stack file");
+    
+    free(buf);
     fclose(fp);
     
             
