@@ -199,12 +199,12 @@ State__CallStack* from_call_stack(CallStack *call_stack) {
     }
     return call_stack_proto;
 }
-CallStack* to_call_stack(State__CallStack *call_stack_proto) {
-    CallStack* call_stack = (CallStack *)malloc(call_stack_proto->n_entries);
-    call_stack->size = call_stack_proto->n_entries;
-    call_stack->entries = (CallStackEntry*)malloc(sizeof(CallStackEntry) * call_stack->size);
-    for (uint32_t i = 0; i < call_stack->size; ++i) {
-        call_stack->entries[i] = *to_call_stack_entry(call_stack_proto->entries[i]);
+CallStack to_call_stack(State__CallStack *call_stack_proto) {
+    CallStack call_stack;;
+    call_stack.size = call_stack_proto->n_entries;
+    call_stack.entries = (CallStackEntry*)malloc(sizeof(CallStackEntry) * call_stack.size);
+    for (uint32_t i = 0; i < call_stack.size; ++i) {
+        call_stack.entries[i] = *to_call_stack_entry(call_stack_proto->entries[i]);
     }
     return call_stack;
 }
