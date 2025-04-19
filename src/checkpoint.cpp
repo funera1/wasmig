@@ -240,6 +240,10 @@ Array8 get_type_stack_v3(uint32_t fidx, uint32_t offset, bool is_return_address)
 
     // 配列を確保
     uint8_t* type_stack = (uint8_t*)malloc(stack_size * sizeof(uint8_t));
+    // スタック型をコピー
+    for (uint32_t i = 0; i < stack_size; ++i) {
+        type_stack[i] = table.data[i].ty;
+    }
 
     return (Array8){ .size = stack_size, .contents = type_stack };
 }
