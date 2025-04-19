@@ -336,9 +336,8 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
         uint32_t locals_bytes = 0, stack_bytes = 0;
         for (int i = 0; i < locals_types.size; ++i) locals_bytes += locals_types.contents[i];
         for (int i = 0; i < stack_types.size; ++i) stack_bytes += stack_types.contents[i];
-        // typesはu32型が1と表現されるので4倍
-        locals->size = locals_bytes * sizeof(uint32_t);
-        value_stack->size = stack_bytes * sizeof(uint32_t);
+        locals->size = locals_bytes;
+        value_stack->size = stack_bytes;
         
         TypedArray locals_typed_array = { .types = locals_types, .values = *locals };
         TypedArray value_stack_typed_array = { .types = stack_types, .values = *value_stack };
