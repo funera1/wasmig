@@ -102,7 +102,8 @@ pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
             };
             StackTableEntry {
                 opcode,
-                ty: ty.size(),
+                // TODO: type sizeは統一する
+                ty: ty.size()/mem::size_of::<u32>() as u8,
                 operand,
             }
         })
