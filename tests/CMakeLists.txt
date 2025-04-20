@@ -14,6 +14,7 @@ target_link_libraries(wasmig_tests
     PRIVATE
     libwasmig
     gtest_main
+    spdlog::spdlog
 )
 
 # test_dataディレクトリのパスをテストコードに渡す（後述の C++ 側で使う）
