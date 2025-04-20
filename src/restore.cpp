@@ -64,6 +64,28 @@ Array64 restore_global(Array8 types) {
     return globals;
 }
 
+TypedArray restore_global_v2() {
+    FILE *fp = open_image("global.img", "rb");
+    if (fp == NULL) {
+        spdlog::error("failed to open global img file");
+        return {0, NULL};
+    }
+    // fpからデータを読み込む
+    fseek(fp, 0, SEEK_END);
+    size_t file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    uint8_t *buf = (uint8_t *)malloc(file_size);
+    fread(buf, file_size, 1, fp);
+    fclose(fp);
+    // bufをデシリアライズする
+    Array8 array8;
+    array8.size = file_size;
+    array8.contents = buf;
+    TypedArray globals = deserialize_typed_array(&array8);
+    free(buf);
+    return globals;
+}
+
 CallStack restore_stack() {
     FILE *fp = open_image("call_stack.img", "rb");
     if (fp == NULL) {

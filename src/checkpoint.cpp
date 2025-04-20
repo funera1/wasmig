@@ -93,6 +93,22 @@ int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     return 0;
 }
 
+int checkpoint_global_v2(TypedArray globals) {
+    FILE *fp = open_image("global.img", "wb");
+    if (fp == NULL) {
+        return -1;
+    }
+    
+    // serialize globals
+    Array8 serialized = serialize_typed_array(&globals);
+    uint32_t len = serialized.size;
+    uint8_t *buf = serialized.contents;
+    fwrite(buf, 1, len, fp);
+
+    fclose(fp);
+    return 0;
+}
+
 int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
     FILE *fp = open_image("global.img", "wb");
     if (fp == NULL) {

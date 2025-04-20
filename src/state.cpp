@@ -252,6 +252,25 @@ CallStack deserialize_call_stack(Array8 *buf) {
     return ret;
 }
 
+Array8 serialize_typed_array(TypedArray *typed_array) {
+    State__TypedArray *typed_array_proto = from_typed_array(typed_array);
+    uint32_t size = state__typed_array__get_packed_size(typed_array_proto);
+    uint8_t *buf = (uint8_t*)malloc(size);
+    state__typed_array__pack(typed_array_proto, buf);
+    free_typed_array_proto(typed_array_proto);
+    return Array8 {
+        .size = size,
+        .contents = buf
+    };
+}
+
+TypedArray deserialize_typed_array(Array8 *buf) {
+    State__TypedArray *typed_array_proto = state__typed_array__unpack(NULL, buf->size, buf->contents);
+    TypedArray ret = *to_typed_array(typed_array_proto);
+    state__typed_array__free_unpacked(typed_array_proto, NULL);
+    return ret;
+}
+
 void print_codepos(CodePos *pc) {
     std::string str = "pc: (";
     str += std::to_string(pc->fidx);
