@@ -15,15 +15,21 @@ add_library(libwasmig STATIC
 )
 
 # msgpackの設定
-add_subdirectory(third_party/msgpack-c)
+if (NOT TARGET msgpack-cxx)
+    add_subdirectory(third_party/msgpack-c)
+endif()
 target_link_libraries(libwasmig PRIVATE msgpack-cxx)
 
 # spdlogの設定
-add_subdirectory(third_party/spdlog)
+if (NOT TARGET spdlog::spdlog)
+    add_subdirectory(third_party/spdlog)
+endif()
 target_link_libraries(libwasmig PRIVATE spdlog::spdlog)
 
 # wcrnの設定
-add_subdirectory(wcrn)
+if (NOT TARGET wcrn)
+    add_subdirectory(wcrn)
+endif()
 target_link_libraries(libwasmig PRIVATE wcrn)
 
 # protobufの設定
@@ -31,7 +37,9 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 link_directories(${GTEST_LIBRARIES})
 # add_subdirectory(third_party/protobuf)
-add_subdirectory(third_party/protobuf-c/build-cmake)
+if (NOT TARGET protobuf-c)
+    add_subdirectory(third_party/protobuf-c/build-cmake)
+endif()
 
 # protoの設定
 add_subdirectory(proto)
