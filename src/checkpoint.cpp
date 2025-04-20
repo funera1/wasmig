@@ -101,9 +101,11 @@ int checkpoint_global_v2(TypedArray globals) {
     
     // serialize globals
     Array8 serialized = serialize_typed_array(&globals);
+    spdlog::info("serialize globals: size = {}", serialized.size);
     uint32_t len = serialized.size;
     uint8_t *buf = serialized.contents;
     fwrite(buf, 1, len, fp);
+    spdlog::info("write globals");
 
     fclose(fp);
     return 0;
