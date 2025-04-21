@@ -3,6 +3,10 @@
 
 extern "C" {
 
+Array8 get_local_types(uint32_t fidx) {
+    Array8 types = wcrn_get_local_types(fidx);
+    return types;
+}
     
 StackTable get_stack_table(uint32_t fidx, uint64_t offset) {
     return wcrn_get_stack_table(fidx, offset);
