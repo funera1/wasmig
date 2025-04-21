@@ -14,6 +14,8 @@ add_library(libwasmig STATIC
     src/codepos.cpp
 )
 
+set_target_properties(libwasmig PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 # msgpackの設定
 if (NOT TARGET msgpack-cxx)
     add_subdirectory(third_party/msgpack-c)
