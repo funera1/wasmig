@@ -8,8 +8,13 @@ Array8 get_local_types(uint32_t fidx) {
     return types;
 }
     
-StackTable get_stack_table(uint32_t fidx, uint64_t offset) {
-    return wcrn_get_stack_table(fidx, offset);
+StackTable get_stack_table(uint32_t fidx, uint64_t offset, bool is_stack_top) {
+    if (is_stack_top) {
+        // スタックのトップを取得する場合は、offset+1にする
+        return wcrn_get_stack_table(fidx, offset+1);
+    } else {
+        return wcrn_get_stack_table(fidx, offset);
+    }
 }
 
 uint32_t get_stack_size(StackTable table) {
