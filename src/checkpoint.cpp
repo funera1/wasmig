@@ -137,26 +137,14 @@ int checkpoint_pc(uint32_t func_idx, uint32_t offset) {
     return 0;
 }
 
-Array8 get_type_stack_v3(uint32_t fidx, uint32_t offset, bool is_stack_top) {
-    // スタックテーブルの取得
-    StackTable table = wcrn_get_stack_table(fidx, offset);
-    uint32_t stack_size = table.size;
-
-    // 戻りアドレスなら、最後の命令の戻り型を削る
-    if (!is_stack_top && table.size > 0) {
-        StackTableEntry last_entry = table.data[table.size - 1];
-        spdlog::info("({}, {}): no stack top & table.size > 0", fidx, offset);
-        if (last_entry.opcode == Opcode::WASMIG_Call) {
-            spdlog::info("({}, {}): result size={}", fidx, offset, last_entry.operand.call_result_type);
-            stack_size -= last_entry.operand.call_result_type;
-        }
-    }
-
+Array8 convert_type_stack_from_stack_table(StackTable *table) {
+    uint32_t stack_size = table->size;
+    
     // 配列を確保
     uint8_t* type_stack = (uint8_t*)malloc(stack_size * sizeof(uint8_t));
     // スタック型をコピー
     for (uint32_t i = 0; i < stack_size; ++i) {
-        type_stack[i] = table.data[i].ty;
+        type_stack[i] = table->data[i].ty;
     }
 
     return (Array8){ .size = stack_size, .contents = type_stack };
@@ -173,8 +161,9 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
         spdlog::debug("checkpoint stack: (fidx={}, offset={})", cur_pos->fidx, cur_pos->offset);
 
         // 型スタック
-        Array8 locals_types = wcrn_get_local_types(cur_pos->fidx);
-        Array8 stack_types = get_type_stack_v3(cur_pos->fidx, cur_pos->offset, (i == size-1));
+        Array8 locals_types = get_local_types(cur_pos->fidx);
+        StackTable stack_table = get_stack_table(cur_pos->fidx, cur_pos->offset, (i == size-1));
+        Array8 stack_types = convert_type_stack_from_stack_table(&stack_table);
         
         // 型スタックをもとに、localsとvalues stackのsizeを計算
         uint32_t locals_bytes = 0, stack_bytes = 0;
