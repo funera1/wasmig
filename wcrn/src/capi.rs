@@ -63,7 +63,7 @@ pub extern "C" fn wcrn_rust_function() -> i32 {
 #[no_mangle]
 pub extern "C" fn wcrn_get_stack_size(fidx: u32, offset: u32) -> usize {
     stack_tables::get_stack_size("./", fidx, offset)
-        .expect("failed to get stack size ({fidx}, {offset})")
+        .expect(&format!("failed to get stack size ({}, {})", fidx, offset))
 }
 
 #[no_mangle]
@@ -91,9 +91,9 @@ pub extern "C" fn wcrn_get_local_types(fidx: u32) -> Array8 {
 #[no_mangle]
 pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
     let stack_tables = stack_tables::deserialize_stack_table("./")
-        .expect("failed to deserialize stack table ({fidx}, {offset})");
+        .expect(&format!("failed to deserialize stack table ({}, {})", fidx, offset));
     let stack = stack_tables.get_stack(fidx as usize, offset)
-        .expect("failed to get stack at ({fidx}, {offset})");
+        .expect(&format!("failed to get stack at ({}, {})", fidx, offset));
     let size = stack.len();
     let entries = stack.iter()
         .map(|(op, ty)| {
@@ -129,10 +129,10 @@ pub extern "C" fn wcrn_get_stack_table(fidx: u32, offset: u32) -> StackTable {
 #[no_mangle]
 pub extern "C" fn wcrn_offset_list(fidx: u32) -> Array32 {
     let stack_tables = stack_tables::deserialize_stack_table("./")
-        .expect("failed to deserialize stack table ({fidx}, {offset})");
+        .expect(&format!("failed to deserialize stack table ({})", fidx));
     
     let stack_table = stack_tables.0.get(fidx as usize)
-        .expect("failed to get stack_table at {fidx}");
+        .expect(&format!("failed to get stack_table at {}", fidx));
     
     let offset_list: Vec<u32> = stack_table.inner()
             .keys()
