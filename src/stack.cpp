@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <unordered_map>
-#include <string>
 
 // ========================================
 // Basic Stack Implementation
@@ -14,10 +13,11 @@ struct stack_node {
     uint64_t value;
     struct stack_node* next;
     int ref_count;  // Reference counting for memory management
+    bool is_terminal; // true if this node represents an empty terminal (sentinel/root)
 };
 
 // Global empty stack singleton
-static struct stack_node empty_stack_singleton = { 0, NULL, 1 };
+static struct stack_node empty_stack_singleton = { 0, NULL, 1, true };
 static Stack empty_stack = &empty_stack_singleton;
 
 // Helper function to increment reference count
@@ -44,9 +44,9 @@ static void stack_release(Stack stack) {
 
 // Stack state map structure using C++ unordered_map for efficiency
 struct stack_state_map {
-    std::unordered_map<std::string, Stack>* map;
+    std::unordered_map<uint32_t, Stack>* map;
     
-    stack_state_map() : map(new std::unordered_map<std::string, Stack>()) {}
+    stack_state_map() : map(new std::unordered_map<uint32_t, Stack>()) {}
     ~stack_state_map() { delete map; }
 };
 
@@ -61,6 +61,7 @@ extern "C" {
         new_node->value = 0;
         new_node->next = NULL;
         new_node->ref_count = 1;
+        new_node->is_terminal = true; // allocated empty root
         return new_node;
     }
     
@@ -77,6 +78,7 @@ extern "C" {
         new_node->value = value;
         new_node->next = stack;
         new_node->ref_count = 1;
+        new_node->is_terminal = false; // element node
         
         // Increment reference count of the previous stack
         stack_retain(stack);
@@ -85,9 +87,9 @@ extern "C" {
     }
 
     Stack stack_pop(Stack stack, uint64_t *value) {
-        if (stack == empty_stack || !stack) {
+        if (!stack || stack->is_terminal) {
             if (value) *value = 0;
-            return empty_stack;
+            return stack ? stack : empty_stack;
         }
         
         if (value) {
@@ -101,11 +103,11 @@ extern "C" {
     }
 
     bool stack_is_empty(Stack stack) {
-        return stack == empty_stack || stack == NULL;
+        return stack == NULL || stack->is_terminal;
     }
 
     uint64_t stack_top(Stack stack) {
-        if (stack == empty_stack || !stack) {
+    if (!stack || stack->is_terminal) {
             return 0;  // Default value for empty stack
         }
         return stack->value;
@@ -113,7 +115,7 @@ extern "C" {
 
     size_t stack_size(Stack stack) {
         size_t count = 0;
-        while (stack && stack != empty_stack) {
+        while (stack && !stack->is_terminal) {
             count++;
             stack = stack->next;
         }
@@ -133,7 +135,7 @@ extern "C" {
         
         printf("[ ");
         Stack current = stack;
-        while (current && current != empty_stack) {
+        while (current && !current->is_terminal) {
             printf("%lu ", current->value);
             current = current->next;
         }
@@ -153,8 +155,8 @@ extern "C" {
     // Stack State Management Functions
     // =====================
     
-    bool stack_state_save(StackStateMap map, const char* key, Stack stack) {
-        if (!map || !key) return false;
+    bool stack_state_save(StackStateMap map, uint32_t key, Stack stack) {
+        if (!map) return false;
         
         try {
             auto it = map->map->find(key);
@@ -172,8 +174,8 @@ extern "C" {
         }
     }
 
-    Stack stack_state_load(StackStateMap map, const char* key) {
-        if (!map || !key) return empty_stack;
+    Stack stack_state_load(StackStateMap map, uint32_t key) {
+        if (!map) return empty_stack;
         
         try {
             auto it = map->map->find(key);
@@ -187,8 +189,8 @@ extern "C" {
         return empty_stack;
     }
 
-    bool stack_state_exists(StackStateMap map, const char* key) {
-        if (!map || !key) return false;
+    bool stack_state_exists(StackStateMap map, uint32_t key) {
+        if (!map) return false;
         
         try {
             return map->map->find(key) != map->map->end();
@@ -197,8 +199,8 @@ extern "C" {
         }
     }
 
-    bool stack_state_remove(StackStateMap map, const char* key) {
-        if (!map || !key) return false;
+    bool stack_state_remove(StackStateMap map, uint32_t key) {
+        if (!map) return false;
         
         try {
             auto it = map->map->find(key);

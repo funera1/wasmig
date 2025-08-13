@@ -40,11 +40,11 @@ typedef struct stack_state_map* StackStateMap;
 StackStateMap stack_state_map_create();
 void stack_state_map_destroy(StackStateMap map);
 
-// State management operations
-bool stack_state_save(StackStateMap map, const char* key, Stack stack);
-Stack stack_state_load(StackStateMap map, const char* key);
-bool stack_state_exists(StackStateMap map, const char* key);
-bool stack_state_remove(StackStateMap map, const char* key);
+// State management operations (uint32_t keys)
+bool stack_state_save(StackStateMap map, uint32_t key, Stack stack);
+Stack stack_state_load(StackStateMap map, uint32_t key);
+bool stack_state_exists(StackStateMap map, uint32_t key);
+bool stack_state_remove(StackStateMap map, uint32_t key);
 
 // Debug utilities for state map
 void stack_state_map_debug_print(StackStateMap map);

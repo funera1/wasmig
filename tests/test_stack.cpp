@@ -20,9 +20,10 @@ TEST_F(StackTest, BasicStackOperations) {
     EXPECT_EQ(stack_size(stack), 0);
     EXPECT_EQ(stack_top(stack), 0);
     
-    // stack_empty()との同等性テスト
+    // stack_empty()との同等性テスト: どちらも空であるが、ポインタは異なる
     Stack empty_stack = stack_empty();
-    EXPECT_EQ(stack, empty_stack);
+    EXPECT_TRUE(stack_is_empty(empty_stack));
+    EXPECT_TRUE(stack_is_empty(stack));
     
     // 空のスタックのテスト
     EXPECT_TRUE(stack_is_empty(stack));
@@ -96,8 +97,8 @@ TEST_F(StackTest, StackStateMap) {
     ASSERT_NE(map, nullptr);
     
     // 初期状態のテスト
-    EXPECT_FALSE(stack_state_exists(map, "checkpoint1"));
-    Stack loaded = stack_state_load(map, "checkpoint1");
+    EXPECT_FALSE(stack_state_exists(map, 1));
+    Stack loaded = stack_state_load(map, 1);
     EXPECT_TRUE(stack_is_empty(loaded));
     
     // スタックを作成して保存
@@ -106,11 +107,11 @@ TEST_F(StackTest, StackStateMap) {
     stack = stack_push(stack, 200);
     stack = stack_push(stack, 300);
     
-    EXPECT_TRUE(stack_state_save(map, "checkpoint1", stack));
-    EXPECT_TRUE(stack_state_exists(map, "checkpoint1"));
+    EXPECT_TRUE(stack_state_save(map, 1, stack));
+    EXPECT_TRUE(stack_state_exists(map, 1));
     
     // 保存した状態をロード
-    Stack loaded_stack = stack_state_load(map, "checkpoint1");
+    Stack loaded_stack = stack_state_load(map, 1);
     EXPECT_EQ(stack_size(loaded_stack), 3);
     EXPECT_EQ(stack_top(loaded_stack), 300);
     
@@ -134,20 +135,20 @@ TEST_F(StackTest, MultipleCheckpoints) {
     // 異なる状態のスタックを複数保存
     Stack stack1 = stack_empty();
     stack1 = stack_push(stack1, 10);
-    stack_state_save(map, "state1", stack1);
+    stack_state_save(map, 1, stack1);
     
     Stack stack2 = stack1;
     stack2 = stack_push(stack2, 20);
-    stack_state_save(map, "state2", stack2);
+    stack_state_save(map, 2, stack2);
     
     Stack stack3 = stack2;
     stack3 = stack_push(stack3, 30);
-    stack_state_save(map, "state3", stack3);
+    stack_state_save(map, 3, stack3);
     
     // それぞれの状態を確認
-    Stack loaded1 = stack_state_load(map, "state1");
-    Stack loaded2 = stack_state_load(map, "state2");
-    Stack loaded3 = stack_state_load(map, "state3");
+    Stack loaded1 = stack_state_load(map, 1);
+    Stack loaded2 = stack_state_load(map, 2);
+    Stack loaded3 = stack_state_load(map, 3);
     
     EXPECT_EQ(stack_size(loaded1), 1);
     EXPECT_EQ(stack_top(loaded1), 10);
@@ -159,13 +160,13 @@ TEST_F(StackTest, MultipleCheckpoints) {
     EXPECT_EQ(stack_top(loaded3), 30);
     
     // 状態の削除テスト
-    EXPECT_TRUE(stack_state_remove(map, "state2"));
-    EXPECT_FALSE(stack_state_exists(map, "state2"));
-    EXPECT_TRUE(stack_state_exists(map, "state1"));
-    EXPECT_TRUE(stack_state_exists(map, "state3"));
+    EXPECT_TRUE(stack_state_remove(map, 2));
+    EXPECT_FALSE(stack_state_exists(map, 2));
+    EXPECT_TRUE(stack_state_exists(map, 1));
+    EXPECT_TRUE(stack_state_exists(map, 3));
     
     // 存在しないキーの削除
-    EXPECT_FALSE(stack_state_remove(map, "nonexistent"));
+    EXPECT_FALSE(stack_state_remove(map, 999999u));
     
     stack_destroy(stack1);
     stack_destroy(stack2);
@@ -180,9 +181,9 @@ TEST_F(StackTest, OverwriteCheckpoint) {
     // 最初の状態を保存
     Stack stack1 = stack_empty();
     stack1 = stack_push(stack1, 10);
-    stack_state_save(map, "checkpoint", stack1);
+    stack_state_save(map, 42, stack1);
     
-    Stack loaded = stack_state_load(map, "checkpoint");
+    Stack loaded = stack_state_load(map, 42);
     EXPECT_EQ(stack_size(loaded), 1);
     EXPECT_EQ(stack_top(loaded), 10);
     
@@ -190,9 +191,9 @@ TEST_F(StackTest, OverwriteCheckpoint) {
     Stack stack2 = stack_empty();
     stack2 = stack_push(stack2, 20);
     stack2 = stack_push(stack2, 30);
-    stack_state_save(map, "checkpoint", stack2);
+    stack_state_save(map, 42, stack2);
     
-    loaded = stack_state_load(map, "checkpoint");
+    loaded = stack_state_load(map, 42);
     EXPECT_EQ(stack_size(loaded), 2);
     EXPECT_EQ(stack_top(loaded), 30);
     
@@ -208,17 +209,14 @@ TEST_F(StackTest, ErrorHandling) {
     EXPECT_NE(map, nullptr); // 正常に作成される
     
     // 無効な引数でのテスト
-    EXPECT_FALSE(stack_state_save(nullptr, "key", stack_empty()));
-    EXPECT_FALSE(stack_state_save(map, nullptr, stack_empty()));
-    EXPECT_FALSE(stack_state_exists(nullptr, "key"));
-    EXPECT_FALSE(stack_state_exists(map, nullptr));
-    EXPECT_FALSE(stack_state_remove(nullptr, "key"));
-    EXPECT_FALSE(stack_state_remove(map, nullptr));
+    EXPECT_FALSE(stack_state_save(nullptr, 1, stack_empty()));
+    EXPECT_FALSE(stack_state_exists(nullptr, 1));
+    EXPECT_FALSE(stack_state_remove(nullptr, 1));
     
-    Stack loaded = stack_state_load(nullptr, "key");
+    Stack loaded = stack_state_load(nullptr, 1);
     EXPECT_TRUE(stack_is_empty(loaded));
     
-    loaded = stack_state_load(map, nullptr);
+    loaded = stack_state_load(map, 0);
     EXPECT_TRUE(stack_is_empty(loaded));
     
     stack_state_map_destroy(map);
@@ -233,14 +231,9 @@ TEST_F(StackTest, HashCollision) {
     for (int i = 0; i < 1000; i++) {
         Stack stack = stack_empty();
         stack = stack_push(stack, i);
-        
-        char key[32];
-        snprintf(key, sizeof(key), "key_%d", i);
-        
-        EXPECT_TRUE(stack_state_save(map, key, stack));
-        EXPECT_TRUE(stack_state_exists(map, key));
-        
-        Stack loaded = stack_state_load(map, key);
+        EXPECT_TRUE(stack_state_save(map, static_cast<uint32_t>(i), stack));
+        EXPECT_TRUE(stack_state_exists(map, static_cast<uint32_t>(i)));
+        Stack loaded = stack_state_load(map, static_cast<uint32_t>(i));
         EXPECT_EQ(stack_top(loaded), i);
         
         stack_destroy(stack);
@@ -248,11 +241,8 @@ TEST_F(StackTest, HashCollision) {
     
     // すべてのキーが正しく保存されているか確認
     for (int i = 0; i < 1000; i++) {
-        char key[32];
-        snprintf(key, sizeof(key), "key_%d", i);
-        
-        EXPECT_TRUE(stack_state_exists(map, key));
-        Stack loaded = stack_state_load(map, key);
+        EXPECT_TRUE(stack_state_exists(map, static_cast<uint32_t>(i)));
+        Stack loaded = stack_state_load(map, static_cast<uint32_t>(i));
         EXPECT_EQ(stack_top(loaded), i);
     }
     
@@ -270,13 +260,13 @@ TEST_F(StackTest, StackCreate) {
     Stack stack2 = stack_create();
     Stack stack3 = stack_create();
     
-    // すべて同じ空スタックを返すことを確認
-    EXPECT_EQ(stack1, stack2);
-    EXPECT_EQ(stack2, stack3);
+    // それぞれ独立した空スタック（ポインタは異なる）が返ること
+    EXPECT_NE(stack1, stack2);
+    EXPECT_NE(stack2, stack3);
     
-    // stack_empty()との一貫性テスト
+    // stack_empty()はグローバルな空スタック（ポインタは異なる可能性あり）
     Stack empty_stack = stack_empty();
-    EXPECT_EQ(stack1, empty_stack);
+    EXPECT_TRUE(stack_is_empty(empty_stack));
     
     // 作成したスタックに対する操作テスト
     Stack new_stack = stack_push(stack1, 42);
