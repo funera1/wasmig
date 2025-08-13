@@ -60,7 +60,7 @@ extern "C" {
     // Basic Stack Operations
     // ========================================
     
-    Stack stack_create() {
+    Stack wasmig_stack_create() {
         struct stack_node* new_node = (struct stack_node*)malloc(sizeof(struct stack_node));
         if (!new_node) return NULL;
         new_node->value = 0;
@@ -70,11 +70,11 @@ extern "C" {
         return new_node;
     }
     
-    Stack stack_empty() {
+    Stack wasmig_stack_empty() {
         return empty_stack;
     }
 
-    Stack stack_push(Stack stack, uint64_t value) {
+    Stack wasmig_stack_push(Stack stack, uint64_t value) {
         struct stack_node* new_node = (struct stack_node*)malloc(sizeof(struct stack_node));
         if (!new_node) {
             return NULL;  // Memory allocation failed
@@ -86,12 +86,12 @@ extern "C" {
         new_node->is_terminal = false; // element node
         
         // Increment reference count of the previous stack
-        stack_retain(stack);
+    stack_retain(stack);
         
         return new_node;
     }
 
-    Stack stack_pop(Stack stack, uint64_t *value) {
+    Stack wasmig_stack_pop(Stack stack, uint64_t *value) {
         if (!stack || stack->is_terminal) {
             if (value) *value = 0;
             return stack ? stack : empty_stack;
@@ -107,18 +107,18 @@ extern "C" {
         return next ? next : empty_stack;
     }
 
-    bool stack_is_empty(Stack stack) {
+    bool wasmig_stack_is_empty(Stack stack) {
         return stack == NULL || stack->is_terminal;
     }
 
-    uint64_t stack_top(Stack stack) {
+    uint64_t wasmig_stack_top(Stack stack) {
     if (!stack || stack->is_terminal) {
             return 0;  // Default value for empty stack
         }
         return stack->value;
     }
 
-    size_t stack_size(Stack stack) {
+    size_t wasmig_stack_size(Stack stack) {
         size_t count = 0;
         while (stack && !stack->is_terminal) {
             count++;
@@ -127,13 +127,13 @@ extern "C" {
         return count;
     }
 
-    void stack_destroy(Stack stack) {
+    void wasmig_stack_destroy(Stack stack) {
         stack_release(stack);
     }
 
-    void stack_print(Stack stack) {
+    void wasmig_stack_print(Stack stack) {
         printf("Stack: ");
-        if (stack_is_empty(stack)) {
+    if (wasmig_stack_is_empty(stack)) {
             printf("(empty)\n");
             return;
         }
@@ -148,7 +148,7 @@ extern "C" {
     }
 
     // Stack state management functions
-    StackStateMap stack_state_map_create() {
+    StackStateMap wasmig_stack_state_map_create() {
         try {
             return new stack_state_map();
         } catch (...) {
@@ -160,7 +160,7 @@ extern "C" {
     // Stack State Management Functions
     // =====================
     
-    bool stack_state_save(StackStateMap map, uint32_t key, Stack stack) {
+    bool wasmig_stack_state_save(StackStateMap map, uint32_t key, Stack stack) {
         if (!map) return false;
         
         try {
@@ -179,7 +179,7 @@ extern "C" {
         }
     }
 
-    Stack stack_state_load(StackStateMap map, uint32_t key) {
+    Stack wasmig_stack_state_load(StackStateMap map, uint32_t key) {
         if (!map) return empty_stack;
         
         try {
@@ -196,7 +196,7 @@ extern "C" {
         return empty_stack;
     }
 
-    bool stack_state_exists(StackStateMap map, uint32_t key) {
+    bool wasmig_stack_state_exists(StackStateMap map, uint32_t key) {
         if (!map) return false;
         
         try {
@@ -206,7 +206,7 @@ extern "C" {
         }
     }
 
-    bool stack_state_remove(StackStateMap map, uint32_t key) {
+    bool wasmig_stack_state_remove(StackStateMap map, uint32_t key) {
         if (!map) return false;
         
         try {
@@ -223,7 +223,7 @@ extern "C" {
         return false;
     }
 
-    void stack_state_map_destroy(StackStateMap map) {
+    void wasmig_stack_state_map_destroy(StackStateMap map) {
         if (!map) return;
         
         try {
@@ -249,27 +249,27 @@ extern "C" {
     // ========================================
     // Stack State Map Registry API
     // ========================================
-    bool stack_state_map_register(uint32_t id, StackStateMap map) {
+    bool wasmig_stack_state_map_register(uint32_t id, StackStateMap map) {
         if (!map) return false;
         if (g_state_map_registry.find(id) != g_state_map_registry.end()) return false;
         g_state_map_registry[id] = map;
         return true;
     }
 
-    StackStateMap stack_state_map_get(uint32_t id) {
+    StackStateMap wasmig_stack_state_map_get(uint32_t id) {
         auto it = g_state_map_registry.find(id);
         if (it == g_state_map_registry.end()) return nullptr;
         return it->second;
     }
 
-    bool stack_state_map_unregister(uint32_t id) {
+    bool wasmig_stack_state_map_unregister(uint32_t id) {
         auto it = g_state_map_registry.find(id);
         if (it == g_state_map_registry.end()) return false;
         g_state_map_registry.erase(it);
         return true;
     }
 
-    void stack_state_map_registry_clear() {
+    void wasmig_stack_state_map_registry_clear() {
         g_state_map_registry.clear();
     }
 }

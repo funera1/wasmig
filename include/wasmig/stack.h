@@ -17,17 +17,17 @@ extern "C" {
 typedef struct stack_node* Stack;
 
 // Basic stack operations
-Stack stack_create();
-Stack stack_empty();
-Stack stack_push(Stack stack, uint64_t value);
-Stack stack_pop(Stack stack, uint64_t *value);
-bool stack_is_empty(Stack stack);
-uint64_t stack_top(Stack stack);
-size_t stack_size(Stack stack);
-void stack_destroy(Stack stack);
+Stack wasmig_stack_create();
+Stack wasmig_stack_empty();
+Stack wasmig_stack_push(Stack stack, uint64_t value);
+Stack wasmig_stack_pop(Stack stack, uint64_t *value);
+bool wasmig_stack_is_empty(Stack stack);
+uint64_t wasmig_stack_top(Stack stack);
+size_t wasmig_stack_size(Stack stack);
+void wasmig_stack_destroy(Stack stack);
 
 // Debug utilities for basic stack
-void stack_print(Stack stack);
+void wasmig_stack_print(Stack stack);
 
 // ========================================
 // Stack State Management API
@@ -37,33 +37,57 @@ void stack_print(Stack stack);
 typedef struct stack_state_map* StackStateMap;
 
 // Stack state map operations
-StackStateMap stack_state_map_create();
-void stack_state_map_destroy(StackStateMap map);
+StackStateMap wasmig_stack_state_map_create();
+void wasmig_stack_state_map_destroy(StackStateMap map);
 
 // State management operations (uint32_t keys)
-bool stack_state_save(StackStateMap map, uint32_t key, Stack stack);
-Stack stack_state_load(StackStateMap map, uint32_t key);
-bool stack_state_exists(StackStateMap map, uint32_t key);
-bool stack_state_remove(StackStateMap map, uint32_t key);
+bool wasmig_stack_state_save(StackStateMap map, uint32_t key, Stack stack);
+Stack wasmig_stack_state_load(StackStateMap map, uint32_t key);
+bool wasmig_stack_state_exists(StackStateMap map, uint32_t key);
+bool wasmig_stack_state_remove(StackStateMap map, uint32_t key);
 
 // Debug utilities for state map
-void stack_state_map_debug_print(StackStateMap map);
+void wasmig_stack_state_map_debug_print(StackStateMap map);
 
 // ========================================
 // Stack State Map Registry API (global)
 // ========================================
 // Register a map with an ID so it can be retrieved elsewhere.
 // Returns false if id already exists or map is NULL.
-bool stack_state_map_register(uint32_t id, StackStateMap map);
+bool wasmig_stack_state_map_register(uint32_t id, StackStateMap map);
 
 // Get a registered map by ID. Returns NULL if not found.
-StackStateMap stack_state_map_get(uint32_t id);
+StackStateMap wasmig_stack_state_map_get(uint32_t id);
 
 // Unregister a map by ID. Does not destroy the map. Returns false if not found.
-bool stack_state_map_unregister(uint32_t id);
+bool wasmig_stack_state_map_unregister(uint32_t id);
 
 // Clear all registered maps (does not destroy them).
-void stack_state_map_registry_clear();
+void wasmig_stack_state_map_registry_clear();
+
+// Backward-compat macros
+#define stack_create wasmig_stack_create
+#define stack_empty wasmig_stack_empty
+#define stack_push wasmig_stack_push
+#define stack_pop wasmig_stack_pop
+#define stack_is_empty wasmig_stack_is_empty
+#define stack_top wasmig_stack_top
+#define stack_size wasmig_stack_size
+#define stack_destroy wasmig_stack_destroy
+#define stack_print wasmig_stack_print
+
+#define stack_state_map_create wasmig_stack_state_map_create
+#define stack_state_map_destroy wasmig_stack_state_map_destroy
+#define stack_state_save wasmig_stack_state_save
+#define stack_state_load wasmig_stack_state_load
+#define stack_state_exists wasmig_stack_state_exists
+#define stack_state_remove wasmig_stack_state_remove
+#define stack_state_map_debug_print wasmig_stack_state_map_debug_print
+
+#define stack_state_map_register wasmig_stack_state_map_register
+#define stack_state_map_get wasmig_stack_state_map_get
+#define stack_state_map_unregister wasmig_stack_state_map_unregister
+#define stack_state_map_registry_clear wasmig_stack_state_map_registry_clear
 
 #ifdef __cplusplus
 }
