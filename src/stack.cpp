@@ -55,6 +55,15 @@ extern "C" {
     // Basic Stack Operations
     // ========================================
     
+    Stack stack_create() {
+        struct stack_node* new_node = (struct stack_node*)malloc(sizeof(struct stack_node));
+        if (!new_node) return NULL;
+        new_node->value = 0;
+        new_node->next = NULL;
+        new_node->ref_count = 1;
+        return new_node;
+    }
+    
     Stack stack_empty() {
         return empty_stack;
     }

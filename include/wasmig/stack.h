@@ -17,6 +17,7 @@ extern "C" {
 typedef struct stack_node* Stack;
 
 // Basic stack operations
+Stack stack_create();
 Stack stack_empty();
 Stack stack_push(Stack stack, uint64_t value);
 Stack stack_pop(Stack stack, uint64_t *value);

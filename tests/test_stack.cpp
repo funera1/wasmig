@@ -14,7 +14,15 @@ protected:
 
 // 基本的なスタック操作のテスト
 TEST_F(StackTest, BasicStackOperations) {
-    Stack stack = stack_empty();
+    // stack_create()のテスト
+    Stack stack = stack_create();
+    EXPECT_TRUE(stack_is_empty(stack));
+    EXPECT_EQ(stack_size(stack), 0);
+    EXPECT_EQ(stack_top(stack), 0);
+    
+    // stack_empty()との同等性テスト
+    Stack empty_stack = stack_empty();
+    EXPECT_EQ(stack, empty_stack);
     
     // 空のスタックのテスト
     EXPECT_TRUE(stack_is_empty(stack));
@@ -249,4 +257,35 @@ TEST_F(StackTest, HashCollision) {
     }
     
     stack_state_map_destroy(map);
+}
+
+// stack_create関数の専用テスト
+TEST_F(StackTest, StackCreate) {
+    // stack_create()の基本テスト
+    Stack stack1 = stack_create();
+    EXPECT_TRUE(stack_is_empty(stack1));
+    EXPECT_EQ(stack_size(stack1), 0);
+    
+    // 複数回の呼び出しテスト
+    Stack stack2 = stack_create();
+    Stack stack3 = stack_create();
+    
+    // すべて同じ空スタックを返すことを確認
+    EXPECT_EQ(stack1, stack2);
+    EXPECT_EQ(stack2, stack3);
+    
+    // stack_empty()との一貫性テスト
+    Stack empty_stack = stack_empty();
+    EXPECT_EQ(stack1, empty_stack);
+    
+    // 作成したスタックに対する操作テスト
+    Stack new_stack = stack_push(stack1, 42);
+    EXPECT_FALSE(stack_is_empty(new_stack));
+    EXPECT_EQ(stack_top(new_stack), 42);
+    EXPECT_EQ(stack_size(new_stack), 1);
+    
+    // 元のスタックは変更されていないことを確認
+    EXPECT_TRUE(stack_is_empty(stack1));
+    
+    stack_destroy(new_stack);
 }
