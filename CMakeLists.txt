@@ -7,6 +7,7 @@ add_library(libwasmig STATIC
     src/restore.cpp
     src/table.cpp
     src/stack_tables.cpp
+    src/stack.cpp
     src/log.cpp
     src/utils.cpp
     src/state.cpp
