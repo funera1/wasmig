@@ -2,29 +2,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unordered_map>
+#include <string>
 
-// Hash table for stack state mapping
-#define STACK_STATE_MAP_SIZE 256
-
-typedef struct stack_state_entry {
-    char* key;
-    Stack stack;
-    struct stack_state_entry* next;
-} StackStateEntry;
-
+// C++のunordered_mapを使用したスタック状態管理
 struct stack_state_map {
-    StackStateEntry* buckets[STACK_STATE_MAP_SIZE];
+    std::unordered_map<std::string, Stack>* map;
+    
+    stack_state_map() : map(new std::unordered_map<std::string, Stack>()) {}
+    ~stack_state_map() { delete map; }
 };
-
-// Simple hash function for strings
-static unsigned int hash_string(const char* str) {
-    unsigned int hash = 5381;
-    int c;
-    while ((c = *str++)) {
-        hash = ((hash << 5) + hash) + c;
-    }
-    return hash % STACK_STATE_MAP_SIZE;
-}
 
 // Internal stack node structure for persistent stack
 struct stack_node {
@@ -134,63 +121,42 @@ extern "C" {
 
     // Stack state management functions
     StackStateMap stack_state_map_create() {
-        StackStateMap map = (StackStateMap)malloc(sizeof(struct stack_state_map));
-        if (!map) return NULL;
-        
-        for (int i = 0; i < STACK_STATE_MAP_SIZE; i++) {
-            map->buckets[i] = NULL;
+        try {
+            return new stack_state_map();
+        } catch (...) {
+            return nullptr;
         }
-        return map;
     }
 
     bool stack_state_save(StackStateMap map, const char* key, Stack stack) {
         if (!map || !key) return false;
         
-        unsigned int index = hash_string(key);
-        
-        // Check if key already exists and update
-        StackStateEntry* entry = map->buckets[index];
-        while (entry) {
-            if (strcmp(entry->key, key) == 0) {
-                // Release old stack and save new one
-                stack_release(entry->stack);
-                entry->stack = stack;
-                stack_retain(stack);
-                return true;
+        try {
+            auto it = map->map->find(key);
+            if (it != map->map->end()) {
+                // 既存のキーがある場合、古いスタックを解放
+                stack_release(it->second);
             }
-            entry = entry->next;
-        }
-        
-        // Create new entry
-        entry = (StackStateEntry*)malloc(sizeof(StackStateEntry));
-        if (!entry) return false;
-        
-        entry->key = (char*)malloc(strlen(key) + 1);
-        if (!entry->key) {
-            free(entry);
+            
+            // 新しいスタックを保存
+            stack_retain(stack);
+            (*map->map)[key] = stack;
+            return true;
+        } catch (...) {
             return false;
         }
-        
-        strcpy(entry->key, key);
-        entry->stack = stack;
-        stack_retain(stack);
-        entry->next = map->buckets[index];
-        map->buckets[index] = entry;
-        
-        return true;
     }
 
     Stack stack_state_load(StackStateMap map, const char* key) {
         if (!map || !key) return empty_stack;
         
-        unsigned int index = hash_string(key);
-        StackStateEntry* entry = map->buckets[index];
-        
-        while (entry) {
-            if (strcmp(entry->key, key) == 0) {
-                return entry->stack;
+        try {
+            auto it = map->map->find(key);
+            if (it != map->map->end()) {
+                return it->second;
             }
-            entry = entry->next;
+        } catch (...) {
+            // エラーが発生した場合は空のスタックを返す
         }
         
         return empty_stack;
@@ -199,41 +165,25 @@ extern "C" {
     bool stack_state_exists(StackStateMap map, const char* key) {
         if (!map || !key) return false;
         
-        unsigned int index = hash_string(key);
-        StackStateEntry* entry = map->buckets[index];
-        
-        while (entry) {
-            if (strcmp(entry->key, key) == 0) {
-                return true;
-            }
-            entry = entry->next;
+        try {
+            return map->map->find(key) != map->map->end();
+        } catch (...) {
+            return false;
         }
-        
-        return false;
     }
 
     bool stack_state_remove(StackStateMap map, const char* key) {
         if (!map || !key) return false;
         
-        unsigned int index = hash_string(key);
-        StackStateEntry* entry = map->buckets[index];
-        StackStateEntry* prev = NULL;
-        
-        while (entry) {
-            if (strcmp(entry->key, key) == 0) {
-                if (prev) {
-                    prev->next = entry->next;
-                } else {
-                    map->buckets[index] = entry->next;
-                }
-                
-                stack_release(entry->stack);
-                free(entry->key);
-                free(entry);
+        try {
+            auto it = map->map->find(key);
+            if (it != map->map->end()) {
+                stack_release(it->second);
+                map->map->erase(it);
                 return true;
             }
-            prev = entry;
-            entry = entry->next;
+        } catch (...) {
+            return false;
         }
         
         return false;
@@ -242,17 +192,15 @@ extern "C" {
     void stack_state_map_destroy(StackStateMap map) {
         if (!map) return;
         
-        for (int i = 0; i < STACK_STATE_MAP_SIZE; i++) {
-            StackStateEntry* entry = map->buckets[i];
-            while (entry) {
-                StackStateEntry* next = entry->next;
-                stack_release(entry->stack);
-                free(entry->key);
-                free(entry);
-                entry = next;
+        try {
+            // すべての保存されたスタックを解放
+            for (auto& pair : *map->map) {
+                stack_release(pair.second);
             }
+            delete map;
+        } catch (...) {
+            // エラーが発生してもメモリリークを防ぐため削除を試行
+            delete map;
         }
-        
-        free(map);
     }
 }
