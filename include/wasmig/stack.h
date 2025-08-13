@@ -49,6 +49,22 @@ bool stack_state_remove(StackStateMap map, uint32_t key);
 // Debug utilities for state map
 void stack_state_map_debug_print(StackStateMap map);
 
+// ========================================
+// Stack State Map Registry API (global)
+// ========================================
+// Register a map with an ID so it can be retrieved elsewhere.
+// Returns false if id already exists or map is NULL.
+bool stack_state_map_register(uint32_t id, StackStateMap map);
+
+// Get a registered map by ID. Returns NULL if not found.
+StackStateMap stack_state_map_get(uint32_t id);
+
+// Unregister a map by ID. Does not destroy the map. Returns false if not found.
+bool stack_state_map_unregister(uint32_t id);
+
+// Clear all registered maps (does not destroy them).
+void stack_state_map_registry_clear();
+
 #ifdef __cplusplus
 }
 #endif

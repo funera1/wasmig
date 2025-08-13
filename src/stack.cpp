@@ -50,6 +50,11 @@ struct stack_state_map {
     ~stack_state_map() { delete map; }
 };
 
+// ========================================
+// Global registry for StackStateMap
+// ========================================
+static std::unordered_map<uint32_t, StackStateMap> g_state_map_registry;
+
 extern "C" {
     // ========================================
     // Basic Stack Operations
@@ -180,6 +185,8 @@ extern "C" {
         try {
             auto it = map->map->find(key);
             if (it != map->map->end()) {
+                // Return a retained reference so caller owns it independently
+                stack_retain(it->second);
                 return it->second;
             }
         } catch (...) {
@@ -220,6 +227,14 @@ extern "C" {
         if (!map) return;
         
         try {
+            // レジストリから該当マップを取り除く
+            for (auto it = g_state_map_registry.begin(); it != g_state_map_registry.end(); ) {
+                if (it->second == map) {
+                    it = g_state_map_registry.erase(it);
+                } else {
+                    ++it;
+                }
+            }
             // すべての保存されたスタックを解放
             for (auto& pair : *map->map) {
                 stack_release(pair.second);
@@ -229,5 +244,32 @@ extern "C" {
             // エラーが発生してもメモリリークを防ぐため削除を試行
             delete map;
         }
+    }
+
+    // ========================================
+    // Stack State Map Registry API
+    // ========================================
+    bool stack_state_map_register(uint32_t id, StackStateMap map) {
+        if (!map) return false;
+        if (g_state_map_registry.find(id) != g_state_map_registry.end()) return false;
+        g_state_map_registry[id] = map;
+        return true;
+    }
+
+    StackStateMap stack_state_map_get(uint32_t id) {
+        auto it = g_state_map_registry.find(id);
+        if (it == g_state_map_registry.end()) return nullptr;
+        return it->second;
+    }
+
+    bool stack_state_map_unregister(uint32_t id) {
+        auto it = g_state_map_registry.find(id);
+        if (it == g_state_map_registry.end()) return false;
+        g_state_map_registry.erase(it);
+        return true;
+    }
+
+    void stack_state_map_registry_clear() {
+        g_state_map_registry.clear();
     }
 }
