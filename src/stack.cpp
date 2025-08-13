@@ -5,13 +5,9 @@
 #include <unordered_map>
 #include <string>
 
-// C++のunordered_mapを使用したスタック状態管理
-struct stack_state_map {
-    std::unordered_map<std::string, Stack>* map;
-    
-    stack_state_map() : map(new std::unordered_map<std::string, Stack>()) {}
-    ~stack_state_map() { delete map; }
-};
+// ========================================
+// Basic Stack Implementation
+// ========================================
 
 // Internal stack node structure for persistent stack
 struct stack_node {
@@ -42,7 +38,23 @@ static void stack_release(Stack stack) {
     }
 }
 
+// ========================================
+// Stack State Map Implementation
+// ========================================
+
+// Stack state map structure using C++ unordered_map for efficiency
+struct stack_state_map {
+    std::unordered_map<std::string, Stack>* map;
+    
+    stack_state_map() : map(new std::unordered_map<std::string, Stack>()) {}
+    ~stack_state_map() { delete map; }
+};
+
 extern "C" {
+    // ========================================
+    // Basic Stack Operations
+    // ========================================
+    
     Stack stack_empty() {
         return empty_stack;
     }
@@ -128,6 +140,10 @@ extern "C" {
         }
     }
 
+    // =====================
+    // Stack State Management Functions
+    // =====================
+    
     bool stack_state_save(StackStateMap map, const char* key, Stack stack) {
         if (!map || !key) return false;
         

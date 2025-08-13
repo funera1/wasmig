@@ -9,43 +9,44 @@
 extern "C" {
 #endif
 
+// ========================================
+// Basic Stack API
+// ========================================
+
 // Opaque stack handle
 typedef struct stack_node* Stack;
 
-// Stack operations
+// Basic stack operations
 Stack stack_empty();
 Stack stack_push(Stack stack, uint64_t value);
 Stack stack_pop(Stack stack, uint64_t *value);
 bool stack_is_empty(Stack stack);
 uint64_t stack_top(Stack stack);
 size_t stack_size(Stack stack);
-
-// Memory management
 void stack_destroy(Stack stack);
 
-// Stack state management
+// Debug utilities for basic stack
+void stack_print(Stack stack);
+
+// ========================================
+// Stack State Management API
+// ========================================
+
+// Opaque stack state map handle
 typedef struct stack_state_map* StackStateMap;
 
-// Create a new stack state map
+// Stack state map operations
 StackStateMap stack_state_map_create();
-
-// Save stack state with a key
-bool stack_state_save(StackStateMap map, const char* key, Stack stack);
-
-// Load stack state by key
-Stack stack_state_load(StackStateMap map, const char* key);
-
-// Check if key exists
-bool stack_state_exists(StackStateMap map, const char* key);
-
-// Remove state by key
-bool stack_state_remove(StackStateMap map, const char* key);
-
-// Destroy the state map
 void stack_state_map_destroy(StackStateMap map);
 
-// Debug utilities
-void stack_print(Stack stack);
+// State management operations
+bool stack_state_save(StackStateMap map, const char* key, Stack stack);
+Stack stack_state_load(StackStateMap map, const char* key);
+bool stack_state_exists(StackStateMap map, const char* key);
+bool stack_state_remove(StackStateMap map, const char* key);
+
+// Debug utilities for state map
+void stack_state_map_debug_print(StackStateMap map);
 
 #ifdef __cplusplus
 }
