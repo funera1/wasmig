@@ -7,6 +7,7 @@ add_subdirectory(third_party/googletest)
 add_executable(
     wasmig_tests
     test_hello.cpp
+    test_stack.cpp
 )
 
 # テスト対象のライブラリと Google Test をリンク

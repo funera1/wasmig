@@ -1,6 +1,30 @@
 #include "wasmig/stack.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
+// Hash table for stack state mapping
+#define STACK_STATE_MAP_SIZE 256
+
+typedef struct stack_state_entry {
+    char* key;
+    Stack stack;
+    struct stack_state_entry* next;
+} StackStateEntry;
+
+struct stack_state_map {
+    StackStateEntry* buckets[STACK_STATE_MAP_SIZE];
+};
+
+// Simple hash function for strings
+static unsigned int hash_string(const char* str) {
+    unsigned int hash = 5381;
+    int c;
+    while ((c = *str++)) {
+        hash = ((hash << 5) + hash) + c;
+    }
+    return hash % STACK_STATE_MAP_SIZE;
+}
 
 // Internal stack node structure for persistent stack
 struct stack_node {
@@ -106,5 +130,129 @@ extern "C" {
             current = current->next;
         }
         printf("]\n");
+    }
+
+    // Stack state management functions
+    StackStateMap stack_state_map_create() {
+        StackStateMap map = (StackStateMap)malloc(sizeof(struct stack_state_map));
+        if (!map) return NULL;
+        
+        for (int i = 0; i < STACK_STATE_MAP_SIZE; i++) {
+            map->buckets[i] = NULL;
+        }
+        return map;
+    }
+
+    bool stack_state_save(StackStateMap map, const char* key, Stack stack) {
+        if (!map || !key) return false;
+        
+        unsigned int index = hash_string(key);
+        
+        // Check if key already exists and update
+        StackStateEntry* entry = map->buckets[index];
+        while (entry) {
+            if (strcmp(entry->key, key) == 0) {
+                // Release old stack and save new one
+                stack_release(entry->stack);
+                entry->stack = stack;
+                stack_retain(stack);
+                return true;
+            }
+            entry = entry->next;
+        }
+        
+        // Create new entry
+        entry = (StackStateEntry*)malloc(sizeof(StackStateEntry));
+        if (!entry) return false;
+        
+        entry->key = (char*)malloc(strlen(key) + 1);
+        if (!entry->key) {
+            free(entry);
+            return false;
+        }
+        
+        strcpy(entry->key, key);
+        entry->stack = stack;
+        stack_retain(stack);
+        entry->next = map->buckets[index];
+        map->buckets[index] = entry;
+        
+        return true;
+    }
+
+    Stack stack_state_load(StackStateMap map, const char* key) {
+        if (!map || !key) return empty_stack;
+        
+        unsigned int index = hash_string(key);
+        StackStateEntry* entry = map->buckets[index];
+        
+        while (entry) {
+            if (strcmp(entry->key, key) == 0) {
+                return entry->stack;
+            }
+            entry = entry->next;
+        }
+        
+        return empty_stack;
+    }
+
+    bool stack_state_exists(StackStateMap map, const char* key) {
+        if (!map || !key) return false;
+        
+        unsigned int index = hash_string(key);
+        StackStateEntry* entry = map->buckets[index];
+        
+        while (entry) {
+            if (strcmp(entry->key, key) == 0) {
+                return true;
+            }
+            entry = entry->next;
+        }
+        
+        return false;
+    }
+
+    bool stack_state_remove(StackStateMap map, const char* key) {
+        if (!map || !key) return false;
+        
+        unsigned int index = hash_string(key);
+        StackStateEntry* entry = map->buckets[index];
+        StackStateEntry* prev = NULL;
+        
+        while (entry) {
+            if (strcmp(entry->key, key) == 0) {
+                if (prev) {
+                    prev->next = entry->next;
+                } else {
+                    map->buckets[index] = entry->next;
+                }
+                
+                stack_release(entry->stack);
+                free(entry->key);
+                free(entry);
+                return true;
+            }
+            prev = entry;
+            entry = entry->next;
+        }
+        
+        return false;
+    }
+
+    void stack_state_map_destroy(StackStateMap map) {
+        if (!map) return;
+        
+        for (int i = 0; i < STACK_STATE_MAP_SIZE; i++) {
+            StackStateEntry* entry = map->buckets[i];
+            while (entry) {
+                StackStateEntry* next = entry->next;
+                stack_release(entry->stack);
+                free(entry->key);
+                free(entry);
+                entry = next;
+            }
+        }
+        
+        free(map);
     }
 }
