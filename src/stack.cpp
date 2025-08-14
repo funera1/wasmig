@@ -86,7 +86,7 @@ extern "C" {
         new_node->is_terminal = false; // element node
         
         // Increment reference count of the previous stack
-    stack_retain(stack);
+        stack_retain(stack);
         
         return new_node;
     }
@@ -131,9 +131,10 @@ extern "C" {
         stack_release(stack);
     }
 
+    // Print the stack from top towards the bottom
     void wasmig_stack_print(Stack stack) {
         printf("Stack: ");
-    if (wasmig_stack_is_empty(stack)) {
+        if (wasmig_stack_is_empty(stack)) {
             printf("(empty)\n");
             return;
         }
