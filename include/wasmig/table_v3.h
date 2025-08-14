@@ -9,22 +9,6 @@
 extern "C" {
 #endif
 
-// 中間表現の型定義
-typedef struct {
-    uint32_t opcode;
-    uint32_t operand1;
-    uint32_t operand2;
-    // 必要に応じて他のフィールドを追加
-} IntermediateRepresentation;
-
-// 命令位置の型定義（状態管理キュー用）
-typedef struct {
-    uint32_t func_idx;
-    uint64_t offset;
-} InstructionAddress;
-
-// 禁止リスト用の64ビットアドレス型
-typedef uint64_t ForbiddenAddress;
 
 // 1. アドレスマップ: u32キーとu64バリューを対応付けるための構造
 typedef struct {
@@ -48,9 +32,9 @@ typedef struct {
 // 禁止リストの関数
 CheckpointForbiddenList* forbidden_list_create(size_t initial_capacity);
 void forbidden_list_destroy(CheckpointForbiddenList* list);
-bool forbidden_list_add(CheckpointForbiddenList* list, ForbiddenAddress addr);
-bool forbidden_list_contains(CheckpointForbiddenList* list, ForbiddenAddress addr);
-bool forbidden_list_remove(CheckpointForbiddenList* list, ForbiddenAddress addr);
+bool forbidden_list_add(CheckpointForbiddenList* list, uint64_t addr);
+bool forbidden_list_contains(CheckpointForbiddenList* list, uint64_t addr);
+bool forbidden_list_remove(CheckpointForbiddenList* list, uint64_t addr);
 size_t forbidden_list_size(CheckpointForbiddenList* list);
 void forbidden_list_print(CheckpointForbiddenList* list);
 
@@ -58,8 +42,7 @@ void forbidden_list_print(CheckpointForbiddenList* list);
 
 // キューエントリの型定義
 typedef struct {
-    InstructionAddress addr;
-    IntermediateRepresentation ir;
+    uint32_t offset;
     bool is_confirmed;
 } StateQueueEntry;
 
@@ -70,9 +53,9 @@ typedef struct {
 // 状態管理キューの関数
 StateManagementQueue* state_queue_create();
 void state_queue_destroy(StateManagementQueue* queue);
-bool state_queue_enqueue(StateManagementQueue* queue, InstructionAddress addr, IntermediateRepresentation ir);
-bool state_queue_dequeue(StateManagementQueue* queue, InstructionAddress* out_addr, IntermediateRepresentation* out_ir);
-bool state_queue_confirm_pending(StateManagementQueue* queue, InstructionAddress addr);
+bool state_queue_enqueue(StateManagementQueue* queue, uint32_t offset);
+bool state_queue_dequeue(StateManagementQueue* queue, uint32_t* out_offset);
+bool state_queue_confirm_pending(StateManagementQueue* queue, uint32_t offset);
 bool state_queue_is_empty(StateManagementQueue* queue);
 size_t state_queue_size(StateManagementQueue* queue);
 void state_queue_print(StateManagementQueue* queue);

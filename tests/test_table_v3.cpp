@@ -5,19 +5,15 @@
 class TableV3Test : public ::testing::Test {
 protected:
     void SetUp() override {
-        // テスト用のデータを準備
-        addr1 = {1, 100};
-        addr2 = {2, 200};
-        addr3 = {3, 300};
-        
         // 禁止リスト用の64ビットアドレス
         forbidden_addr1 = 100;
         forbidden_addr2 = 300;
         forbidden_addr3 = 500;
         
-        ir1 = {0x20, 10, 20}; // local.get
-        ir2 = {0x41, 42, 0};  // i32.const
-        ir3 = {0x10, 5, 0};   // call
+        // 状態キュー用のオフセット
+        offset1 = 100;
+        offset2 = 200;
+        offset3 = 300;
         
         // アドレスマップ用のキー・バリュー
         key1 = 100;
@@ -29,9 +25,8 @@ protected:
         value3 = 0x3000000000ULL;
     }
     
-    InstructionAddress addr1, addr2, addr3;
-    ForbiddenAddress forbidden_addr1, forbidden_addr2, forbidden_addr3;
-    IntermediateRepresentation ir1, ir2, ir3;
+    uint64_t forbidden_addr1, forbidden_addr2, forbidden_addr3;
+    uint32_t offset1, offset2, offset3;
     uint32_t key1, key2, key3;
     uint64_t value1, value2, value3;
 };
@@ -122,31 +117,28 @@ TEST_F(TableV3Test, StateQueueBasicOperations) {
     EXPECT_EQ(state_queue_size(queue), 0);
     
     // エントリの追加
-    EXPECT_TRUE(state_queue_enqueue(queue, addr1, ir1));
-    EXPECT_TRUE(state_queue_enqueue(queue, addr2, ir2));
+    EXPECT_TRUE(state_queue_enqueue(queue, offset1));
+    EXPECT_TRUE(state_queue_enqueue(queue, offset2));
     EXPECT_FALSE(state_queue_is_empty(queue));
     EXPECT_EQ(state_queue_size(queue), 2);
     
     // 確認
-    EXPECT_TRUE(state_queue_confirm_pending(queue, addr1));
-    EXPECT_FALSE(state_queue_confirm_pending(queue, addr3)); // 存在しない
+    EXPECT_TRUE(state_queue_confirm_pending(queue, offset1));
+    EXPECT_FALSE(state_queue_confirm_pending(queue, offset3)); // 存在しない
     
     // エントリの取得（FIFO）
-    InstructionAddress retrieved_addr;
-    IntermediateRepresentation retrieved_ir;
-    EXPECT_TRUE(state_queue_dequeue(queue, &retrieved_addr, &retrieved_ir));
-    EXPECT_EQ(retrieved_addr.func_idx, addr1.func_idx);
-    EXPECT_EQ(retrieved_addr.offset, addr1.offset);
-    EXPECT_EQ(retrieved_ir.opcode, ir1.opcode);
+    uint32_t retrieved_offset;
+    EXPECT_TRUE(state_queue_dequeue(queue, &retrieved_offset));
+    EXPECT_EQ(retrieved_offset, offset1);
     EXPECT_EQ(state_queue_size(queue), 1);
     
     // 残りのエントリを取得
-    EXPECT_TRUE(state_queue_dequeue(queue, &retrieved_addr, &retrieved_ir));
-    EXPECT_EQ(retrieved_addr.func_idx, addr2.func_idx);
+    EXPECT_TRUE(state_queue_dequeue(queue, &retrieved_offset));
+    EXPECT_EQ(retrieved_offset, offset2);
     EXPECT_TRUE(state_queue_is_empty(queue));
     
     // 空のキューから取得
-    EXPECT_FALSE(state_queue_dequeue(queue, &retrieved_addr, &retrieved_ir));
+    EXPECT_FALSE(state_queue_dequeue(queue, &retrieved_offset));
     
     state_queue_destroy(queue);
 }
@@ -169,9 +161,9 @@ TEST_F(TableV3Test, PrintFunctions) {
     
     // 状態キューの印刷
     StateManagementQueue* queue = state_queue_create();
-    state_queue_enqueue(queue, addr1, ir1);
-    state_queue_enqueue(queue, addr2, ir2);
-    state_queue_confirm_pending(queue, addr1);
+    state_queue_enqueue(queue, offset1);
+    state_queue_enqueue(queue, offset2);
+    state_queue_confirm_pending(queue, offset1);
     state_queue_print(queue);
     
     // クリーンアップ

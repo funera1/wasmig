@@ -61,9 +61,9 @@ void example_forbidden_list() {
     CheckpointForbiddenList* list = forbidden_list_create(32);
     
     // 禁止する64ビットアドレスを定義
-    ForbiddenAddress forbidden_addr1 = 50;   // アドレス50
-    ForbiddenAddress forbidden_addr2 = 150;  // アドレス150
-    ForbiddenAddress allowed_addr = 75;      // 許可されるアドレス
+    uint64_t forbidden_addr1 = 50;   // アドレス50
+    uint64_t forbidden_addr2 = 150;  // アドレス150
+    uint64_t allowed_addr = 75;      // 許可されるアドレス
     
     // 禁止リストに追加
     forbidden_list_add(list, forbidden_addr1);
@@ -96,34 +96,29 @@ void example_state_queue() {
     // 状態管理キューを作成
     StateManagementQueue* queue = state_queue_create();
     
-    // 未確定の命令を定義
-    InstructionAddress pending_addr1 = {1, 300};
-    InstructionAddress pending_addr2 = {2, 400};
-    
-    IntermediateRepresentation pending_ir1 = {0x10, 3, 0};   // call 3
-    IntermediateRepresentation pending_ir2 = {0x1A, 0, 0};   // drop
+    // 未確定のオフセットを定義
+    uint32_t pending_offset1 = 300;
+    uint32_t pending_offset2 = 400;
     
     // キューに追加
-    state_queue_enqueue(queue, pending_addr1, pending_ir1);
-    state_queue_enqueue(queue, pending_addr2, pending_ir2);
+    state_queue_enqueue(queue, pending_offset1);
+    state_queue_enqueue(queue, pending_offset2);
     
     printf("キューサイズ: %zu\n", state_queue_size(queue));
     
     // 未確定命令を確認
-    printf("命令[%u, %lu]を確認中...\n", pending_addr1.func_idx, pending_addr1.offset);
-    state_queue_confirm_pending(queue, pending_addr1);
+    printf("オフセット%uを確認中...\n", pending_offset1);
+    state_queue_confirm_pending(queue, pending_offset1);
     
     // キューの内容を印刷
     state_queue_print(queue);
     
     // キューから取得（FIFO順）
-    InstructionAddress dequeued_addr;
-    IntermediateRepresentation dequeued_ir;
+    uint32_t dequeued_offset;
     
     while (!state_queue_is_empty(queue)) {
-        if (state_queue_dequeue(queue, &dequeued_addr, &dequeued_ir)) {
-            printf("デキュー: アドレス[%u, %lu], IR[opcode=%u]\n", 
-                   dequeued_addr.func_idx, dequeued_addr.offset, dequeued_ir.opcode);
+        if (state_queue_dequeue(queue, &dequeued_offset)) {
+            printf("デキュー: オフセット%u\n", dequeued_offset);
         }
     }
     

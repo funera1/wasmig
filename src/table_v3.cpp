@@ -8,21 +8,6 @@
 #include <queue>
 #include <stdexcept>
 
-// C++比較演算子の定義（InstructionAddress用）
-bool operator<(const InstructionAddress& a, const InstructionAddress& b) {
-    if (a.func_idx != b.func_idx) return a.func_idx < b.func_idx;
-    return a.offset < b.offset;
-}
-
-bool operator==(const InstructionAddress& a, const InstructionAddress& b) {
-    return a.func_idx == b.func_idx && a.offset == b.offset;
-}
-
-// アドレス比較関数（confirm_pending用）
-static bool address_equals(InstructionAddress a, InstructionAddress b) {
-    return a.func_idx == b.func_idx && a.offset == b.offset;
-}
-
 // =============================================================================
 // 1. アドレスマップの実装 (C++ std::unordered_map)
 // =============================================================================
@@ -128,7 +113,7 @@ CheckpointForbiddenList* forbidden_list_create(size_t initial_capacity) {
     if (!list) return nullptr;
     
     try {
-        auto* impl = new std::set<ForbiddenAddress>();
+        auto* impl = new std::set<uint64_t>();
         list->impl = impl;
         return list;
     } catch (const std::exception& e) {
@@ -142,7 +127,7 @@ void forbidden_list_destroy(CheckpointForbiddenList* list) {
     if (!list) return;
     
     if (list->impl) {
-        auto* impl = static_cast<std::set<ForbiddenAddress>*>(list->impl);
+        auto* impl = static_cast<std::set<uint64_t>*>(list->impl);
         spdlog::debug("Destroying forbidden list with {} entries", impl->size());
         delete impl;
     }
@@ -150,11 +135,11 @@ void forbidden_list_destroy(CheckpointForbiddenList* list) {
     free(list);
 }
 
-bool forbidden_list_add(CheckpointForbiddenList* list, ForbiddenAddress addr) {
+bool forbidden_list_add(CheckpointForbiddenList* list, uint64_t addr) {
     if (!list || !list->impl) return false;
     
     try {
-        auto* impl = static_cast<std::set<ForbiddenAddress>*>(list->impl);
+        auto* impl = static_cast<std::set<uint64_t>*>(list->impl);
         
         auto result = impl->insert(addr);
         if (result.second) {
@@ -168,18 +153,18 @@ bool forbidden_list_add(CheckpointForbiddenList* list, ForbiddenAddress addr) {
     }
 }
 
-bool forbidden_list_contains(CheckpointForbiddenList* list, ForbiddenAddress addr) {
+bool forbidden_list_contains(CheckpointForbiddenList* list, uint64_t addr) {
     if (!list || !list->impl) return false;
     
-    auto* impl = static_cast<std::set<ForbiddenAddress>*>(list->impl);
+    auto* impl = static_cast<std::set<uint64_t>*>(list->impl);
     return impl->find(addr) != impl->end();
 }
 
-bool forbidden_list_remove(CheckpointForbiddenList* list, ForbiddenAddress addr) {
+bool forbidden_list_remove(CheckpointForbiddenList* list, uint64_t addr) {
     if (!list || !list->impl) return false;
     
     try {
-        auto* impl = static_cast<std::set<ForbiddenAddress>*>(list->impl);
+        auto* impl = static_cast<std::set<uint64_t>*>(list->impl);
         
         size_t erased = impl->erase(addr);
         if (erased > 0) {
@@ -197,14 +182,14 @@ bool forbidden_list_remove(CheckpointForbiddenList* list, ForbiddenAddress addr)
 size_t forbidden_list_size(CheckpointForbiddenList* list) {
     if (!list || !list->impl) return 0;
     
-    auto* impl = static_cast<std::set<ForbiddenAddress>*>(list->impl);
+    auto* impl = static_cast<std::set<uint64_t>*>(list->impl);
     return impl->size();
 }
 
 void forbidden_list_print(CheckpointForbiddenList* list) {
     if (!list || !list->impl) return;
     
-    auto* impl = static_cast<std::set<ForbiddenAddress>*>(list->impl);
+    auto* impl = static_cast<std::set<uint64_t>*>(list->impl);
     printf("ForbiddenList (size: %zu)\n", impl->size());
     
     for (const auto& addr : *impl) {
@@ -245,22 +230,19 @@ void state_queue_destroy(StateManagementQueue* queue) {
     free(queue);
 }
 
-bool state_queue_enqueue(StateManagementQueue* queue, InstructionAddress addr, IntermediateRepresentation ir) {
+bool state_queue_enqueue(StateManagementQueue* queue, uint32_t offset) {
     if (!queue || !queue->impl) return false;
     
     try {
         auto* impl = static_cast<std::queue<StateQueueEntry>*>(queue->impl);
         
         StateQueueEntry entry;
-        entry.addr = addr;
-        entry.ir = ir;
+        entry.offset = offset;
         entry.is_confirmed = false;
         
         impl->push(entry);
-        
-        spdlog::debug("Enqueued to state queue: func_idx={}, offset={}, opcode={}", 
-                      addr.func_idx, addr.offset, ir.opcode);
-        
+
+        spdlog::debug("Enqueued to state queue: offset={}", offset);
         return true;
     } catch (const std::exception& e) {
         spdlog::error("Failed to enqueue: {}", e.what());
@@ -268,8 +250,8 @@ bool state_queue_enqueue(StateManagementQueue* queue, InstructionAddress addr, I
     }
 }
 
-bool state_queue_dequeue(StateManagementQueue* queue, InstructionAddress* out_addr, IntermediateRepresentation* out_ir) {
-    if (!queue || !queue->impl || !out_addr || !out_ir) return false;
+bool state_queue_dequeue(StateManagementQueue* queue, uint32_t* out_offset) {
+    if (!queue || !queue->impl || !out_offset) return false;
     
     try {
         auto* impl = static_cast<std::queue<StateQueueEntry>*>(queue->impl);
@@ -278,13 +260,11 @@ bool state_queue_dequeue(StateManagementQueue* queue, InstructionAddress* out_ad
         
         StateQueueEntry entry = impl->front();
         impl->pop();
-        
-        *out_addr = entry.addr;
-        *out_ir = entry.ir;
-        
-        spdlog::debug("Dequeued from state queue: func_idx={}, offset={}, opcode={}", 
-                      entry.addr.func_idx, entry.addr.offset, entry.ir.opcode);
-        
+
+        *out_offset = entry.offset;
+
+        spdlog::debug("Dequeued from state queue: offset={}", entry.offset);
+
         return true;
     } catch (const std::exception& e) {
         spdlog::error("Failed to dequeue: {}", e.what());
@@ -292,7 +272,7 @@ bool state_queue_dequeue(StateManagementQueue* queue, InstructionAddress* out_ad
     }
 }
 
-bool state_queue_confirm_pending(StateManagementQueue* queue, InstructionAddress addr) {
+bool state_queue_confirm_pending(StateManagementQueue* queue, uint32_t offset) {
     if (!queue || !queue->impl) return false;
     
     try {
@@ -306,11 +286,11 @@ bool state_queue_confirm_pending(StateManagementQueue* queue, InstructionAddress
         while (!impl->empty()) {
             StateQueueEntry entry = impl->front();
             impl->pop();
-            
-            if (address_equals(entry.addr, addr)) {
+
+            if (entry.offset == offset) {
                 entry.is_confirmed = true;
                 found = true;
-                spdlog::debug("Confirmed pending instruction: func_idx={}, offset={}", addr.func_idx, addr.offset);
+                spdlog::debug("Confirmed pending instruction: offset={}", offset);
             }
             
             temp_queue.push(entry);
@@ -353,11 +333,10 @@ void state_queue_print(StateManagementQueue* queue) {
     while (!temp_queue.empty()) {
         StateQueueEntry entry = temp_queue.front();
         temp_queue.pop();
-        
-        printf("  [%d] [%u, %lu] -> [%u, %u, %u] (confirmed: %s)\n", 
+
+        printf("  [%d] [%u] (confirmed: %s)\n", 
                index++,
-               entry.addr.func_idx, entry.addr.offset,
-               entry.ir.opcode, entry.ir.operand1, entry.ir.operand2,
+               entry.offset,
                entry.is_confirmed ? "yes" : "no");
     }
 }
