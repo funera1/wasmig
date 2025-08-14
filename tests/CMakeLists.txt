@@ -8,6 +8,7 @@ add_executable(
     wasmig_tests
     test_hello.cpp
     test_stack.cpp
+    test_table_v3.cpp
 )
 
 # テスト対象のライブラリと Google Test をリンク

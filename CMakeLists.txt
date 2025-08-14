@@ -6,6 +6,7 @@ add_library(libwasmig STATIC
     src/checkpoint.cpp
     src/restore.cpp
     src/table.cpp
+    src/table_v3.cpp
     src/stack_tables.cpp
     src/stack.cpp
     src/log.cpp
@@ -67,4 +68,10 @@ option(ENABLE_TESTS "Enable unit tests" ON)
 if (ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+# examples
+option(ENABLE_EXAMPLES "Enable examples" ON)
+if (ENABLE_EXAMPLES)
+    add_subdirectory(examples)
 endif()
