@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 project(WASMIG)
 
-# ライブラリのヘッダーとソースを指定
-add_library(libwasmig STATIC
+# C++サポートの確認
+option(WASMIG_USE_CPP "Use C++ implementation for table_v3" ON)
+
+# ライブラリのソースファイルリスト
+set(WASMIG_SOURCES
     src/checkpoint.cpp
     src/restore.cpp
     src/table.cpp
-    src/table_v3.cpp
     src/stack_tables.cpp
     src/stack.cpp
     src/log.cpp
@@ -15,6 +17,18 @@ add_library(libwasmig STATIC
     src/debug.cpp
     src/codepos.cpp
 )
+
+# table_v3の実装選択
+if(WASMIG_USE_CPP)
+    list(APPEND WASMIG_SOURCES src/table_v3.cpp)
+    message(STATUS "Using C++ implementation for table_v3")
+else()
+    list(APPEND WASMIG_SOURCES src/table_v3_c_impl.c)
+    message(STATUS "Using C implementation for table_v3")
+endif()
+
+# ライブラリのヘッダーとソースを指定
+add_library(libwasmig STATIC ${WASMIG_SOURCES})
 
 set_target_properties(libwasmig PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

@@ -8,6 +8,16 @@
 #include <queue>
 #include <stdexcept>
 
+// C++比較演算子の定義（InstructionAddress用）
+bool operator<(const InstructionAddress& a, const InstructionAddress& b) {
+    if (a.func_idx != b.func_idx) return a.func_idx < b.func_idx;
+    return a.offset < b.offset;
+}
+
+bool operator==(const InstructionAddress& a, const InstructionAddress& b) {
+    return a.func_idx == b.func_idx && a.offset == b.offset;
+}
+
 // アドレス比較関数（confirm_pending用）
 static bool address_equals(InstructionAddress a, InstructionAddress b) {
     return a.func_idx == b.func_idx && a.offset == b.offset;

@@ -6,9 +6,6 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-#include <unordered_map>
-#include <set>
-#include <queue>
 extern "C" {
 #endif
 
@@ -29,39 +26,9 @@ typedef struct {
 // 禁止リスト用の64ビットアドレス型
 typedef uint64_t ForbiddenAddress;
 
-#ifdef __cplusplus
-// C++比較演算子の定義（InstructionAddress用）
-inline bool operator<(const InstructionAddress& a, const InstructionAddress& b) {
-    if (a.func_idx != b.func_idx) return a.func_idx < b.func_idx;
-    return a.offset < b.offset;
-}
-
-inline bool operator==(const InstructionAddress& a, const InstructionAddress& b) {
-    return a.func_idx == b.func_idx && a.offset == b.offset;
-}
-#endif
-
 // 1. アドレスマップ: u32キーとu64バリューを対応付けるための構造
-#ifdef __cplusplus
-// C++実装：std::unordered_mapを使用
-typedef std::unordered_map<uint32_t, uint64_t> AddressMapImpl;
-#else
-// C実装のフォールバック（使用されない）
-typedef struct AddressMapEntry {
-    uint32_t key;
-    uint64_t value;
-    struct AddressMapEntry* next;
-} AddressMapEntry;
-
 typedef struct {
-    AddressMapEntry** buckets;
-    size_t bucket_count;
-    size_t size;
-} AddressMapImpl;
-#endif
-
-typedef struct {
-    void* impl; // AddressMapImpl* のopaque pointer
+    void* impl; // 実装詳細を隠蔽するopaque pointer
 } AddressMap;
 
 // アドレスマップの関数
@@ -74,25 +41,8 @@ size_t address_map_size(AddressMap* map);
 void address_map_print(AddressMap* map);
 
 // 2. チェックポイント禁止リスト: 64ビットアドレスを保持する集合
-#ifdef __cplusplus
-// C++実装：std::setを使用
-typedef std::set<ForbiddenAddress> ForbiddenListImpl;
-#else
-// C実装のフォールバック（使用されない）
-typedef struct ForbiddenListEntry {
-    ForbiddenAddress addr;
-    struct ForbiddenListEntry* next;
-} ForbiddenListEntry;
-
 typedef struct {
-    ForbiddenListEntry** buckets;
-    size_t bucket_count;
-    size_t size;
-} ForbiddenListImpl;
-#endif
-
-typedef struct {
-    void* impl; // ForbiddenListImpl* のopaque pointer
+    void* impl; // 実装詳細を隠蔽するopaque pointer
 } CheckpointForbiddenList;
 
 // 禁止リストの関数
@@ -113,27 +63,8 @@ typedef struct {
     bool is_confirmed;
 } StateQueueEntry;
 
-#ifdef __cplusplus
-// C++実装：std::queueを使用
-typedef std::queue<StateQueueEntry> StateQueueImpl;
-#else
-// C実装のフォールバック（使用されない）
-typedef struct StateQueueNode {
-    InstructionAddress pending_addr;
-    IntermediateRepresentation pending_ir;
-    bool is_confirmed;
-    struct StateQueueNode* next;
-} StateQueueNode;
-
 typedef struct {
-    StateQueueNode* head;
-    StateQueueNode* tail;
-    size_t size;
-} StateQueueImpl;
-#endif
-
-typedef struct {
-    void* impl; // StateQueueImpl* のopaque pointer
+    void* impl; // 実装詳細を隠蔽するopaque pointer
 } StateManagementQueue;
 
 // 状態管理キューの関数
