@@ -16,13 +16,13 @@ typedef struct {
 } AddressMap;
 
 // アドレスマップの関数
-AddressMap* address_map_create(size_t initial_capacity);
-void address_map_destroy(AddressMap* map);
-bool address_map_set(AddressMap* map, uint32_t key, uint64_t value);
-bool address_map_get(AddressMap* map, uint32_t key, uint64_t* out_value);
-bool address_map_remove(AddressMap* map, uint32_t key);
-size_t address_map_size(AddressMap* map);
-void address_map_print(AddressMap* map);
+AddressMap* wasmig_address_map_create(size_t initial_capacity);
+void wasmig_address_map_destroy(AddressMap* map);
+bool wasmig_address_map_set(AddressMap* map, uint32_t key, uint64_t value);
+bool wasmig_address_map_get(AddressMap* map, uint32_t key, uint64_t* out_value);
+bool wasmig_address_map_remove(AddressMap* map, uint32_t key);
+size_t wasmig_address_map_size(AddressMap* map);
+void wasmig_address_map_print(AddressMap* map);
 
 // 2. チェックポイント禁止リスト: 64ビットアドレスを保持する集合
 typedef struct {
@@ -30,13 +30,13 @@ typedef struct {
 } CheckpointForbiddenList;
 
 // 禁止リストの関数
-CheckpointForbiddenList* forbidden_list_create(size_t initial_capacity);
-void forbidden_list_destroy(CheckpointForbiddenList* list);
-bool forbidden_list_add(CheckpointForbiddenList* list, uint64_t addr);
-bool forbidden_list_contains(CheckpointForbiddenList* list, uint64_t addr);
-bool forbidden_list_remove(CheckpointForbiddenList* list, uint64_t addr);
-size_t forbidden_list_size(CheckpointForbiddenList* list);
-void forbidden_list_print(CheckpointForbiddenList* list);
+CheckpointForbiddenList* wasmig_forbidden_list_create(size_t initial_capacity);
+void wasmig_forbidden_list_destroy(CheckpointForbiddenList* list);
+bool wasmig_forbidden_list_add(CheckpointForbiddenList* list, uint64_t addr);
+bool wasmig_forbidden_list_contains(CheckpointForbiddenList* list, uint64_t addr);
+bool wasmig_forbidden_list_remove(CheckpointForbiddenList* list, uint64_t addr);
+size_t wasmig_forbidden_list_size(CheckpointForbiddenList* list);
+void wasmig_forbidden_list_print(CheckpointForbiddenList* list);
 
 // 3. 状態管理キュー: 未確定の命令位置を一時的に保持し、後続命令生成時に対応付けを確定するための構造
 
@@ -51,14 +51,14 @@ typedef struct {
 } StateManagementQueue;
 
 // 状態管理キューの関数
-StateManagementQueue* state_queue_create();
-void state_queue_destroy(StateManagementQueue* queue);
-bool state_queue_enqueue(StateManagementQueue* queue, uint32_t offset);
-bool state_queue_dequeue(StateManagementQueue* queue, uint32_t* out_offset);
-bool state_queue_confirm_pending(StateManagementQueue* queue, uint32_t offset);
-bool state_queue_is_empty(StateManagementQueue* queue);
-size_t state_queue_size(StateManagementQueue* queue);
-void state_queue_print(StateManagementQueue* queue);
+StateManagementQueue* wasmig_state_queue_create();
+void wasmig_state_queue_destroy(StateManagementQueue* queue);
+bool wasmig_state_queue_enqueue(StateManagementQueue* queue, uint32_t offset);
+bool wasmig_state_queue_dequeue(StateManagementQueue* queue, uint32_t* out_offset);
+bool wasmig_state_queue_confirm_pending(StateManagementQueue* queue, uint32_t offset);
+bool wasmig_state_queue_is_empty(StateManagementQueue* queue);
+size_t wasmig_state_queue_size(StateManagementQueue* queue);
+void wasmig_state_queue_print(StateManagementQueue* queue);
 
 #ifdef __cplusplus
 }

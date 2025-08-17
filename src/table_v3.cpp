@@ -12,7 +12,7 @@
 // 1. アドレスマップの実装 (C++ std::unordered_map)
 // =============================================================================
 
-AddressMap* address_map_create(size_t initial_capacity) {
+AddressMap* wasmig_address_map_create(size_t initial_capacity) {
     spdlog::debug("Creating address map with initial capacity: {}", initial_capacity);
     
     AddressMap* map = (AddressMap*)malloc(sizeof(AddressMap));
@@ -30,7 +30,7 @@ AddressMap* address_map_create(size_t initial_capacity) {
     }
 }
 
-void address_map_destroy(AddressMap* map) {
+void wasmig_address_map_destroy(AddressMap* map) {
     if (!map) return;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
@@ -40,7 +40,7 @@ void address_map_destroy(AddressMap* map) {
     free(map);
 }
 
-bool address_map_set(AddressMap* map, uint32_t key, uint64_t value) {
+bool wasmig_address_map_set(AddressMap* map, uint32_t key, uint64_t value) {
     if (!map || !map->impl) return false;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
@@ -55,7 +55,7 @@ bool address_map_set(AddressMap* map, uint32_t key, uint64_t value) {
     }
 }
 
-bool address_map_get(AddressMap* map, uint32_t key, uint64_t* out_value) {
+bool wasmig_address_map_get(AddressMap* map, uint32_t key, uint64_t* out_value) {
     if (!map || !map->impl || !out_value) return false;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
@@ -70,7 +70,7 @@ bool address_map_get(AddressMap* map, uint32_t key, uint64_t* out_value) {
     return false;
 }
 
-bool address_map_remove(AddressMap* map, uint32_t key) {
+bool wasmig_address_map_remove(AddressMap* map, uint32_t key) {
     if (!map || !map->impl) return false;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
@@ -84,14 +84,14 @@ bool address_map_remove(AddressMap* map, uint32_t key) {
     return false;
 }
 
-size_t address_map_size(AddressMap* map) {
+size_t wasmig_address_map_size(AddressMap* map) {
     if (!map || !map->impl) return 0;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
     return impl->size();
 }
 
-void address_map_print(AddressMap* map) {
+void wasmig_address_map_print(AddressMap* map) {
     if (!map || !map->impl) return;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
@@ -106,7 +106,7 @@ void address_map_print(AddressMap* map) {
 // 2. チェックポイント禁止リストの実装 (C++ std::set)
 // =============================================================================
 
-CheckpointForbiddenList* forbidden_list_create(size_t initial_capacity) {
+CheckpointForbiddenList* wasmig_forbidden_list_create(size_t initial_capacity) {
     spdlog::debug("Creating forbidden list with capacity: {}", initial_capacity);
     
     CheckpointForbiddenList* list = (CheckpointForbiddenList*)malloc(sizeof(CheckpointForbiddenList));
@@ -123,7 +123,7 @@ CheckpointForbiddenList* forbidden_list_create(size_t initial_capacity) {
     }
 }
 
-void forbidden_list_destroy(CheckpointForbiddenList* list) {
+void wasmig_forbidden_list_destroy(CheckpointForbiddenList* list) {
     if (!list) return;
     
     if (list->impl) {
@@ -135,7 +135,7 @@ void forbidden_list_destroy(CheckpointForbiddenList* list) {
     free(list);
 }
 
-bool forbidden_list_add(CheckpointForbiddenList* list, uint64_t addr) {
+bool wasmig_forbidden_list_add(CheckpointForbiddenList* list, uint64_t addr) {
     if (!list || !list->impl) return false;
     
     try {
@@ -153,14 +153,14 @@ bool forbidden_list_add(CheckpointForbiddenList* list, uint64_t addr) {
     }
 }
 
-bool forbidden_list_contains(CheckpointForbiddenList* list, uint64_t addr) {
+bool wasmig_forbidden_list_contains(CheckpointForbiddenList* list, uint64_t addr) {
     if (!list || !list->impl) return false;
     
     auto* impl = static_cast<std::set<uint64_t>*>(list->impl);
     return impl->find(addr) != impl->end();
 }
 
-bool forbidden_list_remove(CheckpointForbiddenList* list, uint64_t addr) {
+bool wasmig_forbidden_list_remove(CheckpointForbiddenList* list, uint64_t addr) {
     if (!list || !list->impl) return false;
     
     try {
@@ -179,14 +179,14 @@ bool forbidden_list_remove(CheckpointForbiddenList* list, uint64_t addr) {
     }
 }
 
-size_t forbidden_list_size(CheckpointForbiddenList* list) {
+size_t wasmig_forbidden_list_size(CheckpointForbiddenList* list) {
     if (!list || !list->impl) return 0;
     
     auto* impl = static_cast<std::set<uint64_t>*>(list->impl);
     return impl->size();
 }
 
-void forbidden_list_print(CheckpointForbiddenList* list) {
+void wasmig_forbidden_list_print(CheckpointForbiddenList* list) {
     if (!list || !list->impl) return;
     
     auto* impl = static_cast<std::set<uint64_t>*>(list->impl);
@@ -201,7 +201,7 @@ void forbidden_list_print(CheckpointForbiddenList* list) {
 // 3. 状態管理キューの実装 (C++ std::queue)
 // =============================================================================
 
-StateManagementQueue* state_queue_create() {
+StateManagementQueue* wasmig_state_queue_create() {
     spdlog::debug("Creating state management queue");
     
     StateManagementQueue* queue = (StateManagementQueue*)malloc(sizeof(StateManagementQueue));
@@ -218,7 +218,7 @@ StateManagementQueue* state_queue_create() {
     }
 }
 
-void state_queue_destroy(StateManagementQueue* queue) {
+void wasmig_state_queue_destroy(StateManagementQueue* queue) {
     if (!queue) return;
     
     if (queue->impl) {
@@ -230,7 +230,7 @@ void state_queue_destroy(StateManagementQueue* queue) {
     free(queue);
 }
 
-bool state_queue_enqueue(StateManagementQueue* queue, uint32_t offset) {
+bool wasmig_state_queue_enqueue(StateManagementQueue* queue, uint32_t offset) {
     if (!queue || !queue->impl) return false;
     
     try {
@@ -250,7 +250,7 @@ bool state_queue_enqueue(StateManagementQueue* queue, uint32_t offset) {
     }
 }
 
-bool state_queue_dequeue(StateManagementQueue* queue, uint32_t* out_offset) {
+bool wasmig_state_queue_dequeue(StateManagementQueue* queue, uint32_t* out_offset) {
     if (!queue || !queue->impl || !out_offset) return false;
     
     try {
@@ -272,7 +272,7 @@ bool state_queue_dequeue(StateManagementQueue* queue, uint32_t* out_offset) {
     }
 }
 
-bool state_queue_confirm_pending(StateManagementQueue* queue, uint32_t offset) {
+bool wasmig_state_queue_confirm_pending(StateManagementQueue* queue, uint32_t offset) {
     if (!queue || !queue->impl) return false;
     
     try {
@@ -306,21 +306,21 @@ bool state_queue_confirm_pending(StateManagementQueue* queue, uint32_t offset) {
     }
 }
 
-bool state_queue_is_empty(StateManagementQueue* queue) {
+bool wasmig_state_queue_is_empty(StateManagementQueue* queue) {
     if (!queue || !queue->impl) return true;
     
     auto* impl = static_cast<std::queue<StateQueueEntry>*>(queue->impl);
     return impl->empty();
 }
 
-size_t state_queue_size(StateManagementQueue* queue) {
+size_t wasmig_state_queue_size(StateManagementQueue* queue) {
     if (!queue || !queue->impl) return 0;
     
     auto* impl = static_cast<std::queue<StateQueueEntry>*>(queue->impl);
     return impl->size();
 }
 
-void state_queue_print(StateManagementQueue* queue) {
+void wasmig_state_queue_print(StateManagementQueue* queue) {
     if (!queue || !queue->impl) return;
     
     auto* impl = static_cast<std::queue<StateQueueEntry>*>(queue->impl);

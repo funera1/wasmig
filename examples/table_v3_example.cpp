@@ -14,8 +14,8 @@ void example_address_map() {
     printf("\n=== アドレスマップの例 ===\n");
     
     // アドレスマップを作成
-    AddressMap* map = address_map_create(32);
-    
+    AddressMap* map = wasmig_address_map_create(32);
+
     // キーとバリューを定義
     uint32_t key1 = 100;
     uint32_t key2 = 200;
@@ -23,42 +23,42 @@ void example_address_map() {
     uint64_t value2 = 0x2000000000ULL;
     
     // マッピングを追加
-    address_map_set(map, key1, value1);
-    address_map_set(map, key2, value2);
+    wasmig_address_map_set(map, key1, value1);
+    wasmig_address_map_set(map, key2, value2);
     
-    printf("登録されたマッピング数: %zu\n", address_map_size(map));
+    printf("登録されたマッピング数: %zu\n", wasmig_address_map_size(map));
     
     // キーからバリューを取得
     uint64_t retrieved_value;
-    if (address_map_get(map, key1, &retrieved_value)) {
+    if (wasmig_address_map_get(map, key1, &retrieved_value)) {
         printf("キー %u -> バリュー %lu\n", key1, retrieved_value);
     }
     
-    if (address_map_get(map, key2, &retrieved_value)) {
+    if (wasmig_address_map_get(map, key2, &retrieved_value)) {
         printf("キー %u -> バリュー %lu\n", key2, retrieved_value);
     }
     
     // エントリの更新
     uint64_t new_value = 0x3000000000ULL;
-    address_map_set(map, key1, new_value);
+    wasmig_address_map_set(map, key1, new_value);
     printf("キー %u を更新\n", key1);
     
     // エントリの削除
-    address_map_remove(map, key2);
+    wasmig_address_map_remove(map, key2);
     printf("キー %u を削除\n", key2);
-    printf("削除後のマッピング数: %zu\n", address_map_size(map));
-    
+    printf("削除後のマッピング数: %zu\n", wasmig_address_map_size(map));
+
     // マップの内容を印刷
-    address_map_print(map);
+    wasmig_address_map_print(map);
     
-    address_map_destroy(map);
+    wasmig_address_map_destroy(map);
 }
 
 void example_forbidden_list() {
     printf("\n=== チェックポイント禁止リストの例 ===\n");
     
     // 禁止リストを作成
-    CheckpointForbiddenList* list = forbidden_list_create(32);
+    CheckpointForbiddenList* list = wasmig_forbidden_list_create(32);
     
     // 禁止する64ビットアドレスを定義
     uint64_t forbidden_addr1 = 50;   // アドレス50
@@ -66,63 +66,63 @@ void example_forbidden_list() {
     uint64_t allowed_addr = 75;      // 許可されるアドレス
     
     // 禁止リストに追加
-    forbidden_list_add(list, forbidden_addr1);
-    forbidden_list_add(list, forbidden_addr2);
+    wasmig_forbidden_list_add(list, forbidden_addr1);
+    wasmig_forbidden_list_add(list, forbidden_addr2);
     
-    printf("禁止リストのサイズ: %zu\n", forbidden_list_size(list));
+    printf("禁止リストのサイズ: %zu\n", wasmig_forbidden_list_size(list));
     
     // チェックポイント許可確認
     printf("アドレス%luでのチェックポイント: %s\n", 
            forbidden_addr1,
-           forbidden_list_contains(list, forbidden_addr1) ? "禁止" : "許可");
+           wasmig_forbidden_list_contains(list, forbidden_addr1) ? "禁止" : "許可");
     
     printf("アドレス%luでのチェックポイント: %s\n", 
            allowed_addr,
-           forbidden_list_contains(list, allowed_addr) ? "禁止" : "許可");
+           wasmig_forbidden_list_contains(list, allowed_addr) ? "禁止" : "許可");
     
     // リストの内容を印刷
-    forbidden_list_print(list);
+    wasmig_forbidden_list_print(list);
     
     // 禁止を解除
-    forbidden_list_remove(list, forbidden_addr1);
-    printf("禁止解除後のサイズ: %zu\n", forbidden_list_size(list));
-    
-    forbidden_list_destroy(list);
+    wasmig_forbidden_list_remove(list, forbidden_addr1);
+    printf("禁止解除後のサイズ: %zu\n", wasmig_forbidden_list_size(list));
+
+    wasmig_forbidden_list_destroy(list);
 }
 
 void example_state_queue() {
     printf("\n=== 状態管理キューの例 ===\n");
     
     // 状態管理キューを作成
-    StateManagementQueue* queue = state_queue_create();
-    
+    StateManagementQueue* queue = wasmig_state_queue_create();
+
     // 未確定のオフセットを定義
     uint32_t pending_offset1 = 300;
     uint32_t pending_offset2 = 400;
     
     // キューに追加
-    state_queue_enqueue(queue, pending_offset1);
-    state_queue_enqueue(queue, pending_offset2);
-    
-    printf("キューサイズ: %zu\n", state_queue_size(queue));
-    
+    wasmig_state_queue_enqueue(queue, pending_offset1);
+    wasmig_state_queue_enqueue(queue, pending_offset2);
+
+    printf("キューサイズ: %zu\n", wasmig_state_queue_size(queue));
+
     // 未確定命令を確認
     printf("オフセット%uを確認中...\n", pending_offset1);
-    state_queue_confirm_pending(queue, pending_offset1);
+    wasmig_state_queue_confirm_pending(queue, pending_offset1);
     
     // キューの内容を印刷
-    state_queue_print(queue);
+    wasmig_state_queue_print(queue);
     
     // キューから取得（FIFO順）
     uint32_t dequeued_offset;
-    
-    while (!state_queue_is_empty(queue)) {
-        if (state_queue_dequeue(queue, &dequeued_offset)) {
+
+    while (!wasmig_state_queue_is_empty(queue)) {
+        if (wasmig_state_queue_dequeue(queue, &dequeued_offset)) {
             printf("デキュー: オフセット%u\n", dequeued_offset);
         }
     }
     
-    state_queue_destroy(queue);
+    wasmig_state_queue_destroy(queue);
 }
 
 int main() {
