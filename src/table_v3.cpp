@@ -309,7 +309,15 @@ size_t wasmig_state_queue_size(StateManagementQueue queue) {
 }
 
 void wasmig_state_queue_print(StateManagementQueue queue) {
-    if (!queue || !queue->impl) return;
+    if (!queue) {
+        printf("StateQueue is null\n");
+        return;
+    }
+    if (!queue->impl) {
+        printf("StateQueue impl is null\n");
+        return;
+    }
+
     auto* impl = static_cast<std::queue<StateQueueEntry>*>(queue->impl);
     printf("StateQueue (size: %zu)\n", impl->size());
     std::queue<StateQueueEntry> temp_queue = *impl;
