@@ -247,30 +247,4 @@ extern "C" {
         }
     }
 
-    // ========================================
-    // Stack State Map Registry API
-    // ========================================
-    bool wasmig_stack_state_map_register(uint32_t id, StackStateMap map) {
-        if (!map) return false;
-        if (g_state_map_registry.find(id) != g_state_map_registry.end()) return false;
-        g_state_map_registry[id] = map;
-        return true;
-    }
-
-    StackStateMap wasmig_stack_state_map_get(uint32_t id) {
-        auto it = g_state_map_registry.find(id);
-        if (it == g_state_map_registry.end()) return nullptr;
-        return it->second;
-    }
-
-    bool wasmig_stack_state_map_unregister(uint32_t id) {
-        auto it = g_state_map_registry.find(id);
-        if (it == g_state_map_registry.end()) return false;
-        g_state_map_registry.erase(it);
-        return true;
-    }
-
-    void wasmig_stack_state_map_registry_clear() {
-        g_state_map_registry.clear();
-    }
 }

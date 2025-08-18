@@ -25,16 +25,6 @@ bool wasmig_address_map_remove(AddressMap map, uint32_t key);
 size_t wasmig_address_map_size(AddressMap map);
 void wasmig_address_map_print(AddressMap map);
 
-// =============================
-// AddressMap Registry API (global)
-// =============================
-// Save a map with an ID so it can be retrieved elsewhere.
-// Returns false if id already exists or map is NULL.
-bool wasmig_address_map_save(uint32_t id, AddressMap map);
-AddressMap wasmig_address_map_load(uint32_t id);
-bool wasmig_address_map_exists(uint32_t id);
-void wasmig_address_map_registry_clear();
-
 // 2. チェックポイント禁止リスト: 64ビットアドレスを保持する集合
 struct checkpoint_forbidden_list_impl {
     void* impl;
@@ -49,14 +39,6 @@ bool wasmig_forbidden_list_contains(CheckpointForbiddenList list, uint64_t addr)
 bool wasmig_forbidden_list_remove(CheckpointForbiddenList list, uint64_t addr);
 size_t wasmig_forbidden_list_size(CheckpointForbiddenList list);
 void wasmig_forbidden_list_print(CheckpointForbiddenList list);
-
-// =============================
-// CheckpointForbiddenList Registry API (global)
-// =============================
-bool wasmig_forbidden_list_save(uint32_t id, CheckpointForbiddenList list);
-CheckpointForbiddenList wasmig_forbidden_list_load(uint32_t id);
-bool wasmig_forbidden_list_exists(uint32_t id);
-void wasmig_forbidden_list_registry_clear();
 
 // 3. 状態管理キュー: 未確定の命令位置を一時的に保持し、後続命令生成時に対応付けを確定するための構造
 

@@ -16,16 +16,18 @@ set(WASMIG_SOURCES
     src/state.cpp
     src/debug.cpp
     src/codepos.cpp
+    src/table_v3.cpp
+    src/registry.cpp
 )
 
 # table_v3の実装選択
-if(WASMIG_USE_CPP)
-    list(APPEND WASMIG_SOURCES src/table_v3.cpp)
-    message(STATUS "Using C++ implementation for table_v3")
-else()
-    list(APPEND WASMIG_SOURCES src/table_v3_c_impl.c)
-    message(STATUS "Using C implementation for table_v3")
-endif()
+# if(WASMIG_USE_CPP)
+#     list(APPEND WASMIG_SOURCES src/table_v3.cpp)
+#     message(STATUS "Using C++ implementation for table_v3")
+# else()
+#     list(APPEND WASMIG_SOURCES src/table_v3_c_impl.c)
+#     message(STATUS "Using C implementation for table_v3")
+# endif()
 
 # ライブラリのヘッダーとソースを指定
 add_library(libwasmig STATIC ${WASMIG_SOURCES})

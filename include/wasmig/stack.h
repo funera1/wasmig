@@ -25,8 +25,6 @@ bool wasmig_stack_is_empty(Stack stack);
 uint64_t wasmig_stack_top(Stack stack);
 size_t wasmig_stack_size(Stack stack);
 void wasmig_stack_destroy(Stack stack);
-
-// Debug utilities for basic stack
 void wasmig_stack_print(Stack stack);
 
 // ========================================
@@ -39,31 +37,11 @@ typedef struct stack_state_map* StackStateMap;
 // Stack state map operations
 StackStateMap wasmig_stack_state_map_create();
 void wasmig_stack_state_map_destroy(StackStateMap map);
-
-// State management operations (uint32_t keys)
 bool wasmig_stack_state_save(StackStateMap map, uint32_t key, Stack stack);
 Stack wasmig_stack_state_load(StackStateMap map, uint32_t key);
 bool wasmig_stack_state_exists(StackStateMap map, uint32_t key);
 bool wasmig_stack_state_remove(StackStateMap map, uint32_t key);
-
-// Debug utilities for state map
 void wasmig_stack_state_map_debug_print(StackStateMap map);
-
-// ========================================
-// Stack State Map Registry API (global)
-// ========================================
-// Register a map with an ID so it can be retrieved elsewhere.
-// Returns false if id already exists or map is NULL.
-bool wasmig_stack_state_map_register(uint32_t id, StackStateMap map);
-
-// Get a registered map by ID. Returns NULL if not found.
-StackStateMap wasmig_stack_state_map_get(uint32_t id);
-
-// Unregister a map by ID. Does not destroy the map. Returns false if not found.
-bool wasmig_stack_state_map_unregister(uint32_t id);
-
-// Clear all registered maps (does not destroy them).
-void wasmig_stack_state_map_registry_clear();
 
 // Backward-compat macros
 #define stack_create wasmig_stack_create
@@ -83,11 +61,6 @@ void wasmig_stack_state_map_registry_clear();
 #define stack_state_exists wasmig_stack_state_exists
 #define stack_state_remove wasmig_stack_state_remove
 #define stack_state_map_debug_print wasmig_stack_state_map_debug_print
-
-#define stack_state_map_register wasmig_stack_state_map_register
-#define stack_state_map_get wasmig_stack_state_map_get
-#define stack_state_map_unregister wasmig_stack_state_map_unregister
-#define stack_state_map_registry_clear wasmig_stack_state_map_registry_clear
 
 #ifdef __cplusplus
 }

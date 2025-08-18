@@ -1,4 +1,5 @@
 #include "wasmig/table_v3.h"
+#include "wasmig/registry.h"
 #include <gtest/gtest.h>
 #include <stdio.h>
 
@@ -177,14 +178,14 @@ TEST_F(TableV3Test, PrintFunctions) {
 TEST_F(TableV3Test, AddressMapRegistry) {
     AddressMap map1 = wasmig_address_map_create(8);
     AddressMap map2 = wasmig_address_map_create(8);
-    EXPECT_TRUE(wasmig_address_map_save(1, map1));
-    EXPECT_TRUE(wasmig_address_map_save(2, map2));
-    EXPECT_FALSE(wasmig_address_map_save(1, map2)); // 既存IDは失敗
-    EXPECT_EQ(wasmig_address_map_load(1), map1);
-    EXPECT_EQ(wasmig_address_map_load(2), map2);
-    EXPECT_TRUE(wasmig_address_map_exists(1));
+    EXPECT_TRUE(wasmig_address_map_registry_save(1, map1));
+    EXPECT_TRUE(wasmig_address_map_registry_save(2, map2));
+    EXPECT_FALSE(wasmig_address_map_registry_save(1, map2)); // 既存IDは失敗
+    EXPECT_EQ(wasmig_address_map_registry_load(1), map1);
+    EXPECT_EQ(wasmig_address_map_registry_load(2), map2);
+    EXPECT_TRUE(wasmig_address_map_registry_exists(1));
     wasmig_address_map_registry_clear();
-    EXPECT_EQ(wasmig_address_map_load(2), nullptr);
+    EXPECT_EQ(wasmig_address_map_registry_load(2), nullptr);
     wasmig_address_map_destroy(map1);
     wasmig_address_map_destroy(map2);
 }
@@ -193,14 +194,14 @@ TEST_F(TableV3Test, AddressMapRegistry) {
 TEST_F(TableV3Test, ForbiddenListRegistry) {
     CheckpointForbiddenList list1 = wasmig_forbidden_list_create(8);
     CheckpointForbiddenList list2 = wasmig_forbidden_list_create(8);
-    EXPECT_TRUE(wasmig_forbidden_list_save(10, list1));
-    EXPECT_TRUE(wasmig_forbidden_list_save(20, list2));
-    EXPECT_FALSE(wasmig_forbidden_list_save(10, list2)); // 既存IDは失敗
-    EXPECT_EQ(wasmig_forbidden_list_load(10), list1);
-    EXPECT_EQ(wasmig_forbidden_list_load(20), list2);
-    EXPECT_TRUE(wasmig_forbidden_list_exists(10));
+    EXPECT_TRUE(wasmig_forbidden_list_registry_save(10, list1));
+    EXPECT_TRUE(wasmig_forbidden_list_registry_save(20, list2));
+    EXPECT_FALSE(wasmig_forbidden_list_registry_save(10, list2)); // 既存IDは失敗
+    EXPECT_EQ(wasmig_forbidden_list_registry_load(10), list1);
+    EXPECT_EQ(wasmig_forbidden_list_registry_load(20), list2);
+    EXPECT_TRUE(wasmig_forbidden_list_registry_exists(10));
     wasmig_forbidden_list_registry_clear();
-    EXPECT_EQ(wasmig_forbidden_list_load(20), nullptr);
+    EXPECT_EQ(wasmig_forbidden_list_registry_load(20), nullptr);
     wasmig_forbidden_list_destroy(list1);
     wasmig_forbidden_list_destroy(list2);
 }
