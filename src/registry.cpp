@@ -55,9 +55,9 @@ void wasmig_address_map_clear() {
 }
 
 bool wasmig_forbidden_list_save(CheckpointForbiddenList list) {
-    if (g_forbidden_list_singleton) {
-        wasmig_forbidden_list_destroy(g_forbidden_list_singleton);
-    }
+    // if (g_forbidden_list_singleton) {
+    //     wasmig_forbidden_list_destroy(g_forbidden_list_singleton);
+    // }
     g_forbidden_list_singleton = list;
     return true;
 }
