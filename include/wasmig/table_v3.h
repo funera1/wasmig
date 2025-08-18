@@ -14,7 +14,7 @@ extern "C" {
 struct address_map_impl{
     void* impl; // 実装詳細を隠蔽するopaque pointer
 };
-typedef address_map_impl* AddressMap;
+typedef struct address_map_impl* AddressMap;
 
 // アドレスマップの関数
 AddressMap wasmig_address_map_create(size_t initial_capacity);
@@ -29,7 +29,7 @@ void wasmig_address_map_print(AddressMap map);
 struct checkpoint_forbidden_list_impl {
     void* impl;
 };
-typedef checkpoint_forbidden_list_impl* CheckpointForbiddenList;
+typedef struct checkpoint_forbidden_list_impl* CheckpointForbiddenList;
 
 // 禁止リストの関数
 CheckpointForbiddenList wasmig_forbidden_list_create(size_t initial_capacity);
@@ -52,7 +52,7 @@ struct state_management_queue_impl {
     void* impl; // 実装詳細を隠蔽するopaque pointer
 }; 
 
-typedef state_management_queue_impl* StateManagementQueue;
+typedef struct state_management_queue_impl* StateManagementQueue;
 
 // 状態管理キューの関数
 StateManagementQueue wasmig_state_queue_create();
