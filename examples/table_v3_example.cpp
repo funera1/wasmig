@@ -58,7 +58,7 @@ void example_forbidden_list() {
     printf("\n=== チェックポイント禁止リストの例 ===\n");
     
     // 禁止リストを作成
-    CheckpointForbiddenList* list = wasmig_forbidden_list_create(32);
+    CheckpointForbiddenList list = wasmig_forbidden_list_create(32);
     
     // 禁止する64ビットアドレスを定義
     uint64_t forbidden_addr1 = 50;   // アドレス50
@@ -94,7 +94,7 @@ void example_state_queue() {
     printf("\n=== 状態管理キューの例 ===\n");
     
     // 状態管理キューを作成
-    StateManagementQueue* queue = wasmig_state_queue_create();
+    StateManagementQueue queue = wasmig_state_queue_create();
 
     // 未確定のオフセットを定義
     uint32_t pending_offset1 = 300;

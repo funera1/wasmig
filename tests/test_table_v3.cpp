@@ -75,7 +75,7 @@ TEST_F(TableV3Test, AddressMapBasicOperations) {
 
 // 禁止リストのテスト
 TEST_F(TableV3Test, ForbiddenListBasicOperations) {
-    CheckpointForbiddenList* list = wasmig_forbidden_list_create(16);
+    CheckpointForbiddenList list = wasmig_forbidden_list_create(16);
     ASSERT_NE(list, nullptr);
     
     // 初期状態
@@ -109,7 +109,7 @@ TEST_F(TableV3Test, ForbiddenListBasicOperations) {
 
 // 状態管理キューのテスト
 TEST_F(TableV3Test, StateQueueBasicOperations) {
-    StateManagementQueue* queue = wasmig_state_queue_create();
+    StateManagementQueue queue = wasmig_state_queue_create();
     ASSERT_NE(queue, nullptr);
     
     // 初期状態
@@ -154,13 +154,13 @@ TEST_F(TableV3Test, PrintFunctions) {
     wasmig_address_map_print(map);
 
     // 禁止リストの印刷
-    CheckpointForbiddenList* list = wasmig_forbidden_list_create(16);
+    CheckpointForbiddenList list = wasmig_forbidden_list_create(16);
     wasmig_forbidden_list_add(list, forbidden_addr1);
     wasmig_forbidden_list_add(list, forbidden_addr2);
     wasmig_forbidden_list_print(list);
     
     // 状態キューの印刷
-    StateManagementQueue* queue = wasmig_state_queue_create();
+    StateManagementQueue queue = wasmig_state_queue_create();
     wasmig_state_queue_enqueue(queue, offset1);
     wasmig_state_queue_enqueue(queue, offset2);
     wasmig_state_queue_confirm_pending(queue, offset1);

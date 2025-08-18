@@ -26,18 +26,19 @@ size_t wasmig_address_map_size(AddressMap map);
 void wasmig_address_map_print(AddressMap map);
 
 // 2. チェックポイント禁止リスト: 64ビットアドレスを保持する集合
-typedef struct {
-    void* impl; // 実装詳細を隠蔽するopaque pointer
-} CheckpointForbiddenList;
+struct checkpoint_forbidden_list_impl {
+    void* impl;
+};
+typedef checkpoint_forbidden_list_impl* CheckpointForbiddenList;
 
 // 禁止リストの関数
-CheckpointForbiddenList* wasmig_forbidden_list_create(size_t initial_capacity);
-void wasmig_forbidden_list_destroy(CheckpointForbiddenList* list);
-bool wasmig_forbidden_list_add(CheckpointForbiddenList* list, uint64_t addr);
-bool wasmig_forbidden_list_contains(CheckpointForbiddenList* list, uint64_t addr);
-bool wasmig_forbidden_list_remove(CheckpointForbiddenList* list, uint64_t addr);
-size_t wasmig_forbidden_list_size(CheckpointForbiddenList* list);
-void wasmig_forbidden_list_print(CheckpointForbiddenList* list);
+CheckpointForbiddenList wasmig_forbidden_list_create(size_t initial_capacity);
+void wasmig_forbidden_list_destroy(CheckpointForbiddenList list);
+bool wasmig_forbidden_list_add(CheckpointForbiddenList list, uint64_t addr);
+bool wasmig_forbidden_list_contains(CheckpointForbiddenList list, uint64_t addr);
+bool wasmig_forbidden_list_remove(CheckpointForbiddenList list, uint64_t addr);
+size_t wasmig_forbidden_list_size(CheckpointForbiddenList list);
+void wasmig_forbidden_list_print(CheckpointForbiddenList list);
 
 // 3. 状態管理キュー: 未確定の命令位置を一時的に保持し、後続命令生成時に対応付けを確定するための構造
 
@@ -47,19 +48,21 @@ typedef struct {
     bool is_confirmed;
 } StateQueueEntry;
 
-typedef struct {
+struct state_management_queue_impl {
     void* impl; // 実装詳細を隠蔽するopaque pointer
-} StateManagementQueue;
+}; 
+
+typedef state_management_queue_impl* StateManagementQueue;
 
 // 状態管理キューの関数
-StateManagementQueue* wasmig_state_queue_create();
-void wasmig_state_queue_destroy(StateManagementQueue* queue);
-bool wasmig_state_queue_enqueue(StateManagementQueue* queue, uint32_t offset);
-bool wasmig_state_queue_dequeue(StateManagementQueue* queue, uint32_t* out_offset);
-bool wasmig_state_queue_confirm_pending(StateManagementQueue* queue, uint32_t offset);
-bool wasmig_state_queue_is_empty(StateManagementQueue* queue);
-size_t wasmig_state_queue_size(StateManagementQueue* queue);
-void wasmig_state_queue_print(StateManagementQueue* queue);
+StateManagementQueue wasmig_state_queue_create();
+void wasmig_state_queue_destroy(StateManagementQueue queue);
+bool wasmig_state_queue_enqueue(StateManagementQueue queue, uint32_t offset);
+bool wasmig_state_queue_dequeue(StateManagementQueue queue, uint32_t* out_offset);
+bool wasmig_state_queue_confirm_pending(StateManagementQueue queue, uint32_t offset);
+bool wasmig_state_queue_is_empty(StateManagementQueue queue);
+size_t wasmig_state_queue_size(StateManagementQueue queue);
+void wasmig_state_queue_print(StateManagementQueue queue);
 
 #ifdef __cplusplus
 }
