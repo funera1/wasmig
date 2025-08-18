@@ -44,9 +44,9 @@ void example_address_map() {
     printf("キー %u を更新\n", key1);
     
     // エントリの削除
-    wasmig_address_map_remove(map, key2);
-    printf("キー %u を削除\n", key2);
-    printf("削除後のマッピング数: %zu\n", wasmig_address_map_size(map));
+    // wasmig_address_map_remove(map, key2);
+    // printf("キー %u を削除\n", key2);
+    // printf("削除後のマッピング数: %zu\n", wasmig_address_map_size(map));
 
     // マップの内容を印刷
     wasmig_address_map_print(map);
@@ -84,8 +84,8 @@ void example_forbidden_list() {
     wasmig_forbidden_list_print(list);
     
     // 禁止を解除
-    wasmig_forbidden_list_remove(list, forbidden_addr1);
-    printf("禁止解除後のサイズ: %zu\n", wasmig_forbidden_list_size(list));
+    // wasmig_forbidden_list_remove(list, forbidden_addr1);
+    // printf("禁止解除後のサイズ: %zu\n", wasmig_forbidden_list_size(list));
 
     wasmig_forbidden_list_destroy(list);
 }
