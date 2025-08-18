@@ -48,6 +48,7 @@ void wasmig_forbidden_list_print(CheckpointForbiddenList list);
 
 // キューエントリの型定義
 typedef struct {
+    uint32_t fidx;
     uint32_t offset;
     bool is_confirmed;
 } StateQueueEntry;
@@ -61,9 +62,9 @@ typedef struct state_management_queue_impl* StateManagementQueue;
 // 状態管理キューの関数
 StateManagementQueue wasmig_state_queue_create();
 void wasmig_state_queue_destroy(StateManagementQueue queue);
-bool wasmig_state_queue_enqueue(StateManagementQueue queue, uint32_t offset);
-bool wasmig_state_queue_dequeue(StateManagementQueue queue, uint32_t* out_offset);
-bool wasmig_state_queue_confirm_pending(StateManagementQueue queue, uint32_t offset);
+bool wasmig_state_queue_enqueue(StateManagementQueue queue, uint32_t fidx, uint32_t offset);
+bool wasmig_state_queue_dequeue(StateManagementQueue queue, uint32_t* out_fidx, uint32_t* out_offset);
+bool wasmig_state_queue_confirm_pending(StateManagementQueue queue, uint32_t fidx, uint32_t offset);
 bool wasmig_state_queue_is_empty(StateManagementQueue queue);
 size_t wasmig_state_queue_size(StateManagementQueue queue);
 void wasmig_state_queue_print(StateManagementQueue queue);

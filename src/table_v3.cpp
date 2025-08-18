@@ -238,15 +238,16 @@ void wasmig_state_queue_destroy(StateManagementQueue queue) {
     free(queue);
 }
 
-bool wasmig_state_queue_enqueue(StateManagementQueue queue, uint32_t offset) {
+bool wasmig_state_queue_enqueue(StateManagementQueue queue, uint32_t fidx, uint32_t offset) {
     if (!queue || !queue->impl) return false;
     try {
         auto* impl = static_cast<std::queue<StateQueueEntry>*>(queue->impl);
         StateQueueEntry entry;
+        entry.fidx = fidx;
         entry.offset = offset;
         entry.is_confirmed = false;
         impl->push(entry);
-        spdlog::debug("Enqueued to state queue: offset={}", offset);
+        spdlog::debug("Enqueued to state queue: fidx={}, offset={}", fidx, offset);
         return true;
     } catch (const std::exception& e) {
         spdlog::error("Failed to enqueue: {}", e.what());
@@ -254,15 +255,16 @@ bool wasmig_state_queue_enqueue(StateManagementQueue queue, uint32_t offset) {
     }
 }
 
-bool wasmig_state_queue_dequeue(StateManagementQueue queue, uint32_t* out_offset) {
-    if (!queue || !queue->impl || !out_offset) return false;
+bool wasmig_state_queue_dequeue(StateManagementQueue queue, uint32_t* out_fidx, uint32_t* out_offset) {
+    if (!queue || !queue->impl || !out_fidx || !out_offset) return false;
     try {
         auto* impl = static_cast<std::queue<StateQueueEntry>*>(queue->impl);
         if (impl->empty()) return false;
         StateQueueEntry entry = impl->front();
         impl->pop();
+        *out_fidx = entry.fidx;
         *out_offset = entry.offset;
-        spdlog::debug("Dequeued from state queue: offset={}", entry.offset);
+        spdlog::debug("Dequeued from state queue: (fidx={}, offset={})", entry.fidx, entry.offset);
         return true;
     } catch (const std::exception& e) {
         spdlog::error("Failed to dequeue: {}", e.what());
@@ -270,7 +272,7 @@ bool wasmig_state_queue_dequeue(StateManagementQueue queue, uint32_t* out_offset
     }
 }
 
-bool wasmig_state_queue_confirm_pending(StateManagementQueue queue, uint32_t offset) {
+bool wasmig_state_queue_confirm_pending(StateManagementQueue queue, uint32_t fidx, uint32_t offset) {
     if (!queue || !queue->impl) return false;
     try {
         auto* impl = static_cast<std::queue<StateQueueEntry>*>(queue->impl);
@@ -279,10 +281,10 @@ bool wasmig_state_queue_confirm_pending(StateManagementQueue queue, uint32_t off
         while (!impl->empty()) {
             StateQueueEntry entry = impl->front();
             impl->pop();
-            if (entry.offset == offset) {
+            if (entry.fidx == fidx && entry.offset == offset) {
                 entry.is_confirmed = true;
                 found = true;
-                spdlog::debug("Confirmed pending instruction: offset={}", offset);
+                spdlog::debug("Confirmed pending instruction: (fidx={}, offset={})", fidx, offset);
             }
             temp_queue.push(entry);
         }
