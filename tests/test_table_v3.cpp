@@ -41,26 +41,26 @@ TEST_F(TableV3Test, AddressMapBasicOperations) {
     EXPECT_EQ(wasmig_address_map_size(map), 0);
     
     // エントリの追加
-    EXPECT_TRUE(wasmig_address_map_set(map, key1, offset1, value1));
-    EXPECT_TRUE(wasmig_address_map_set(map, key2, offset2, value2));
+    EXPECT_TRUE(wasmig_address_map_set_bidirect(map, key1, offset1, value1));
+    EXPECT_TRUE(wasmig_address_map_set_bidirect(map, key2, offset2, value2));
     EXPECT_EQ(wasmig_address_map_size(map), 2);
     
     // キーからバリューを取得
     uint64_t retrieved_value;
-    EXPECT_TRUE(wasmig_address_map_get(map, key1, offset1, &retrieved_value));
+    EXPECT_TRUE(wasmig_address_map_get_value(map, key1, offset1, &retrieved_value));
     EXPECT_EQ(retrieved_value, value1);
     
-    EXPECT_TRUE(wasmig_address_map_get(map, key2, offset2, &retrieved_value));
+    EXPECT_TRUE(wasmig_address_map_get_value(map, key2, offset2, &retrieved_value));
     EXPECT_EQ(retrieved_value, value2);
     
     // 存在しないエントリ
-    EXPECT_FALSE(wasmig_address_map_get(map, key3, offset3, &retrieved_value));
-    
+    EXPECT_FALSE(wasmig_address_map_get_value(map, key3, offset3, &retrieved_value));
+
     // エントリの更新
     uint64_t new_value = 0x4000000000ULL;
-    EXPECT_TRUE(wasmig_address_map_set(map, key1, offset1, new_value));
+    EXPECT_TRUE(wasmig_address_map_set_bidirect(map, key1, offset1, new_value));
     EXPECT_EQ(wasmig_address_map_size(map), 2); // サイズは変わらない
-    EXPECT_TRUE(wasmig_address_map_get(map, key1, offset1, &retrieved_value));
+    EXPECT_TRUE(wasmig_address_map_get_value(map, key1, offset1, &retrieved_value));
     EXPECT_EQ(retrieved_value, new_value);
     
     // エントリの削除
@@ -150,8 +150,8 @@ TEST_F(TableV3Test, PrintFunctions) {
     
     // アドレスマップの印刷
     AddressMap map = wasmig_address_map_create(16);
-    wasmig_address_map_set(map, key1, offset1, value1);
-    wasmig_address_map_set(map, key2, offset2, value2);
+    wasmig_address_map_set_bidirect(map, key1, offset1, value1);
+    wasmig_address_map_set_bidirect(map, key2, offset2, value2);
     wasmig_address_map_print(map);
 
     // 禁止リストの印刷

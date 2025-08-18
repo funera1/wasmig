@@ -49,7 +49,7 @@ void wasmig_address_map_destroy(AddressMap map) {
     free(map);
 }
 
-bool wasmig_address_map_set(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t value) {
+bool wasmig_address_map_set_bidirect(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t value) {
     if (!map || !map->kv_impl || !map->vk_impl) return false;
     auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
     auto* vk = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->vk_impl);
@@ -68,17 +68,18 @@ bool wasmig_address_map_set(AddressMap map, uint32_t fidx, uint32_t offset, uint
     }
 }
 
-bool wasmig_address_map_get(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t* out_value) {
-    if (!map || !map->kv_impl || !out_value) return false;
+bool wasmig_address_map_set_forward(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t value) {
+    if (!map || !map->kv_impl || !map->vk_impl) return false;
     auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
-    uint64_t packed = pack_fidx_offset(fidx, offset);
-    auto it = kv->find(packed);
-    if (it != kv->end()) {
-        *out_value = it->second;
-        spdlog::debug("Found value for fidx/offset {}:{} -> {}", fidx, offset, *out_value);
+    try {
+        uint64_t packed = pack_fidx_offset(fidx, offset);
+        auto it = kv->find(packed);
+        (*kv)[packed] = value;
         return true;
+    } catch (const std::exception& e) {
+        spdlog::error("Failed to set address map entry: {}", e.what());
+        return false;
     }
-    return false;
 }
 
 bool wasmig_address_map_get_key(AddressMap map, uint64_t value, uint32_t* out_fidx, uint32_t* out_offset) {
@@ -91,6 +92,19 @@ bool wasmig_address_map_get_key(AddressMap map, uint64_t value, uint32_t* out_fi
         *out_fidx = fidx;
         *out_offset = offset;
         spdlog::debug("Found key for value {}: {}:{}", value, fidx, offset);
+        return true;
+    }
+    return false;
+}
+
+bool wasmig_address_map_get_value(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t* out_value) {
+    if (!map || !map->kv_impl || !out_value) return false;
+    auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
+    uint64_t packed = pack_fidx_offset(fidx, offset);
+    auto it = kv->find(packed);
+    if (it != kv->end()) {
+        *out_value = it->second;
+        spdlog::debug("Found value for fidx/offset {}:{} -> {}", fidx, offset, *out_value);
         return true;
     }
     return false;
