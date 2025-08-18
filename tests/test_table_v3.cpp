@@ -33,7 +33,7 @@ protected:
 
 // アドレスマップのテスト
 TEST_F(TableV3Test, AddressMapBasicOperations) {
-    AddressMap* map = wasmig_address_map_create(16);
+    AddressMap map = wasmig_address_map_create(16);
     ASSERT_NE(map, nullptr);
     
     // 初期状態
@@ -148,7 +148,7 @@ TEST_F(TableV3Test, PrintFunctions) {
     printf("\n=== Print Functions Test ===\n");
     
     // アドレスマップの印刷
-    AddressMap* map = wasmig_address_map_create(16);
+    AddressMap map = wasmig_address_map_create(16);
     wasmig_address_map_set(map, key1, value1);
     wasmig_address_map_set(map, key2, value2);
     wasmig_address_map_print(map);

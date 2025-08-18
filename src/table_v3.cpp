@@ -12,10 +12,10 @@
 // 1. アドレスマップの実装 (C++ std::unordered_map)
 // =============================================================================
 
-AddressMap* wasmig_address_map_create(size_t initial_capacity) {
+AddressMap wasmig_address_map_create(size_t initial_capacity) {
     spdlog::debug("Creating address map with initial capacity: {}", initial_capacity);
-    
-    AddressMap* map = (AddressMap*)malloc(sizeof(AddressMap));
+
+    AddressMap map = (AddressMap)malloc(sizeof(struct address_map_impl));
     if (!map) return nullptr;
     
     try {
@@ -30,7 +30,7 @@ AddressMap* wasmig_address_map_create(size_t initial_capacity) {
     }
 }
 
-void wasmig_address_map_destroy(AddressMap* map) {
+void wasmig_address_map_destroy(AddressMap map) {
     if (!map) return;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
@@ -40,7 +40,7 @@ void wasmig_address_map_destroy(AddressMap* map) {
     free(map);
 }
 
-bool wasmig_address_map_set(AddressMap* map, uint32_t key, uint64_t value) {
+bool wasmig_address_map_set(AddressMap map, uint32_t key, uint64_t value) {
     if (!map || !map->impl) return false;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
@@ -55,7 +55,7 @@ bool wasmig_address_map_set(AddressMap* map, uint32_t key, uint64_t value) {
     }
 }
 
-bool wasmig_address_map_get(AddressMap* map, uint32_t key, uint64_t* out_value) {
+bool wasmig_address_map_get(AddressMap map, uint32_t key, uint64_t* out_value) {
     if (!map || !map->impl || !out_value) return false;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
@@ -70,7 +70,7 @@ bool wasmig_address_map_get(AddressMap* map, uint32_t key, uint64_t* out_value) 
     return false;
 }
 
-bool wasmig_address_map_remove(AddressMap* map, uint32_t key) {
+bool wasmig_address_map_remove(AddressMap map, uint32_t key) {
     if (!map || !map->impl) return false;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
@@ -84,14 +84,14 @@ bool wasmig_address_map_remove(AddressMap* map, uint32_t key) {
     return false;
 }
 
-size_t wasmig_address_map_size(AddressMap* map) {
+size_t wasmig_address_map_size(AddressMap map) {
     if (!map || !map->impl) return 0;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
     return impl->size();
 }
 
-void wasmig_address_map_print(AddressMap* map) {
+void wasmig_address_map_print(AddressMap map) {
     if (!map || !map->impl) return;
     
     auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);

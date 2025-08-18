@@ -11,18 +11,19 @@ extern "C" {
 
 
 // 1. アドレスマップ: u32キーとu64バリューを対応付けるための構造
-typedef struct {
+struct address_map_impl{
     void* impl; // 実装詳細を隠蔽するopaque pointer
-} AddressMap;
+};
+typedef address_map_impl* AddressMap;
 
 // アドレスマップの関数
-AddressMap* wasmig_address_map_create(size_t initial_capacity);
-void wasmig_address_map_destroy(AddressMap* map);
-bool wasmig_address_map_set(AddressMap* map, uint32_t key, uint64_t value);
-bool wasmig_address_map_get(AddressMap* map, uint32_t key, uint64_t* out_value);
-bool wasmig_address_map_remove(AddressMap* map, uint32_t key);
-size_t wasmig_address_map_size(AddressMap* map);
-void wasmig_address_map_print(AddressMap* map);
+AddressMap wasmig_address_map_create(size_t initial_capacity);
+void wasmig_address_map_destroy(AddressMap map);
+bool wasmig_address_map_set(AddressMap map, uint32_t key, uint64_t value);
+bool wasmig_address_map_get(AddressMap map, uint32_t key, uint64_t* out_value);
+bool wasmig_address_map_remove(AddressMap map, uint32_t key);
+size_t wasmig_address_map_size(AddressMap map);
+void wasmig_address_map_print(AddressMap map);
 
 // 2. チェックポイント禁止リスト: 64ビットアドレスを保持する集合
 typedef struct {

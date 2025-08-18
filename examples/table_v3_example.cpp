@@ -14,7 +14,7 @@ void example_address_map() {
     printf("\n=== アドレスマップの例 ===\n");
     
     // アドレスマップを作成
-    AddressMap* map = wasmig_address_map_create(32);
+    AddressMap map = wasmig_address_map_create(32);
 
     // キーとバリューを定義
     uint32_t key1 = 100;
