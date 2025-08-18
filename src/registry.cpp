@@ -31,10 +31,10 @@ static AddressMap g_address_map_singleton = nullptr;
 static CheckpointForbiddenList g_forbidden_list_singleton = nullptr;
 
 bool wasmig_address_map_save(AddressMap map) {
-    if (g_address_map_singleton) {
-        // replace existing
-        wasmig_address_map_destroy(g_address_map_singleton);
-    }
+    // if (g_address_map_singleton) {
+    //     // replace existing
+    //     wasmig_address_map_destroy(g_address_map_singleton);
+    // }
     g_address_map_singleton = map;
     return true;
 }
