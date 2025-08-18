@@ -23,24 +23,24 @@ void example_address_map() {
     uint64_t value2 = 0x2000000000ULL;
     
     // マッピングを追加
-    wasmig_address_map_set(map, key1, value1);
-    wasmig_address_map_set(map, key2, value2);
+    wasmig_address_map_set(map, key1, 0, value1);
+    wasmig_address_map_set(map, key2, 0, value2);
     
     printf("登録されたマッピング数: %zu\n", wasmig_address_map_size(map));
     
     // キーからバリューを取得
     uint64_t retrieved_value;
-    if (wasmig_address_map_get(map, key1, &retrieved_value)) {
+    if (wasmig_address_map_get(map, key1, 0, &retrieved_value)) {
         printf("キー %u -> バリュー %lu\n", key1, retrieved_value);
     }
     
-    if (wasmig_address_map_get(map, key2, &retrieved_value)) {
+    if (wasmig_address_map_get(map, key2, 0, &retrieved_value)) {
         printf("キー %u -> バリュー %lu\n", key2, retrieved_value);
     }
     
     // エントリの更新
     uint64_t new_value = 0x3000000000ULL;
-    wasmig_address_map_set(map, key1, new_value);
+    wasmig_address_map_set(map, key1, 0, new_value);
     printf("キー %u を更新\n", key1);
     
     // エントリの削除

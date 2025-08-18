@@ -41,35 +41,35 @@ TEST_F(TableV3Test, AddressMapBasicOperations) {
     EXPECT_EQ(wasmig_address_map_size(map), 0);
     
     // エントリの追加
-    EXPECT_TRUE(wasmig_address_map_set(map, key1, value1));
-    EXPECT_TRUE(wasmig_address_map_set(map, key2, value2));
+    EXPECT_TRUE(wasmig_address_map_set(map, key1, offset1, value1));
+    EXPECT_TRUE(wasmig_address_map_set(map, key2, offset2, value2));
     EXPECT_EQ(wasmig_address_map_size(map), 2);
     
     // キーからバリューを取得
     uint64_t retrieved_value;
-    EXPECT_TRUE(wasmig_address_map_get(map, key1, &retrieved_value));
+    EXPECT_TRUE(wasmig_address_map_get(map, key1, offset1, &retrieved_value));
     EXPECT_EQ(retrieved_value, value1);
     
-    EXPECT_TRUE(wasmig_address_map_get(map, key2, &retrieved_value));
+    EXPECT_TRUE(wasmig_address_map_get(map, key2, offset2, &retrieved_value));
     EXPECT_EQ(retrieved_value, value2);
     
     // 存在しないエントリ
-    EXPECT_FALSE(wasmig_address_map_get(map, key3, &retrieved_value));
+    EXPECT_FALSE(wasmig_address_map_get(map, key3, offset3, &retrieved_value));
     
     // エントリの更新
     uint64_t new_value = 0x4000000000ULL;
-    EXPECT_TRUE(wasmig_address_map_set(map, key1, new_value));
+    EXPECT_TRUE(wasmig_address_map_set(map, key1, offset1, new_value));
     EXPECT_EQ(wasmig_address_map_size(map), 2); // サイズは変わらない
-    EXPECT_TRUE(wasmig_address_map_get(map, key1, &retrieved_value));
+    EXPECT_TRUE(wasmig_address_map_get(map, key1, offset1, &retrieved_value));
     EXPECT_EQ(retrieved_value, new_value);
     
     // エントリの削除
-    // EXPECT_TRUE(wasmig_address_map_remove(map, key1));
-    // EXPECT_FALSE(wasmig_address_map_get(map, key1, &retrieved_value));
+    // EXPECT_TRUE(wasmig_address_map_remove(map, key1, offset1));
+    // EXPECT_FALSE(wasmig_address_map_get(map, key1, offset1, &retrieved_value));
     // EXPECT_EQ(wasmig_address_map_size(map), 1);
 
     // 存在しないエントリの削除
-    // EXPECT_FALSE(wasmig_address_map_remove(map, key3));
+    // EXPECT_FALSE(wasmig_address_map_remove(map, key3, offset3));
     wasmig_address_map_destroy(map);
 }
 
@@ -149,8 +149,8 @@ TEST_F(TableV3Test, PrintFunctions) {
     
     // アドレスマップの印刷
     AddressMap map = wasmig_address_map_create(16);
-    wasmig_address_map_set(map, key1, value1);
-    wasmig_address_map_set(map, key2, value2);
+    wasmig_address_map_set(map, key1, offset1, value1);
+    wasmig_address_map_set(map, key2, offset2, value2);
     wasmig_address_map_print(map);
 
     // 禁止リストの印刷
@@ -178,14 +178,13 @@ TEST_F(TableV3Test, PrintFunctions) {
 TEST_F(TableV3Test, AddressMapRegistry) {
     AddressMap map1 = wasmig_address_map_create(8);
     AddressMap map2 = wasmig_address_map_create(8);
-    EXPECT_TRUE(wasmig_address_map_registry_save(1, map1));
-    EXPECT_TRUE(wasmig_address_map_registry_save(2, map2));
-    EXPECT_FALSE(wasmig_address_map_registry_save(1, map2)); // 既存IDは失敗
-    EXPECT_EQ(wasmig_address_map_registry_load(1), map1);
-    EXPECT_EQ(wasmig_address_map_registry_load(2), map2);
-    EXPECT_TRUE(wasmig_address_map_registry_exists(1));
-    wasmig_address_map_registry_clear();
-    EXPECT_EQ(wasmig_address_map_registry_load(2), nullptr);
+    EXPECT_TRUE(wasmig_address_map_save(map1));
+    // second save replaces existing singleton
+    EXPECT_TRUE(wasmig_address_map_save(map2));
+    EXPECT_EQ(wasmig_address_map_load(), map2);
+    EXPECT_TRUE(wasmig_address_map_exists());
+    wasmig_address_map_clear();
+    EXPECT_EQ(wasmig_address_map_load(), nullptr);
     wasmig_address_map_destroy(map1);
     wasmig_address_map_destroy(map2);
 }
@@ -194,14 +193,13 @@ TEST_F(TableV3Test, AddressMapRegistry) {
 TEST_F(TableV3Test, ForbiddenListRegistry) {
     CheckpointForbiddenList list1 = wasmig_forbidden_list_create(8);
     CheckpointForbiddenList list2 = wasmig_forbidden_list_create(8);
-    EXPECT_TRUE(wasmig_forbidden_list_registry_save(10, list1));
-    EXPECT_TRUE(wasmig_forbidden_list_registry_save(20, list2));
-    EXPECT_FALSE(wasmig_forbidden_list_registry_save(10, list2)); // 既存IDは失敗
-    EXPECT_EQ(wasmig_forbidden_list_registry_load(10), list1);
-    EXPECT_EQ(wasmig_forbidden_list_registry_load(20), list2);
-    EXPECT_TRUE(wasmig_forbidden_list_registry_exists(10));
-    wasmig_forbidden_list_registry_clear();
-    EXPECT_EQ(wasmig_forbidden_list_registry_load(20), nullptr);
+    EXPECT_TRUE(wasmig_forbidden_list_save(list1));
+    // second save replaces existing singleton
+    EXPECT_TRUE(wasmig_forbidden_list_save(list2));
+    EXPECT_EQ(wasmig_forbidden_list_load(), list2);
+    EXPECT_TRUE(wasmig_forbidden_list_exists());
+    wasmig_forbidden_list_clear();
+    EXPECT_EQ(wasmig_forbidden_list_load(), nullptr);
     wasmig_forbidden_list_destroy(list1);
     wasmig_forbidden_list_destroy(list2);
 }

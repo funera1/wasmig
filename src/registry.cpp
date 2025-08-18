@@ -1,71 +1,54 @@
 #include "wasmig/registry.h"
-#include <unordered_map>
+#include <vector>
+#include <memory>
 
-// StackStateMap global registry
-static std::unordered_map<uint32_t, StackStateMap> g_stack_state_map_registry;
+// Singletons for AddressMap and CheckpointForbiddenList
+static AddressMap g_address_map_singleton = nullptr;
+static CheckpointForbiddenList g_forbidden_list_singleton = nullptr;
 
-bool wasmig_stack_state_map_registry_save(uint32_t id, StackStateMap map) {
-    if (!map) return false;
-    auto [it, inserted] = g_stack_state_map_registry.emplace(id, map);
-    return inserted;
+bool wasmig_address_map_save(AddressMap map) {
+    if (g_address_map_singleton) {
+        // replace existing
+        wasmig_address_map_destroy(g_address_map_singleton);
+    }
+    g_address_map_singleton = map;
+    return true;
 }
 
-StackStateMap wasmig_stack_state_map_registry_load(uint32_t id) {
-    auto it = g_stack_state_map_registry.find(id);
-    if (it != g_stack_state_map_registry.end()) return it->second;
-    return nullptr;
+AddressMap wasmig_address_map_load() {
+    return g_address_map_singleton;
 }
 
-bool wasmig_stack_state_map_registry_exists(uint32_t id) {
-    return g_stack_state_map_registry.count(id) > 0;
+bool wasmig_address_map_exists() {
+    return g_address_map_singleton != nullptr;
 }
 
-void wasmig_stack_state_map_registry_clear() {
-    g_stack_state_map_registry.clear();
+void wasmig_address_map_clear() {
+    if (g_address_map_singleton) {
+        wasmig_address_map_destroy(g_address_map_singleton);
+        g_address_map_singleton = nullptr;
+    }
 }
 
-// AddressMap global registry
-static std::unordered_map<uint32_t, AddressMap> g_address_map_registry;
-
-bool wasmig_address_map_registry_save(uint32_t id, AddressMap map) {
-    if (!map) return false;
-    auto [it, inserted] = g_address_map_registry.emplace(id, map);
-    return inserted;
+bool wasmig_forbidden_list_save(CheckpointForbiddenList list) {
+    if (g_forbidden_list_singleton) {
+        wasmig_forbidden_list_destroy(g_forbidden_list_singleton);
+    }
+    g_forbidden_list_singleton = list;
+    return true;
 }
 
-AddressMap wasmig_address_map_registry_load(uint32_t id) {
-    auto it = g_address_map_registry.find(id);
-    if (it != g_address_map_registry.end()) return it->second;
-    return nullptr;
+CheckpointForbiddenList wasmig_forbidden_list_load() {
+    return g_forbidden_list_singleton;
 }
 
-bool wasmig_address_map_registry_exists(uint32_t id) {
-    return g_address_map_registry.count(id) > 0;
+bool wasmig_forbidden_list_exists() {
+    return g_forbidden_list_singleton != nullptr;
 }
 
-void wasmig_address_map_registry_clear() {
-    g_address_map_registry.clear();
-}
-
-// CheckpointForbiddenList global registry
-static std::unordered_map<uint32_t, CheckpointForbiddenList> g_forbidden_list_registry;
-
-bool wasmig_forbidden_list_registry_save(uint32_t id, CheckpointForbiddenList list) {
-    if (!list) return false;
-    auto [it, inserted] = g_forbidden_list_registry.emplace(id, list);
-    return inserted;
-}
-
-CheckpointForbiddenList wasmig_forbidden_list_registry_load(uint32_t id) {
-    auto it = g_forbidden_list_registry.find(id);
-    if (it != g_forbidden_list_registry.end()) return it->second;
-    return nullptr;
-}
-
-bool wasmig_forbidden_list_registry_exists(uint32_t id) {
-    return g_forbidden_list_registry.count(id) > 0;
-}
-
-void wasmig_forbidden_list_registry_clear() {
-    g_forbidden_list_registry.clear();
+void wasmig_forbidden_list_clear() {
+    if (g_forbidden_list_singleton) {
+        wasmig_forbidden_list_destroy(g_forbidden_list_singleton);
+        g_forbidden_list_singleton = nullptr;
+    }
 }

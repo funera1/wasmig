@@ -20,11 +20,12 @@ typedef struct address_map_impl* AddressMap;
 // アドレスマップの関数
 AddressMap wasmig_address_map_create(size_t initial_capacity);
 void wasmig_address_map_destroy(AddressMap map);
-bool wasmig_address_map_set(AddressMap map, uint32_t key, uint64_t value);
-bool wasmig_address_map_get(AddressMap map, uint32_t key, uint64_t* out_value);
-// valueからkeyを取得するAPI
-bool wasmig_address_map_get_key(AddressMap map, uint64_t value, uint32_t* out_key);
-bool wasmig_address_map_remove(AddressMap map, uint32_t key);
+// Use (fidx, offset) as the key
+bool wasmig_address_map_set(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t value);
+bool wasmig_address_map_get(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t* out_value);
+// valueから (fidx, offset) を取得するAPI
+bool wasmig_address_map_get_key(AddressMap map, uint64_t value, uint32_t* out_fidx, uint32_t* out_offset);
+bool wasmig_address_map_remove(AddressMap map, uint32_t fidx, uint32_t offset);
 size_t wasmig_address_map_size(AddressMap map);
 void wasmig_address_map_print(AddressMap map);
 

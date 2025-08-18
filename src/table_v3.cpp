@@ -12,13 +12,21 @@
 // 1. アドレスマップの実装 (C++ 双方向マップ)
 // =============================================================================
 
+static inline uint64_t pack_fidx_offset(uint32_t fidx, uint32_t offset) {
+    return (uint64_t(fidx) << 32) | uint64_t(offset);
+}
+static inline void unpack_fidx_offset(uint64_t packed, uint32_t &fidx, uint32_t &offset) {
+    fidx = uint32_t(packed >> 32);
+    offset = uint32_t(packed & 0xffffffffu);
+}
+
 AddressMap wasmig_address_map_create(size_t initial_capacity) {
     spdlog::debug("Creating address map with initial capacity: {}", initial_capacity);
     AddressMap map = (AddressMap)malloc(sizeof(struct address_map_impl));
     if (!map) return nullptr;
     try {
-        auto* kv = new std::unordered_map<uint32_t, uint64_t>();
-        auto* vk = new std::unordered_map<uint64_t, uint32_t>();
+        auto* kv = new std::unordered_map<uint64_t, uint64_t>();
+        auto* vk = new std::unordered_map<uint64_t, uint64_t>();
         kv->reserve(initial_capacity);
         vk->reserve(initial_capacity);
         map->kv_impl = kv;
@@ -33,26 +41,26 @@ AddressMap wasmig_address_map_create(size_t initial_capacity) {
 
 void wasmig_address_map_destroy(AddressMap map) {
     if (!map) return;
-    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
-    auto* vk = static_cast<std::unordered_map<uint64_t, uint32_t>*>(map->vk_impl);
+    auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->vk_impl);
     spdlog::debug("Destroying address map with {} entries", kv->size());
     delete kv;
     delete vk;
     free(map);
 }
 
-bool wasmig_address_map_set(AddressMap map, uint32_t key, uint64_t value) {
+bool wasmig_address_map_set(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t value) {
     if (!map || !map->kv_impl || !map->vk_impl) return false;
-    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
-    auto* vk = static_cast<std::unordered_map<uint64_t, uint32_t>*>(map->vk_impl);
+    auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->vk_impl);
     try {
-        // 既存keyのvalueを更新する場合、古いvalue→keyを消す
-        auto it = kv->find(key);
+        uint64_t packed = pack_fidx_offset(fidx, offset);
+        auto it = kv->find(packed);
         if (it != kv->end()) {
             vk->erase(it->second);
         }
-        (*kv)[key] = value;
-        (*vk)[value] = key;
+        (*kv)[packed] = value;
+        (*vk)[value] = packed;
         return true;
     } catch (const std::exception& e) {
         spdlog::error("Failed to set address map entry: {}", e.what());
@@ -60,39 +68,44 @@ bool wasmig_address_map_set(AddressMap map, uint32_t key, uint64_t value) {
     }
 }
 
-bool wasmig_address_map_get(AddressMap map, uint32_t key, uint64_t* out_value) {
+bool wasmig_address_map_get(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t* out_value) {
     if (!map || !map->kv_impl || !out_value) return false;
-    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
-    auto it = kv->find(key);
+    auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
+    uint64_t packed = pack_fidx_offset(fidx, offset);
+    auto it = kv->find(packed);
     if (it != kv->end()) {
         *out_value = it->second;
-        spdlog::debug("Found value for key {}: {}", key, *out_value);
+        spdlog::debug("Found value for fidx/offset {}:{} -> {}", fidx, offset, *out_value);
         return true;
     }
     return false;
 }
 
-bool wasmig_address_map_get_key(AddressMap map, uint64_t value, uint32_t* out_key) {
-    if (!map || !map->vk_impl || !out_key) return false;
-    auto* vk = static_cast<std::unordered_map<uint64_t, uint32_t>*>(map->vk_impl);
+bool wasmig_address_map_get_key(AddressMap map, uint64_t value, uint32_t* out_fidx, uint32_t* out_offset) {
+    if (!map || !map->vk_impl || !out_fidx || !out_offset) return false;
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->vk_impl);
     auto it = vk->find(value);
     if (it != vk->end()) {
-        *out_key = it->second;
-        spdlog::debug("Found key for value {}: {}", value, *out_key);
+        uint32_t fidx, offset;
+        unpack_fidx_offset(it->second, fidx, offset);
+        *out_fidx = fidx;
+        *out_offset = offset;
+        spdlog::debug("Found key for value {}: {}:{}", value, fidx, offset);
         return true;
     }
     return false;
 }
 
-bool wasmig_address_map_remove(AddressMap map, uint32_t key) {
+bool wasmig_address_map_remove(AddressMap map, uint32_t fidx, uint32_t offset) {
     if (!map || !map->kv_impl || !map->vk_impl) return false;
-    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
-    auto* vk = static_cast<std::unordered_map<uint64_t, uint32_t>*>(map->vk_impl);
-    auto it = kv->find(key);
+    auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->vk_impl);
+    uint64_t packed = pack_fidx_offset(fidx, offset);
+    auto it = kv->find(packed);
     if (it != kv->end()) {
         vk->erase(it->second);
         kv->erase(it);
-        spdlog::debug("Removed key {} from address map", key);
+        spdlog::debug("Removed fidx/offset {}:{} from address map", fidx, offset);
         return true;
     }
     return false;
@@ -100,16 +113,18 @@ bool wasmig_address_map_remove(AddressMap map, uint32_t key) {
 
 size_t wasmig_address_map_size(AddressMap map) {
     if (!map || !map->kv_impl) return 0;
-    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
+    auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
     return kv->size();
 }
 
 void wasmig_address_map_print(AddressMap map) {
     if (!map || !map->kv_impl) return;
-    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
+    auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
     printf("AddressMap (size: %zu)\n", kv->size());
     for (const auto& pair : *kv) {
-        printf("  %u -> %lu\n", pair.first, pair.second);
+        uint32_t fidx, offset;
+        unpack_fidx_offset(pair.first, fidx, offset);
+        printf("  %u:%u -> %lu\n", fidx, offset, pair.second);
     }
 }
 
