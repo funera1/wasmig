@@ -1,6 +1,30 @@
 #include "wasmig/registry.h"
 #include <vector>
 #include <memory>
+#include <unordered_map>
+
+// StackStateMap global registry
+static std::unordered_map<uint32_t, StackStateMap> g_stack_state_map_registry;
+
+bool wasmig_stack_state_map_registry_save(uint32_t id, StackStateMap map) {
+    if (!map) return false;
+    auto [it, inserted] = g_stack_state_map_registry.emplace(id, map);
+    return inserted;
+}
+
+StackStateMap wasmig_stack_state_map_registry_load(uint32_t id) {
+    auto it = g_stack_state_map_registry.find(id);
+    if (it != g_stack_state_map_registry.end()) return it->second;
+    return nullptr;
+}
+
+bool wasmig_stack_state_map_registry_exists(uint32_t id) {
+    return g_stack_state_map_registry.count(id) > 0;
+}
+
+void wasmig_stack_state_map_registry_clear() {
+    g_stack_state_map_registry.clear();
+}
 
 // Singletons for AddressMap and CheckpointForbiddenList
 static AddressMap g_address_map_singleton = nullptr;

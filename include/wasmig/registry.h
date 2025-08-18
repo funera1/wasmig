@@ -11,7 +11,11 @@
 extern "C" {
 #endif
 
-// Note: ModuleTables abstraction removed; use singletons for AddressMap and ForbiddenList.
+// StackStateMap global registry
+bool wasmig_stack_state_map_registry_save(uint32_t id, StackStateMap map);
+StackStateMap wasmig_stack_state_map_registry_load(uint32_t id);
+bool wasmig_stack_state_map_registry_exists(uint32_t id);
+void wasmig_stack_state_map_registry_clear();
 
 // Backward-compatible wrappers for previous registry functions
 // Singletons (one per process/module system): AddressMap and ForbiddenList
