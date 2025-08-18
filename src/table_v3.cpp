@@ -110,6 +110,16 @@ bool wasmig_address_map_get_value(AddressMap map, uint32_t fidx, uint32_t offset
     return false;
 }
 
+bool wasmig_address_map_exist_value(AddressMap map, uint32_t fidx, uint32_t offset) {
+    if (!map || !map->kv_impl) {
+        spdlog::error("AddressMap is null");
+        return false;
+    }
+    auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
+    uint64_t packed = pack_fidx_offset(fidx, offset);
+    return kv->find(packed) != kv->end();
+}
+
 bool wasmig_address_map_remove(AddressMap map, uint32_t fidx, uint32_t offset) {
     if (!map || !map->kv_impl || !map->vk_impl) return false;
     auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
