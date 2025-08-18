@@ -9,19 +9,20 @@
 #include <stdexcept>
 
 // =============================================================================
-// 1. アドレスマップの実装 (C++ std::unordered_map)
+// 1. アドレスマップの実装 (C++ 双方向マップ)
 // =============================================================================
 
 AddressMap wasmig_address_map_create(size_t initial_capacity) {
     spdlog::debug("Creating address map with initial capacity: {}", initial_capacity);
-
     AddressMap map = (AddressMap)malloc(sizeof(struct address_map_impl));
     if (!map) return nullptr;
-    
     try {
-        auto* impl = new std::unordered_map<uint32_t, uint64_t>();
-        impl->reserve(initial_capacity);
-        map->impl = impl;
+        auto* kv = new std::unordered_map<uint32_t, uint64_t>();
+        auto* vk = new std::unordered_map<uint64_t, uint32_t>();
+        kv->reserve(initial_capacity);
+        vk->reserve(initial_capacity);
+        map->kv_impl = kv;
+        map->vk_impl = vk;
         return map;
     } catch (const std::exception& e) {
         spdlog::error("Failed to create address map: {}", e.what());
@@ -32,22 +33,26 @@ AddressMap wasmig_address_map_create(size_t initial_capacity) {
 
 void wasmig_address_map_destroy(AddressMap map) {
     if (!map) return;
-    
-    auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
-    spdlog::debug("Destroying address map with {} entries", impl->size());
-    
-    delete impl;
+    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint32_t>*>(map->vk_impl);
+    spdlog::debug("Destroying address map with {} entries", kv->size());
+    delete kv;
+    delete vk;
     free(map);
 }
 
 bool wasmig_address_map_set(AddressMap map, uint32_t key, uint64_t value) {
-    if (!map || !map->impl) return false;
-    
-    auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
-    spdlog::debug("Setting address map: key={}, value={}", key, value);
-    
+    if (!map || !map->kv_impl || !map->vk_impl) return false;
+    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint32_t>*>(map->vk_impl);
     try {
-        (*impl)[key] = value;
+        // 既存keyのvalueを更新する場合、古いvalue→keyを消す
+        auto it = kv->find(key);
+        if (it != kv->end()) {
+            vk->erase(it->second);
+        }
+        (*kv)[key] = value;
+        (*vk)[value] = key;
         return true;
     } catch (const std::exception& e) {
         spdlog::error("Failed to set address map entry: {}", e.what());
@@ -56,48 +61,54 @@ bool wasmig_address_map_set(AddressMap map, uint32_t key, uint64_t value) {
 }
 
 bool wasmig_address_map_get(AddressMap map, uint32_t key, uint64_t* out_value) {
-    if (!map || !map->impl || !out_value) return false;
-    
-    auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
-    
-    auto it = impl->find(key);
-    if (it != impl->end()) {
+    if (!map || !map->kv_impl || !out_value) return false;
+    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
+    auto it = kv->find(key);
+    if (it != kv->end()) {
         *out_value = it->second;
         spdlog::debug("Found value for key {}: {}", key, *out_value);
         return true;
     }
-    
+    return false;
+}
+
+bool wasmig_address_map_get_key(AddressMap map, uint64_t value, uint32_t* out_key) {
+    if (!map || !map->vk_impl || !out_key) return false;
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint32_t>*>(map->vk_impl);
+    auto it = vk->find(value);
+    if (it != vk->end()) {
+        *out_key = it->second;
+        spdlog::debug("Found key for value {}: {}", value, *out_key);
+        return true;
+    }
     return false;
 }
 
 bool wasmig_address_map_remove(AddressMap map, uint32_t key) {
-    if (!map || !map->impl) return false;
-    
-    auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
-    
-    size_t erased = impl->erase(key);
-    if (erased > 0) {
+    if (!map || !map->kv_impl || !map->vk_impl) return false;
+    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint32_t>*>(map->vk_impl);
+    auto it = kv->find(key);
+    if (it != kv->end()) {
+        vk->erase(it->second);
+        kv->erase(it);
         spdlog::debug("Removed key {} from address map", key);
         return true;
     }
-    
     return false;
 }
 
 size_t wasmig_address_map_size(AddressMap map) {
-    if (!map || !map->impl) return 0;
-    
-    auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
-    return impl->size();
+    if (!map || !map->kv_impl) return 0;
+    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
+    return kv->size();
 }
 
 void wasmig_address_map_print(AddressMap map) {
-    if (!map || !map->impl) return;
-    
-    auto* impl = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->impl);
-    printf("AddressMap (size: %zu)\n", impl->size());
-    
-    for (const auto& pair : *impl) {
+    if (!map || !map->kv_impl) return;
+    auto* kv = static_cast<std::unordered_map<uint32_t, uint64_t>*>(map->kv_impl);
+    printf("AddressMap (size: %zu)\n", kv->size());
+    for (const auto& pair : *kv) {
         printf("  %u -> %lu\n", pair.first, pair.second);
     }
 }
