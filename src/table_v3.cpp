@@ -118,7 +118,19 @@ size_t wasmig_address_map_size(AddressMap map) {
 }
 
 void wasmig_address_map_print(AddressMap map) {
-    if (!map || !map->kv_impl) return;
+    if (!map) {
+        printf("AddressMap is null\n");
+        return;
+    }
+    if (!map->kv_impl) {
+        printf("AddressMap kv_impl is null\n");
+        return;
+    }
+    if (!map->vk_impl) {
+        printf("AddressMap vk_impl is null\n");
+        return;
+    }
+
     auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
     printf("AddressMap (size: %zu)\n", kv->size());
     for (const auto& pair : *kv) {
