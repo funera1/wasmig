@@ -148,6 +148,63 @@ extern "C" {
         printf("]\n");
     }
 
+    struct stack_iterator {
+        Stack current; // retained current node
+    };
+
+    // Create an iterator. Retains the root node (or empty singleton).
+    StackIterator wasmig_stack_iterator_create(Stack stack) {
+        StackIterator it = (StackIterator)malloc(sizeof(struct stack_iterator));
+        if (!it) return NULL;
+        if (!stack) stack = empty_stack;
+        // Retain the starting node to keep it alive during iteration
+        stack_retain(stack);
+        it->current = stack;
+        return it;
+    }
+
+    bool wasmig_stack_iterator_has_next(StackIterator it) {
+        if (!it || !it->current) return false;
+        return !it->current->is_terminal;
+    }
+
+    uint64_t wasmig_stack_iterator_peek(StackIterator it) {
+        if (!it || !it->current || it->current->is_terminal) return 0;
+        return it->current->value;
+    }
+
+    uint64_t wasmig_stack_iterator_next(StackIterator it) {
+        if (!it || !it->current || it->current->is_terminal) return 0;
+        uint64_t val = it->current->value;
+        Stack next = it->current->next ? it->current->next : empty_stack;
+        // retain next before releasing current to ensure safety
+        stack_retain(next);
+        stack_release(it->current);
+        it->current = next;
+        return val;
+    }
+
+    void wasmig_stack_iterator_destroy(StackIterator it) {
+        if (!it) return;
+        if (it->current) stack_release(it->current);
+        free(it);
+    }
+
+    void wasmig_stack_foreach(Stack stack, wasmig_stack_iter_cb cb, void* user) {
+        if (!cb) return;
+        StackIterator it = wasmig_stack_iterator_create(stack);
+        if (!it) return;
+        while (wasmig_stack_iterator_has_next(it)) {
+            uint64_t v = wasmig_stack_iterator_next(it);
+            cb(v, user);
+        }
+        wasmig_stack_iterator_destroy(it);
+    }
+
+    // =====================
+    // Stack State Management Functions
+    // =====================
+
     // Stack state management functions
     StackStateMap wasmig_stack_state_map_create() {
         try {
@@ -156,10 +213,6 @@ extern "C" {
             return nullptr;
         }
     }
-
-    // =====================
-    // Stack State Management Functions
-    // =====================
     
     bool wasmig_stack_state_save(StackStateMap map, uint32_t key, Stack stack) {
         if (!map) return false;

@@ -27,6 +27,31 @@ size_t wasmig_stack_size(Stack stack);
 void wasmig_stack_destroy(Stack stack);
 void wasmig_stack_print(Stack stack);
 
+// Opaque iterator handle that safely iterates a shared persistent stack.
+// The iterator holds internal retains/releases so the caller needn't worry
+// about the stack being released elsewhere during iteration.
+typedef struct stack_iterator* StackIterator;
+
+// Create iterator that starts at `stack`. Iterator retains the root node.
+StackIterator wasmig_stack_iterator_create(Stack stack);
+
+// Check if current element exists (non-empty)
+bool wasmig_stack_iterator_has_next(StackIterator it);
+
+// Peek current element value without advancing
+uint64_t wasmig_stack_iterator_peek(StackIterator it);
+
+// Advance iterator and return current element value. If no element, returns 0.
+uint64_t wasmig_stack_iterator_next(StackIterator it);
+
+// Destroy iterator (releases any retained node)
+void wasmig_stack_iterator_destroy(StackIterator it);
+
+// Convenience callback-based foreach (non-destructive)
+typedef void (*wasmig_stack_iter_cb)(uint64_t value, void* user);
+void wasmig_stack_foreach(Stack stack, wasmig_stack_iter_cb cb, void* user);
+
+
 // ========================================
 // Stack State Management API
 // ========================================

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <wasmig/stack.h>
+#include <vector>
 
 class StackTest : public ::testing::Test {
 protected:
@@ -11,6 +12,12 @@ protected:
         // テスト後のクリーンアップ
     }
 };
+
+// Helper callback for wasmig_stack_foreach tests
+static void collect_cb(uint64_t value, void* user) {
+    auto* v = static_cast<std::vector<uint64_t>*>(user);
+    v->push_back(value);
+}
 
 // 基本的なスタック操作のテスト
 TEST_F(StackTest, BasicStackOperations) {
@@ -278,4 +285,55 @@ TEST_F(StackTest, StackCreate) {
     EXPECT_TRUE(stack_is_empty(stack1));
     
     stack_destroy(new_stack);
+}
+
+// 非破壊イテレータのテスト
+TEST_F(StackTest, IteratorNonDestructive) {
+    Stack stack = stack_empty();
+    stack = stack_push(stack, 10);
+    stack = stack_push(stack, 20);
+    stack = stack_push(stack, 30);
+
+    // 元のスタックは変化しないことを確認
+    size_t orig_size = stack_size(stack);
+    uint64_t orig_top = stack_top(stack);
+
+    std::vector<uint64_t> seen;
+    StackIterator it = wasmig_stack_iterator_create(stack);
+    ASSERT_NE(it, nullptr);
+
+    while (wasmig_stack_iterator_has_next(it)) {
+        uint64_t p = wasmig_stack_iterator_peek(it);
+        uint64_t n = wasmig_stack_iterator_next(it);
+        EXPECT_EQ(p, n);
+        seen.push_back(n);
+    }
+
+    wasmig_stack_iterator_destroy(it);
+
+    // pushで積んだ順にトップから列挙されるはず
+    std::vector<uint64_t> expected = {30, 20, 10};
+    EXPECT_EQ(seen, expected);
+
+    // 元のスタックはそのまま
+    EXPECT_EQ(stack_size(stack), orig_size);
+    EXPECT_EQ(stack_top(stack), orig_top);
+
+    stack_destroy(stack);
+}
+
+// foreach コールバックのテスト
+TEST_F(StackTest, IteratorForeach) {
+    Stack stack = stack_empty();
+    stack = stack_push(stack, 1);
+    stack = stack_push(stack, 2);
+    stack = stack_push(stack, 3);
+
+    std::vector<uint64_t> collected;
+    wasmig_stack_foreach(stack, collect_cb, &collected);
+
+    std::vector<uint64_t> expected = {3,2,1};
+    EXPECT_EQ(collected, expected);
+
+    stack_destroy(stack);
 }
