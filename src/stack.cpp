@@ -44,9 +44,15 @@ static void stack_release(Stack stack) {
 
 // Stack state map structure using C++ unordered_map for efficiency
 struct stack_state_map {
-    std::unordered_map<uint32_t, Stack>* map;
-    
-    stack_state_map() : map(new std::unordered_map<uint32_t, Stack>()) {}
+    // Store a pair of stacks per key: address stack and type stack
+    struct stack_pair {
+        Stack address_stack;
+        Stack type_stack;
+    };
+
+    std::unordered_map<uint32_t, stack_pair>* map;
+
+    stack_state_map() : map(new std::unordered_map<uint32_t, stack_pair>()) {}
     ~stack_state_map() { delete map; }
 };
 
@@ -214,41 +220,51 @@ extern "C" {
         }
     }
     
-    bool wasmig_stack_state_save(StackStateMap map, uint32_t key, Stack stack) {
+    // Save a pair of stacks (address and type) under a key
+    bool wasmig_stack_state_save_pair(StackStateMap map, uint32_t key, Stack address_stack, Stack type_stack) {
         if (!map) return false;
-        
+
         try {
             auto it = map->map->find(key);
             if (it != map->map->end()) {
-                // 既存のキーがある場合、古いスタックを解放
-                stack_release(it->second);
+                // release existing stacks
+                stack_release(it->second.address_stack);
+                stack_release(it->second.type_stack);
             }
-            
-            // 新しいスタックを保存
-            stack_retain(stack);
-            (*map->map)[key] = stack;
+
+            // retain incoming stacks
+            if (address_stack) stack_retain(address_stack);
+            if (type_stack) stack_retain(type_stack);
+
+            (*map->map)[key] = { address_stack, type_stack };
             return true;
         } catch (...) {
             return false;
         }
     }
 
-    Stack wasmig_stack_state_load(StackStateMap map, uint32_t key) {
-        if (!map) return empty_stack;
-        
+    // Load pair of stacks; outputs retained stacks via out pointers
+    bool wasmig_stack_state_load_pair(StackStateMap map, uint32_t key, Stack *out_address_stack, Stack *out_type_stack) {
+        if (!map || !out_address_stack || !out_type_stack) return false;
+
         try {
             auto it = map->map->find(key);
             if (it != map->map->end()) {
-                // Return a retained reference so caller owns it independently
-                stack_retain(it->second);
-                return it->second;
+                *out_address_stack = it->second.address_stack ? it->second.address_stack : empty_stack;
+                *out_type_stack = it->second.type_stack ? it->second.type_stack : empty_stack;
+
+                // retain both so caller owns them
+                if (*out_address_stack) stack_retain(*out_address_stack);
+                if (*out_type_stack) stack_retain(*out_type_stack);
+                return true;
             }
         } catch (...) {
-            // エラーが発生した場合は空のスタックを返す
+            // fallthrough
         }
-        
-        return empty_stack;
+
+        return false;
     }
+
 
     bool wasmig_stack_state_exists(StackStateMap map, uint32_t key) {
         if (!map) return false;
@@ -266,7 +282,9 @@ extern "C" {
         try {
             auto it = map->map->find(key);
             if (it != map->map->end()) {
-                stack_release(it->second);
+                // release both stacks if present
+                stack_release(it->second.address_stack);
+                stack_release(it->second.type_stack);
                 map->map->erase(it);
                 return true;
             }
@@ -290,13 +308,29 @@ extern "C" {
                 }
             }
             // すべての保存されたスタックを解放
-            for (auto& pair : *map->map) {
-                stack_release(pair.second);
+            for (auto& kv : *map->map) {
+                stack_release(kv.second.address_stack);
+                stack_release(kv.second.type_stack);
             }
             delete map;
         } catch (...) {
             // エラーが発生してもメモリリークを防ぐため削除を試行
             delete map;
+        }
+    }
+
+    // Debug print for map contents
+    void wasmig_stack_state_map_debug_print(StackStateMap map) {
+        if (!map) {
+            printf("StackStateMap: (null)\n");
+            return;
+        }
+        printf("StackStateMap contents (size=%zu):\n", map->map->size());
+        for (auto &kv : *map->map) {
+            uint32_t k = kv.first;
+            size_t asz = wasmig_stack_size(kv.second.address_stack);
+            size_t tsz = wasmig_stack_size(kv.second.type_stack);
+            printf("  key=%u -> address_stack_size=%zu, type_stack_size=%zu\n", k, asz, tsz);
         }
     }
 
