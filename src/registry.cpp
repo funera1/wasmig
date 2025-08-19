@@ -31,10 +31,6 @@ static AddressMap g_address_map_singleton = nullptr;
 static CheckpointForbiddenList g_forbidden_list_singleton = nullptr;
 
 bool wasmig_address_map_save(AddressMap map) {
-    // if (g_address_map_singleton) {
-    //     // replace existing
-    //     wasmig_address_map_destroy(g_address_map_singleton);
-    // }
     g_address_map_singleton = map;
     return true;
 }
@@ -48,16 +44,11 @@ bool wasmig_address_map_exists() {
 }
 
 void wasmig_address_map_clear() {
-    if (g_address_map_singleton) {
-        wasmig_address_map_destroy(g_address_map_singleton);
-        g_address_map_singleton = nullptr;
-    }
+    // Only clear the saved pointer; do not destroy the object here.
+    g_address_map_singleton = nullptr;
 }
 
 bool wasmig_forbidden_list_save(CheckpointForbiddenList list) {
-    // if (g_forbidden_list_singleton) {
-    //     wasmig_forbidden_list_destroy(g_forbidden_list_singleton);
-    // }
     g_forbidden_list_singleton = list;
     return true;
 }
@@ -71,8 +62,6 @@ bool wasmig_forbidden_list_exists() {
 }
 
 void wasmig_forbidden_list_clear() {
-    if (g_forbidden_list_singleton) {
-        wasmig_forbidden_list_destroy(g_forbidden_list_singleton);
-        g_forbidden_list_singleton = nullptr;
-    }
+    // Only clear the saved pointer; do not destroy the object here.
+    g_forbidden_list_singleton = nullptr;
 }

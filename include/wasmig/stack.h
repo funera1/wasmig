@@ -60,6 +60,10 @@ void wasmig_stack_state_map_debug_print(StackStateMap map);
 #define stack_state_remove wasmig_stack_state_remove
 #define stack_state_map_debug_print wasmig_stack_state_map_debug_print
 
+// Pair API macros
+#define stack_state_save_pair wasmig_stack_state_save_pair
+#define stack_state_load_pair wasmig_stack_state_load_pair
+
 #ifdef __cplusplus
 }
 #endif
