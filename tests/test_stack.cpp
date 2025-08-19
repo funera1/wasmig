@@ -324,14 +324,14 @@ TEST_F(StackTest, StackCreate) {
 
 // 非破壊イテレータのテスト
 TEST_F(StackTest, IteratorNonDestructive) {
-    Stack stack = stack_empty();
-    stack = stack_push(stack, 10);
-    stack = stack_push(stack, 20);
-    stack = stack_push(stack, 30);
+    Stack stack = wasmig_stack_empty();
+    stack = wasmig_stack_push(stack, 10);
+    stack = wasmig_stack_push(stack, 20);
+    stack = wasmig_stack_push(stack, 30);
 
     // 元のスタックは変化しないことを確認
-    size_t orig_size = stack_size(stack);
-    uint64_t orig_top = stack_top(stack);
+    size_t orig_size = wasmig_stack_size(stack);
+    uint64_t orig_top = wasmig_stack_top(stack);
 
     std::vector<uint64_t> seen;
     StackIterator it = wasmig_stack_iterator_create(stack);
@@ -351,18 +351,18 @@ TEST_F(StackTest, IteratorNonDestructive) {
     EXPECT_EQ(seen, expected);
 
     // 元のスタックはそのまま
-    EXPECT_EQ(stack_size(stack), orig_size);
-    EXPECT_EQ(stack_top(stack), orig_top);
+    EXPECT_EQ(wasmig_stack_size(stack), orig_size);
+    EXPECT_EQ(wasmig_stack_top(stack), orig_top);
 
-    stack_destroy(stack);
+    wasmig_stack_destroy(stack);
 }
 
 // foreach コールバックのテスト
 TEST_F(StackTest, IteratorForeach) {
-    Stack stack = stack_empty();
-    stack = stack_push(stack, 1);
-    stack = stack_push(stack, 2);
-    stack = stack_push(stack, 3);
+    Stack stack = wasmig_stack_empty();
+    stack = wasmig_stack_push(stack, 1);
+    stack = wasmig_stack_push(stack, 2);
+    stack = wasmig_stack_push(stack, 3);
 
     std::vector<uint64_t> collected;
     wasmig_stack_foreach(stack, collect_cb, &collected);
@@ -370,5 +370,5 @@ TEST_F(StackTest, IteratorForeach) {
     std::vector<uint64_t> expected = {3,2,1};
     EXPECT_EQ(collected, expected);
 
-    stack_destroy(stack);
+    wasmig_stack_destroy(stack);
 }
