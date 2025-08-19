@@ -3,6 +3,8 @@
 #include "wasmig/stack_tables.h"
 #include "wasmig/utils.h"
 #include "wasmig/state.h"
+#include "wasmig/stack.h"
+#include "wasmig/registry.h"
 #include "wasmig/internal/debug.hpp"
 #include "proto/state.pb-c.h"
 #include <spdlog/spdlog.h>
@@ -171,7 +173,9 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
         for (int i = 0; i < stack_types.size; ++i) stack_bytes += stack_types.contents[i];
         locals->size = locals_bytes;
         value_stack->size = stack_bytes;
-        
+        spdlog::info("frame[%d] (fidx={}, offset={})", i, cur_pos->fidx, cur_pos->offset);
+        spdlog::info("checkpoint stack: (locals_size={}, value_stack_size={})", locals_bytes, stack_bytes);
+
         TypedArray locals_typed_array = { .types = locals_types, .values = *locals };
         TypedArray value_stack_typed_array = { .types = stack_types, .values = *value_stack };
         
@@ -203,5 +207,67 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
             
     return 0;
 }
+
+// int checkpoint_stack_v4(size_t size, BaseCallStackEntry *call_stack) {
+//     // checkpoint call stack size
+//     CallStackEntry entry[size];
+//     for (int i = 0; i < size; ++i) {
+//         bool is_frame_top = (i == size - 1);
+//         CodePos *cur_pos = &call_stack[i].pc;
+//         Array32 *locals = &call_stack[i].locals;
+//         Array32 *value_stack = &call_stack[i].value_stack;
+//         spdlog::debug("checkpoint stack: (fidx={}, offset={})", cur_pos->fidx, cur_pos->offset);
+
+//         // 型スタック
+//         // Array8 locals_types = get_local_types(cur_pos->fidx);
+//         // StackTable stack_table = get_stack_table(cur_pos->fidx, cur_pos->offset, (i == size-1));
+//         // Array8 stack_types = convert_type_stack_from_stack_table(&stack_table);
+//         uint32_t fidx = cur_pos->fidx;
+//         uint32_t offset = (is_frame_top ? cur_pos->offset : cur_pos->offset - 1);
+//         Stack metadata_address_stack, metadata_type_stack;
+//         StackStateMap m = wasmig_stack_state_map_registry_load(fidx);
+//         if (!wasmig_stack_state_load_pair(m, offset, &metadata_address_stack, &metadata_type_stack)) {
+//             spdlog::error("failed to load metadata stack\n");
+//             return false;
+//         }
+        
+//         // 型スタックをもとに、localsとvalues stackのsizeを計算
+//         // uint32_t locals_bytes = 0, stack_bytes = 0;
+//         // for (int i = 0; i < locals_types.size; ++i) locals_bytes += locals_types.contents[i];
+//         // for (int i = 0; i < stack_types.size; ++i) stack_bytes += stack_types.contents[i];
+//         // locals->size = locals_bytes;
+//         // value_stack->size = stack_bytes;
+        
+//         TypedArray locals_typed_array = { .types = locals_types, .values = *locals };
+//         TypedArray value_stack_typed_array = { .types = stack_types, .values = *value_stack };
+        
+//         // CallStackEntryに変換
+//         entry[i].pc = call_stack[i].pc;
+//         entry[i].locals = locals_typed_array;
+//         entry[i].value_stack = value_stack_typed_array;
+//         entry[i].label_stack = call_stack[i].label_stack;
+//     }
+    
+//     // checkpoint call stack
+//     CallStack cs = { .size = size, .entries = entry };
+//     print_call_stack(&cs);
+//     spdlog::info("print call stack");
+//     Array8 serialized_call_stack = serialize_call_stack(&cs);
+//     FILE *fp = open_image("call_stack.img", "wb");
+//     spdlog::info("open call stack file");
+//     if (fp == NULL) {
+//         return -1;
+//     }
+//     uint32_t len = serialized_call_stack.size;
+//     uint8_t *buf = serialized_call_stack.contents;
+//     fwrite(buf, 1, len, fp);
+//     spdlog::info("write call stack file");
+    
+//     free(buf);
+//     fclose(fp);
+    
+            
+//     return 0;
+// }
 
 }
