@@ -23,6 +23,7 @@ int checkpoint_global_v2(TypedArray globals);
 int checkpoint_pc(uint32_t func_idx, uint32_t offset);
 int checkpoint_stack_v2(size_t size, BaseCallStackEntry *call_stack);
 int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack);
+int checkpoint_stack_v4(size_t size, CallStackEntry *call_stack);
 
 Array8 restore_memory();
 Array64 restore_global(Array8 types);
