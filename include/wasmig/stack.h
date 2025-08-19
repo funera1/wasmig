@@ -37,8 +37,8 @@ typedef struct stack_state_map* StackStateMap;
 // Stack state map operations
 StackStateMap wasmig_stack_state_map_create();
 void wasmig_stack_state_map_destroy(StackStateMap map);
-bool wasmig_stack_state_save(StackStateMap map, uint32_t key, Stack stack);
-Stack wasmig_stack_state_load(StackStateMap map, uint32_t key);
+bool wasmig_stack_state_save_pair(StackStateMap map, uint32_t key, Stack address_stack, Stack type_stack);
+bool wasmig_stack_state_load_pair(StackStateMap map, uint32_t key, Stack *out_address_stack, Stack *out_type_stack);
 bool wasmig_stack_state_exists(StackStateMap map, uint32_t key);
 bool wasmig_stack_state_remove(StackStateMap map, uint32_t key);
 void wasmig_stack_state_map_debug_print(StackStateMap map);
@@ -56,8 +56,6 @@ void wasmig_stack_state_map_debug_print(StackStateMap map);
 
 #define stack_state_map_create wasmig_stack_state_map_create
 #define stack_state_map_destroy wasmig_stack_state_map_destroy
-#define stack_state_save wasmig_stack_state_save
-#define stack_state_load wasmig_stack_state_load
 #define stack_state_exists wasmig_stack_state_exists
 #define stack_state_remove wasmig_stack_state_remove
 #define stack_state_map_debug_print wasmig_stack_state_map_debug_print

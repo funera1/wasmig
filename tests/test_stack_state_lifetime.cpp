@@ -9,21 +9,24 @@ TEST(StackStateLifetime, LoadReturnsRetained) {
 
     Stack s = stack_create();
     s = stack_push(s, 1);
-    EXPECT_TRUE(stack_state_save(map, 123, s));
+    EXPECT_TRUE(stack_state_save_pair(map, 123, s, stack_empty()));
 
     // Load twice; each load should be independently destroyable
-    Stack a = stack_state_load(map, 123);
-    Stack b = stack_state_load(map, 123);
+    Stack a = stack_empty(); Stack a_type = stack_empty();
+    Stack b = stack_empty(); Stack b_type = stack_empty();
+    EXPECT_TRUE(stack_state_load_pair(map, 123, &a, &a_type));
+    EXPECT_TRUE(stack_state_load_pair(map, 123, &b, &b_type));
 
     // Destroy loaded stacks
-    stack_destroy(a);
-    stack_destroy(b);
+    stack_destroy(a); stack_destroy(a_type);
+    stack_destroy(b); stack_destroy(b_type);
 
     // Map should still have the stack
     EXPECT_TRUE(stack_state_exists(map, 123));
-    Stack c = stack_state_load(map, 123);
+    Stack c = stack_empty(); Stack c_type = stack_empty();
+    EXPECT_TRUE(stack_state_load_pair(map, 123, &c, &c_type));
     EXPECT_EQ(stack_top(c), 1u);
-    stack_destroy(c);
+    stack_destroy(c); stack_destroy(c_type);
 
     // Clean up original
     stack_destroy(s);

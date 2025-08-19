@@ -98,8 +98,14 @@ TEST_F(StackTest, StackStateMap) {
     
     // 初期状態のテスト
     EXPECT_FALSE(stack_state_exists(map, 1));
-    Stack loaded = stack_state_load(map, 1);
-    EXPECT_TRUE(stack_is_empty(loaded));
+    {
+        Stack loaded = stack_empty();
+        Stack loaded_type = stack_empty();
+        bool ok = stack_state_load_pair(map, 1, &loaded, &loaded_type);
+        // missing key -> not ok, loaded remains empty
+        EXPECT_TRUE(stack_is_empty(loaded));
+        if (ok) { stack_destroy(loaded); stack_destroy(loaded_type); }
+    }
     
     // スタックを作成して保存
     Stack stack = stack_empty();
@@ -107,22 +113,30 @@ TEST_F(StackTest, StackStateMap) {
     stack = stack_push(stack, 200);
     stack = stack_push(stack, 300);
     
-    EXPECT_TRUE(stack_state_save(map, 1, stack));
+    EXPECT_TRUE(stack_state_save_pair(map, 1, stack, stack_empty()));
     EXPECT_TRUE(stack_state_exists(map, 1));
-    
     // 保存した状態をロード
-    Stack loaded_stack = stack_state_load(map, 1);
-    EXPECT_EQ(stack_size(loaded_stack), 3);
-    EXPECT_EQ(stack_top(loaded_stack), 300);
-    
-    uint64_t value;
-    loaded_stack = stack_pop(loaded_stack, &value);
-    EXPECT_EQ(value, 300);
-    loaded_stack = stack_pop(loaded_stack, &value);
-    EXPECT_EQ(value, 200);
-    loaded_stack = stack_pop(loaded_stack, &value);
-    EXPECT_EQ(value, 100);
-    EXPECT_TRUE(stack_is_empty(loaded_stack));
+    {
+        Stack loaded_stack = stack_empty();
+        Stack loaded_type = stack_empty();
+        bool ok = stack_state_load_pair(map, 1, &loaded_stack, &loaded_type);
+        EXPECT_TRUE(ok);
+        EXPECT_EQ(stack_size(loaded_stack), 3);
+        EXPECT_EQ(stack_top(loaded_stack), 300);
+
+        uint64_t value;
+        loaded_stack = stack_pop(loaded_stack, &value);
+        EXPECT_EQ(value, 300);
+        loaded_stack = stack_pop(loaded_stack, &value);
+        EXPECT_EQ(value, 200);
+        loaded_stack = stack_pop(loaded_stack, &value);
+        EXPECT_EQ(value, 100);
+        EXPECT_TRUE(stack_is_empty(loaded_stack));
+
+        // cleanup loaded pair
+        stack_destroy(loaded_stack);
+        stack_destroy(loaded_type);
+    }
     
     stack_destroy(stack);
     stack_state_map_destroy(map);
@@ -135,20 +149,23 @@ TEST_F(StackTest, MultipleCheckpoints) {
     // 異なる状態のスタックを複数保存
     Stack stack1 = stack_empty();
     stack1 = stack_push(stack1, 10);
-    stack_state_save(map, 1, stack1);
+    stack_state_save_pair(map, 1, stack1, stack_empty());
     
     Stack stack2 = stack1;
     stack2 = stack_push(stack2, 20);
-    stack_state_save(map, 2, stack2);
+    stack_state_save_pair(map, 2, stack2, stack_empty());
     
     Stack stack3 = stack2;
     stack3 = stack_push(stack3, 30);
-    stack_state_save(map, 3, stack3);
+    stack_state_save_pair(map, 3, stack3, stack_empty());
     
     // それぞれの状態を確認
-    Stack loaded1 = stack_state_load(map, 1);
-    Stack loaded2 = stack_state_load(map, 2);
-    Stack loaded3 = stack_state_load(map, 3);
+    Stack loaded1 = stack_empty(); Stack loaded1_type = stack_empty();
+    Stack loaded2 = stack_empty(); Stack loaded2_type = stack_empty();
+    Stack loaded3 = stack_empty(); Stack loaded3_type = stack_empty();
+    EXPECT_TRUE(stack_state_load_pair(map, 1, &loaded1, &loaded1_type));
+    EXPECT_TRUE(stack_state_load_pair(map, 2, &loaded2, &loaded2_type));
+    EXPECT_TRUE(stack_state_load_pair(map, 3, &loaded3, &loaded3_type));
     
     EXPECT_EQ(stack_size(loaded1), 1);
     EXPECT_EQ(stack_top(loaded1), 10);
@@ -171,6 +188,10 @@ TEST_F(StackTest, MultipleCheckpoints) {
     stack_destroy(stack1);
     stack_destroy(stack2);
     stack_destroy(stack3);
+    // destroy loaded pairs
+    stack_destroy(loaded1); stack_destroy(loaded1_type);
+    stack_destroy(loaded2); stack_destroy(loaded2_type);
+    stack_destroy(loaded3); stack_destroy(loaded3_type);
     stack_state_map_destroy(map);
 }
 
@@ -181,21 +202,28 @@ TEST_F(StackTest, OverwriteCheckpoint) {
     // 最初の状態を保存
     Stack stack1 = stack_empty();
     stack1 = stack_push(stack1, 10);
-    stack_state_save(map, 42, stack1);
+    stack_state_save_pair(map, 42, stack1, stack_empty());
     
-    Stack loaded = stack_state_load(map, 42);
-    EXPECT_EQ(stack_size(loaded), 1);
-    EXPECT_EQ(stack_top(loaded), 10);
+    {
+        Stack loaded = stack_empty(); Stack loaded_type = stack_empty();
+        EXPECT_TRUE(stack_state_load_pair(map, 42, &loaded, &loaded_type));
+        EXPECT_EQ(stack_size(loaded), 1);
+        EXPECT_EQ(stack_top(loaded), 10);
+        stack_destroy(loaded); stack_destroy(loaded_type);
+    }
     
     // 同じキーで別の状態を保存（上書き）
     Stack stack2 = stack_empty();
     stack2 = stack_push(stack2, 20);
     stack2 = stack_push(stack2, 30);
-    stack_state_save(map, 42, stack2);
-    
-    loaded = stack_state_load(map, 42);
-    EXPECT_EQ(stack_size(loaded), 2);
-    EXPECT_EQ(stack_top(loaded), 30);
+    stack_state_save_pair(map, 42, stack2, stack_empty());
+    {
+        Stack loaded = stack_empty(); Stack loaded_type = stack_empty();
+        EXPECT_TRUE(stack_state_load_pair(map, 42, &loaded, &loaded_type));
+        EXPECT_EQ(stack_size(loaded), 2);
+        EXPECT_EQ(stack_top(loaded), 30);
+        stack_destroy(loaded); stack_destroy(loaded_type);
+    }
     
     stack_destroy(stack1);
     stack_destroy(stack2);
@@ -209,15 +237,18 @@ TEST_F(StackTest, ErrorHandling) {
     EXPECT_NE(map, nullptr); // 正常に作成される
     
     // 無効な引数でのテスト
-    EXPECT_FALSE(stack_state_save(nullptr, 1, stack_empty()));
+    EXPECT_FALSE(stack_state_save_pair(nullptr, 1, stack_empty(), stack_empty()));
     EXPECT_FALSE(stack_state_exists(nullptr, 1));
     EXPECT_FALSE(stack_state_remove(nullptr, 1));
     
-    Stack loaded = stack_state_load(nullptr, 1);
-    EXPECT_TRUE(stack_is_empty(loaded));
-    
-    loaded = stack_state_load(map, 0);
-    EXPECT_TRUE(stack_is_empty(loaded));
+    {
+        Stack loaded = stack_empty(); Stack loaded_type = stack_empty();
+        EXPECT_FALSE(stack_state_load_pair(nullptr, 1, &loaded, &loaded_type));
+    }
+    {
+        Stack loaded = stack_empty(); Stack loaded_type = stack_empty();
+        EXPECT_FALSE(stack_state_load_pair(map, 0, &loaded, &loaded_type));
+    }
     
     stack_state_map_destroy(map);
     stack_state_map_destroy(nullptr); // 安全に呼び出せる
@@ -231,19 +262,23 @@ TEST_F(StackTest, HashCollision) {
     for (int i = 0; i < 1000; i++) {
         Stack stack = stack_empty();
         stack = stack_push(stack, i);
-        EXPECT_TRUE(stack_state_save(map, static_cast<uint32_t>(i), stack));
+    EXPECT_TRUE(stack_state_save_pair(map, static_cast<uint32_t>(i), stack, stack_empty()));
         EXPECT_TRUE(stack_state_exists(map, static_cast<uint32_t>(i)));
-        Stack loaded = stack_state_load(map, static_cast<uint32_t>(i));
-        EXPECT_EQ(stack_top(loaded), i);
+    Stack loaded = stack_empty(); Stack loaded_type = stack_empty();
+    EXPECT_TRUE(stack_state_load_pair(map, static_cast<uint32_t>(i), &loaded, &loaded_type));
+    EXPECT_EQ(stack_top(loaded), i);
+    stack_destroy(loaded); stack_destroy(loaded_type);
         
         stack_destroy(stack);
     }
     
     // すべてのキーが正しく保存されているか確認
     for (int i = 0; i < 1000; i++) {
-        EXPECT_TRUE(stack_state_exists(map, static_cast<uint32_t>(i)));
-        Stack loaded = stack_state_load(map, static_cast<uint32_t>(i));
-        EXPECT_EQ(stack_top(loaded), i);
+    EXPECT_TRUE(stack_state_exists(map, static_cast<uint32_t>(i)));
+    Stack loaded = stack_empty(); Stack loaded_type = stack_empty();
+    EXPECT_TRUE(stack_state_load_pair(map, static_cast<uint32_t>(i), &loaded, &loaded_type));
+    EXPECT_EQ(stack_top(loaded), i);
+    stack_destroy(loaded); stack_destroy(loaded_type);
     }
     
     stack_state_map_destroy(map);
