@@ -173,7 +173,7 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
         for (int i = 0; i < stack_types.size; ++i) stack_bytes += stack_types.contents[i];
         locals->size = locals_bytes;
         value_stack->size = stack_bytes;
-        spdlog::info("frame[%d] (fidx={}, offset={})", i, cur_pos->fidx, cur_pos->offset);
+        spdlog::info("frame[{}] (fidx={}, offset={})", i, cur_pos->fidx, cur_pos->offset);
         spdlog::info("checkpoint stack: (locals_size={}, value_stack_size={})", locals_bytes, stack_bytes);
 
         TypedArray locals_typed_array = { .types = locals_types, .values = *locals };
