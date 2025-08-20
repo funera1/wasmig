@@ -82,6 +82,18 @@ bool wasmig_address_map_set_forward(AddressMap map, uint32_t fidx, uint32_t offs
     }
 }
 
+bool wasmig_address_map_set_backward(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t value) {
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->vk_impl);
+    try {
+        uint64_t packed = pack_fidx_offset(fidx, offset);
+        (*vk)[value] = packed;
+        return true;
+    } catch (const std::exception& e) {
+        spdlog::error("Failed to set address map entry: {}", e.what());
+        return false;
+    }
+}
+
 bool wasmig_address_map_get_key(AddressMap map, uint64_t value, uint32_t* out_fidx, uint32_t* out_offset) {
     if (!map || !map->vk_impl || !out_fidx || !out_offset) return false;
     auto* vk = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->vk_impl);
