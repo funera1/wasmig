@@ -43,6 +43,8 @@ uint32_t get_stack_size(StackTable table);
 // Callのresultのサイズを返す. 
 uint32_t get_result_size(StackTable table);
 
+Array8 convert_type_stack_from_stack_table(StackTable *table);
+
 #ifdef __cplusplus
 }
 #endif

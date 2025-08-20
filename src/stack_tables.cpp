@@ -34,4 +34,18 @@ uint32_t get_result_size(StackTable table) {
     return result_size;
 }
 
+Array8 convert_type_stack_from_stack_table(StackTable *table) {
+    uint32_t stack_size = table->size;
+    
+    // 配列を確保
+    uint8_t* type_stack = (uint8_t*)malloc(stack_size * sizeof(uint8_t));
+    // スタック型をコピー
+    for (uint32_t i = 0; i < stack_size; ++i) {
+        type_stack[i] = table->data[i].ty;
+    }
+
+    return (Array8){ .size = stack_size, .contents = type_stack };
+}
+
+
 }

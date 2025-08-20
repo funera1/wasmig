@@ -139,19 +139,6 @@ int checkpoint_pc(uint32_t func_idx, uint32_t offset) {
     return 0;
 }
 
-Array8 convert_type_stack_from_stack_table(StackTable *table) {
-    uint32_t stack_size = table->size;
-    
-    // 配列を確保
-    uint8_t* type_stack = (uint8_t*)malloc(stack_size * sizeof(uint8_t));
-    // スタック型をコピー
-    for (uint32_t i = 0; i < stack_size; ++i) {
-        type_stack[i] = table->data[i].ty;
-    }
-
-    return (Array8){ .size = stack_size, .contents = type_stack };
-}
-
 
 int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
     // checkpoint call stack size
