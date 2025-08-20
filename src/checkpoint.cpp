@@ -164,7 +164,8 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
 
         // 型スタック
         Array8 locals_types = get_local_types(cur_pos->fidx);
-        StackTable stack_table = get_stack_table(cur_pos->fidx, cur_pos->offset, (i == size-1));
+        uint32_t offset = (i == size-1) ? cur_pos->offset : cur_pos->offset - 1;
+        StackTable stack_table = get_stack_table(cur_pos->fidx, offset);
         Array8 stack_types = convert_type_stack_from_stack_table(&stack_table);
         
         // 型スタックをもとに、localsとvalues stackのsizeを計算
