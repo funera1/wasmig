@@ -22,6 +22,7 @@ AddressMap wasmig_address_map_create(size_t initial_capacity);
 void wasmig_address_map_destroy(AddressMap map);
 bool wasmig_address_map_set_bidirect(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t value);
 bool wasmig_address_map_set_forward(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t value);
+bool wasmig_address_map_set_backward(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t value);
 bool wasmig_address_map_get_key(AddressMap map, uint64_t value, uint32_t* out_fidx, uint32_t* out_offset);
 bool wasmig_address_map_get_value(AddressMap map, uint32_t fidx, uint32_t offset, uint64_t* out_value);
 bool wasmig_address_map_exist_value(AddressMap map, uint32_t fidx, uint32_t offset);

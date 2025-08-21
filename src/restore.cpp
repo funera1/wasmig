@@ -14,8 +14,9 @@ void restore_dirty_memory(uint8_t *memory, FILE* memory_fp) {
     }
 }
 
-Array8 restore_memory() {
-    FILE* memory_fp   = open_image("memory.img", "rb");
+Array8 wasmig_restore_memory() {
+    // FILE *mem_fp = open_image("memory.img", "wb");
+    FILE* memory_fp = open_image("memory.img", "rb");
     FILE* mem_size_fp = open_image("mem_page_count.img", "rb");
 
     // check file pointers
@@ -69,7 +70,7 @@ Array8 restore_memory() {
     return (Array8){.size = total_size, .contents = memory};
 }
 
-CodePos restore_pc() {
+CodePos wasmig_restore_pc() {
     FILE *fp = open_image("program_counter.img", "rb");
     if (fp == NULL) {
         spdlog::error("failed to open program counter file");
@@ -82,7 +83,7 @@ CodePos restore_pc() {
     return pc;
 }
 
-Array64 restore_global(Array8 types) {
+Array64 wasmig_restore_global(Array8 types) {
     FILE *fp = open_image("global.img", "rb");
     if (fp == NULL) {
         spdlog::error("failed to open global file");
@@ -99,7 +100,7 @@ Array64 restore_global(Array8 types) {
     return globals;
 }
 
-TypedArray restore_global_v2() {
+TypedArray wasmig_restore_global_v2() {
     FILE *fp = open_image("global.img", "rb");
     if (fp == NULL) {
         spdlog::error("failed to open global img file");
@@ -121,7 +122,7 @@ TypedArray restore_global_v2() {
     return globals;
 }
 
-CallStack restore_stack() {
+CallStack wasmig_restore_stack() {
     FILE *fp = open_image("call_stack.img", "rb");
     if (fp == NULL) {
         spdlog::error("failed to open call stack file");
