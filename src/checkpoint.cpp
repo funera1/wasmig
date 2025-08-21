@@ -76,7 +76,7 @@ int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
     return 0;
 }
 
-int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
+int wasmig_checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     FILE *mem_fp = open_image("memory.img", "wb");
     FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
     if (mem_fp == NULL || mem_size_fp == NULL) {
@@ -95,7 +95,7 @@ int checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     return 0;
 }
 
-int checkpoint_global_v2(TypedArray globals) {
+int wasmig_checkpoint_global_v2(TypedArray globals) {
     FILE *fp = open_image("global.img", "wb");
     if (fp == NULL) {
         return -1;
