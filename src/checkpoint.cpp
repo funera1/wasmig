@@ -113,7 +113,7 @@ int wasmig_checkpoint_global_v2(TypedArray globals) {
     return 0;
 }
 
-int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
+int wasmig_checkpoint_global(uint64_t* values, uint32_t* types, int len) {
     FILE *fp = open_image("global.img", "wb");
     if (fp == NULL) {
         return -1;
