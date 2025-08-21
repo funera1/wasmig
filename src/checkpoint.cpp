@@ -127,7 +127,7 @@ int checkpoint_global(uint64_t* values, uint32_t* types, int len) {
     return 0;
 }
 
-int checkpoint_pc(uint32_t func_idx, uint32_t offset) {
+int wasmig_checkpoint_pc(uint32_t func_idx, uint32_t offset) {
     FILE *fp = open_image("program_counter.img", "wb");
     if (fp == NULL) {
         return -1;
@@ -139,8 +139,7 @@ int checkpoint_pc(uint32_t func_idx, uint32_t offset) {
     return 0;
 }
 
-
-int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
+int wasmig_checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
     // checkpoint call stack size
     CallStackEntry entry[size];
     for (int i = 0; i < size; ++i) {
@@ -196,7 +195,7 @@ int checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
     return 0;
 }
 
-int checkpoint_stack_v4(size_t size, CallStackEntry *call_stack) {
+int wasmig_checkpoint_stack_v4(size_t size, CallStackEntry *call_stack) {
     // checkpoint call stack
     CallStack cs = { .size = size, .entries = call_stack };
     print_call_stack(&cs);
