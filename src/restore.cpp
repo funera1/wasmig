@@ -15,23 +15,58 @@ void restore_dirty_memory(uint8_t *memory, FILE* memory_fp) {
 }
 
 Array8 restore_memory() {
-    // FILE *mem_fp = open_image("memory.img", "wb");
-    FILE* memory_fp = open_image("memory.img", "rb");
+    FILE* memory_fp   = open_image("memory.img", "rb");
     FILE* mem_size_fp = open_image("mem_page_count.img", "rb");
-    if (mem_size_fp == NULL || memory_fp == NULL) {
+
+    // check file pointers
+    if (!memory_fp || !mem_size_fp) {
         spdlog::error("failed to open memory file");
-        return {0, NULL};
+        if (memory_fp) fclose(memory_fp);
+        if (mem_size_fp) fclose(mem_size_fp);
+        return (Array8){0, NULL};
     }
+
     // restore page_count
     uint32_t page_count;
-    fread(&page_count, sizeof(uint32_t), 1, mem_size_fp);
-    
-    // restore memory
-    uint8_t* memory = (uint8_t*)malloc(WASM_PAGE_SIZE * page_count);
-    // restore_dirty_memory(memory, memory_fp);
-    fread(memory, WASM_PAGE_SIZE, page_count, memory_fp);
-    
-    return Array8{.size = WASM_PAGE_SIZE*page_count, .contents = memory};
+    if (fread(&page_count, sizeof(uint32_t), 1, mem_size_fp) != 1) {
+        spdlog::error("failed to read page_count");
+        fclose(memory_fp);
+        fclose(mem_size_fp);
+        return (Array8){0, NULL};
+    }
+
+    // overflow check: WASM_PAGE_SIZE * page_count
+    size_t total_size;
+    if (__builtin_mul_overflow((size_t)WASM_PAGE_SIZE, (size_t)page_count, &total_size)) {
+        spdlog::error("memory size overflow: page_count={}", page_count);
+        fclose(memory_fp);
+        fclose(mem_size_fp);
+        return (Array8){0, NULL};
+    }
+
+    // allocate memory
+    uint8_t* memory = (uint8_t*)malloc(total_size);
+    if (!memory) {
+        spdlog::error("malloc failed for {} bytes", total_size);
+        fclose(memory_fp);
+        fclose(mem_size_fp);
+        return (Array8){0, NULL};
+    }
+
+    // read memory contents
+    size_t read_count = fread(memory, WASM_PAGE_SIZE, page_count, memory_fp);
+    if (read_count != page_count) {
+        spdlog::error("failed to read memory: expected {} pages, got {}", page_count, read_count);
+        free(memory);
+        fclose(memory_fp);
+        fclose(mem_size_fp);
+        return (Array8){0, NULL};
+    }
+
+    fclose(memory_fp);
+    fclose(mem_size_fp);
+
+    return (Array8){.size = total_size, .contents = memory};
 }
 
 CodePos restore_pc() {
