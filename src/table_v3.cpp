@@ -168,11 +168,19 @@ void wasmig_address_map_print(AddressMap map) {
     }
 
     auto* kv = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->kv_impl);
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->vk_impl);
     printf("AddressMap (size: %zu)\n", kv->size());
     for (const auto& pair : *kv) {
         uint32_t fidx, offset;
         unpack_fidx_offset(pair.first, fidx, offset);
-        printf("  %u:%u -> %lu\n", fidx, offset, pair.second);
+        uint64_t address = pair.second;
+        
+        // 双方向対応をチェック: vk[address] が存在して pair.first と一致するか
+        auto vk_it = vk->find(address);
+        bool is_bidirectional = (vk_it != vk->end()) && (vk_it->second == pair.first);
+        
+        const char* arrow = is_bidirectional ? "<->" : "->";
+        printf("  %u:%u %s %lu\n", fidx, offset, arrow, address);
     }
 }
 
