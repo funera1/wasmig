@@ -122,6 +122,15 @@ bool wasmig_address_map_get_value(AddressMap map, uint32_t fidx, uint32_t offset
     return false;
 }
 
+bool wasmig_address_map_exist_key(AddressMap map, uint64_t address) {
+    if (!map || !map->vk_impl) {
+        spdlog::error("AddressMap is null");
+        return false;
+    }
+    auto* vk = static_cast<std::unordered_map<uint64_t, uint64_t>*>(map->vk_impl);
+    return vk->find(address) != vk->end();
+}
+
 bool wasmig_address_map_exist_value(AddressMap map, uint32_t fidx, uint32_t offset) {
     if (!map || !map->kv_impl) {
         spdlog::error("AddressMap is null");
