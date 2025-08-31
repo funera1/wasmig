@@ -13,6 +13,8 @@ extern "C" {
 
 // Function prototypes for the Rust library
 int wcrn_rust_function(); // Example function
+
+size_t wcrn_load_stack_tables();
 size_t wcrn_get_stack_size(uint32_t fidx, uint32_t offset);
 // TODO: deserializeを何回もしないようにする
 StackTable wcrn_get_stack_table(uint32_t fidx, uint32_t offset);

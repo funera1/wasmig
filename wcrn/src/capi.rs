@@ -19,7 +19,7 @@ pub enum Opcode {
 }
 
 #[repr(C)]
-union Operand {
+pub union Operand {
     pub local_idx: u32,
     pub i32_const: i32,
     pub i64_const: i64,
@@ -61,7 +61,16 @@ pub extern "C" fn wcrn_rust_function() -> i32 {
 }
 
 #[no_mangle]
+pub extern "C" fn wcrn_load_stack_tables() -> usize {
+    // Initialize tables (idempotent). Return number of functions loaded for convenience.
+    stack_tables::init_stack_tables("./").expect("failed to init stack tables");
+    let tables = stack_tables::get_stack_tables().expect("not initialized after init");
+    tables.0.len()
+}
+
+#[no_mangle]
 pub extern "C" fn wcrn_get_stack_size(fidx: u32, offset: u32) -> usize {
+    // Prefer cached version; if not yet loaded this will auto-init with default path.
     stack_tables::get_stack_size("./", fidx, offset)
         .expect(&format!("failed to get stack size ({}, {})", fidx, offset))
 }
@@ -76,12 +85,7 @@ pub extern "C" fn wcrn_get_local_types(fidx: u32) -> Array8 {
         .map(|ty| ty.size()/mem::size_of::<u32>() as u8)
         .collect::<Vec<_>>();
     
-    let locals = unsafe {
-        Array8 {
-            size: locals_vec.len(),
-            contents: locals_vec.as_ptr(),
-        }
-    };
+    let locals = Array8 { size: locals_vec.len(), contents: locals_vec.as_ptr() };
     mem::forget(locals_vec);
 
     return locals;
@@ -139,12 +143,7 @@ pub extern "C" fn wcrn_offset_list(fidx: u32) -> Array32 {
             .map(|offset| *offset)
             .collect();
     
-    let ret = unsafe {
-        Array32 {
-            size: offset_list.len(),
-            contents: offset_list.as_ptr(),
-        }
-    };
+    let ret = Array32 { size: offset_list.len(), contents: offset_list.as_ptr() };
     mem::forget(offset_list);
     
     return ret;

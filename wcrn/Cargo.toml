@@ -9,3 +9,4 @@ crate-type = ["staticlib"]
 [dependencies]
 anyhow = "1.0.97"
 wacret = { git = "https://github.com/funera1/Wacret", branch = "create-table-v2" }
+once_cell = "1.19"
