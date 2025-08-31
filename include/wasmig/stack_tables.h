@@ -36,6 +36,7 @@ typedef struct stack_table {
 extern "C" {
 #endif
 
+size_t load_stack_tables();
 Array8 get_local_types(uint32_t fidx);
 StackTable get_stack_table(uint32_t fidx, uint64_t offset);
 // NOTE: stackの値の個数ではなく、32bit slotの個数を返す ([i32, i64, i32]なら1+2+1=4を返す)
