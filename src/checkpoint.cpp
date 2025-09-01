@@ -90,7 +90,7 @@ int wasmig_checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
 
     // fclose(mem_fp);
     fclose(mem_size_fp);
-    spdlog::info("checkpoint memory");
+    // spdlog::info("checkpoint memory");
     
     return 0;
 }
