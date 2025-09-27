@@ -198,8 +198,6 @@ int wasmig_checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack) {
 int wasmig_checkpoint_stack_v4(size_t size, CallStackEntry *call_stack) {
     // checkpoint call stack
     CallStack cs = { .size = size, .entries = call_stack };
-    // print_call_stack(&cs);
-    spdlog::debug("print call stack");
     Array8 serialized_call_stack = serialize_call_stack(&cs);
     FILE *fp = open_image("call_stack.img", "wb");
     spdlog::debug("open call stack file");
