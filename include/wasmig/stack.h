@@ -72,9 +72,9 @@ void wasmig_stack_state_map_debug_print(StackStateMap map);
 // Helper functions
 // ========================================
 // Load metadata stacks from the global registry
-bool load_metadata_stacks(uint32_t fidx, uint32_t offset, Stack* addr_stack, Stack* type_stack);
+bool wasmig_load_metadata_stacks(uint32_t fidx, uint32_t offset, Stack* addr_stack, Stack* type_stack);
 // Count the number of entries and total size in a stack
-bool count_stack_entries(Stack type_stack, uint32_t* stack_count, uint32_t* stack_size);
+bool wasmig_count_stack_entries(Stack type_stack, uint32_t* stack_count, uint32_t* stack_size);
 
 #ifdef __cplusplus
 }
