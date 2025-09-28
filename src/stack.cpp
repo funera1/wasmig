@@ -1,4 +1,6 @@
 #include "wasmig/stack.h"
+#include "wasmig/log.h"
+#include "wasmig/registry.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -334,4 +336,37 @@ extern "C" {
         }
     }
 
+}
+
+/// helper functions
+// Load metadata stacks from the global registry
+bool load_metadata_stacks(uint32_t fidx, uint32_t offset, Stack* addr_stack, Stack* type_stack) {
+    StackStateMap m = wasmig_stack_state_map_registry_load(fidx);
+    if (!wasmig_stack_state_load_pair(m, offset, addr_stack, type_stack)) {
+        wasmig_error("failed to load metadata stack\n");
+        return false;
+    }
+    return true;
+}
+
+// Count the number of entries and total size in a stack
+bool count_stack_entries(Stack type_stack, uint32_t* stack_count, uint32_t* stack_size) {
+    uint32_t count = 0;
+    uint32_t size = 0;
+    StackIterator it = wasmig_stack_iterator_create(type_stack);
+    if (!it) {
+        wasmig_error("failed to create type iterator");
+        return false;
+    }
+    while (wasmig_stack_iterator_has_next(it)) {
+        uint64_t t = wasmig_stack_iterator_next(it);
+        count++;
+        size += (uint32_t)t;
+    }
+    wasmig_stack_iterator_destroy(it);
+
+    *stack_count = count;
+    *stack_size = size;
+
+    return true;
 }
