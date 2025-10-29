@@ -189,7 +189,7 @@ void wasmig_address_map_print(AddressMap map) {
         bool is_bidirectional = (vk_it != vk->end()) && (vk_it->second == pair.first);
         
         const char* arrow = is_bidirectional ? "<->" : "->";
-        printf("  %u:%u %s %lu\n", fidx, offset, arrow, address);
+        printf("  %u:%u %s %p\n", fidx, offset, arrow, address);
     }
 }
 
