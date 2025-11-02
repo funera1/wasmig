@@ -9,7 +9,7 @@ add_executable(
 # ライブラリをリンク
 target_link_libraries(table_v3_example
     PRIVATE
-    libwasmig
+    wasmig
     spdlog::spdlog
 )
 

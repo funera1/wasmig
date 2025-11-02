@@ -14,7 +14,7 @@ add_executable(
 # テスト対象のライブラリと Google Test をリンク
 target_link_libraries(wasmig_tests
     PRIVATE
-    libwasmig
+    wasmig
     gtest_main
     spdlog::spdlog
 )
