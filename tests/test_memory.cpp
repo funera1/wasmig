@@ -52,7 +52,7 @@ private:
     inline static int counter_ = 0;
 };
 
-TEST_F(MemoryCheckpointTest, CheckpointSkipsZeroPagesAndRestoreReconstructsMemory) {
+TEST_F(MemoryCheckpointTest, CheckpointSkipsZero4KBChunksAndRestoreReconstructsMemory) {
     ScopedWorkDir work_dir(test_dir_);
 
     const uint32_t page_count = 3;
@@ -62,8 +62,9 @@ TEST_F(MemoryCheckpointTest, CheckpointSkipsZeroPagesAndRestoreReconstructsMemor
 
     ASSERT_EQ(wasmig_checkpoint_memory(memory.data(), page_count), 0);
 
-    EXPECT_EQ(file_size(test_dir_ / "memory.img"), static_cast<size_t>(2) * (sizeof(uint32_t) + WASM_PAGE_SIZE));
-    EXPECT_EQ(file_size(test_dir_ / "mem_page_count.img"), sizeof(uint32_t));
+    constexpr size_t kChunkSize = 4096;
+    EXPECT_EQ(file_size(test_dir_ / "memory.img"), static_cast<size_t>(2) * (sizeof(uint32_t) + kChunkSize));
+    EXPECT_EQ(file_size(test_dir_ / "mem_page_count.img"), sizeof(uint32_t) * 2);
 
     Array8 restored = wasmig_restore_memory();
     ASSERT_NE(restored.contents, nullptr);
