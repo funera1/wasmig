@@ -2,6 +2,47 @@
 #include <wasmig/migration.h>
 #include <spdlog/spdlog.h>
 
+namespace {
+
+bool get_file_size(FILE* fp, size_t* out_size) {
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        return false;
+    }
+    long size = ftell(fp);
+    if (size < 0) {
+        return false;
+    }
+    if (fseek(fp, 0, SEEK_SET) != 0) {
+        return false;
+    }
+    *out_size = static_cast<size_t>(size);
+    return true;
+}
+
+bool restore_sparse_memory(uint8_t* memory, uint32_t page_count, FILE* memory_fp) {
+    while (true) {
+        uint32_t page_idx = 0;
+        size_t index_read = fread(&page_idx, sizeof(uint32_t), 1, memory_fp);
+        if (index_read == 0) {
+            return feof(memory_fp) != 0;
+        }
+        if (index_read != 1) {
+            return false;
+        }
+        if (page_idx >= page_count) {
+            spdlog::error("memory image contains out-of-range page index {}", page_idx);
+            return false;
+        }
+
+        uint8_t* page = memory + (static_cast<size_t>(page_idx) * WASM_PAGE_SIZE);
+        if (fread(page, sizeof(uint8_t), WASM_PAGE_SIZE, memory_fp) != WASM_PAGE_SIZE) {
+            return false;
+        }
+    }
+}
+
+}
+
 void restore_dirty_memory(uint8_t *memory, FILE* memory_fp) {
     const int PAGE_SIZE = 4096;
     while (!feof(memory_fp)) {
@@ -46,18 +87,38 @@ Array8 wasmig_restore_memory() {
     }
 
     // allocate memory
-    uint8_t* memory = (uint8_t*)malloc(total_size);
+    uint8_t* memory = (uint8_t*)calloc(1, total_size);
     if (!memory) {
-        spdlog::error("malloc failed for {} bytes", total_size);
+        spdlog::error("calloc failed for {} bytes", total_size);
         fclose(memory_fp);
         fclose(mem_size_fp);
         return (Array8){0, NULL};
     }
 
-    // read memory contents
-    size_t read_count = fread(memory, WASM_PAGE_SIZE, page_count, memory_fp);
-    if (read_count != page_count) {
-        spdlog::error("failed to read memory: expected {} pages, got {}", page_count, read_count);
+    size_t file_size = 0;
+    if (!get_file_size(memory_fp, &file_size)) {
+        spdlog::error("failed to inspect memory image size");
+        free(memory);
+        fclose(memory_fp);
+        fclose(mem_size_fp);
+        return (Array8){0, NULL};
+    }
+
+    bool restored = false;
+    if (file_size == total_size) {
+        size_t read_count = fread(memory, sizeof(uint8_t), total_size, memory_fp);
+        restored = (read_count == total_size);
+        if (!restored) {
+            spdlog::error("failed to read dense memory image: expected {} bytes, got {}", total_size, read_count);
+        }
+    } else {
+        restored = restore_sparse_memory(memory, page_count, memory_fp);
+        if (!restored) {
+            spdlog::error("failed to read sparse memory image");
+        }
+    }
+
+    if (!restored) {
         free(memory);
         fclose(memory_fp);
         fclose(mem_size_fp);

@@ -7,6 +7,7 @@ add_subdirectory(third_party/googletest)
 add_executable(
     wasmig_tests
     test_hello.cpp
+    test_memory.cpp
     test_stack.cpp
     test_table_v3.cpp
 )

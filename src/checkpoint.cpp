@@ -13,6 +13,19 @@
 #include <cstdint>
 #include <wcrn.h>
 
+namespace {
+
+bool is_zero_wasm_page(const uint8_t* page) {
+    for (uint32_t i = 0; i < WASM_PAGE_SIZE; ++i) {
+        if (page[i] != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+}
+
 extern "C" {
 
 // TODO: バグってるので修正
@@ -81,14 +94,34 @@ int wasmig_checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
     if (mem_fp == NULL || mem_size_fp == NULL) {
         spdlog::error("failed to open memory file");
+        if (mem_fp) fclose(mem_fp);
+        if (mem_size_fp) fclose(mem_size_fp);
         return -1;
     }
 
-    // write_dirty_memory(memory, cur_page);
-    fwrite(memory, sizeof(uint8_t), WASM_PAGE_SIZE * cur_page, mem_fp);
-    fwrite(&cur_page, sizeof(uint32_t), 1, mem_size_fp);
+    for (uint32_t page_idx = 0; page_idx < cur_page; ++page_idx) {
+        const uint8_t* page = memory + (static_cast<size_t>(page_idx) * WASM_PAGE_SIZE);
+        if (is_zero_wasm_page(page)) {
+            continue;
+        }
 
-    // fclose(mem_fp);
+        if (fwrite(&page_idx, sizeof(uint32_t), 1, mem_fp) != 1 ||
+            fwrite(page, sizeof(uint8_t), WASM_PAGE_SIZE, mem_fp) != WASM_PAGE_SIZE) {
+            spdlog::error("failed to write memory page {}", page_idx);
+            fclose(mem_fp);
+            fclose(mem_size_fp);
+            return -1;
+        }
+    }
+
+    if (fwrite(&cur_page, sizeof(uint32_t), 1, mem_size_fp) != 1) {
+        spdlog::error("failed to write memory page count");
+        fclose(mem_fp);
+        fclose(mem_size_fp);
+        return -1;
+    }
+
+    fclose(mem_fp);
     fclose(mem_size_fp);
     // spdlog::info("checkpoint memory");
     
