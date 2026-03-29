@@ -134,6 +134,37 @@ int wasmig_checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     return 0;
 }
 
+int wasmig_checkpoint_memory_all(uint8_t* memory, uint32_t cur_page) {
+    FILE *mem_fp = open_image("memory.img", "wb");
+    FILE *mem_size_fp = open_image("mem_page_count.img", "wb");
+    if (mem_fp == NULL || mem_size_fp == NULL) {
+        spdlog::error("failed to open memory file");
+        if (mem_fp) fclose(mem_fp);
+        if (mem_size_fp) fclose(mem_size_fp);
+        return -1;
+    }
+
+    const size_t total_size = static_cast<size_t>(cur_page) * WASM_PAGE_SIZE;
+    if (fwrite(memory, sizeof(uint8_t), total_size, mem_fp) != total_size) {
+        spdlog::error("failed to write dense memory image");
+        fclose(mem_fp);
+        fclose(mem_size_fp);
+        return -1;
+    }
+
+    if (fwrite(&cur_page, sizeof(uint32_t), 1, mem_size_fp) != 1) {
+        spdlog::error("failed to write dense memory page count");
+        fclose(mem_fp);
+        fclose(mem_size_fp);
+        return -1;
+    }
+
+    fclose(mem_fp);
+    fclose(mem_size_fp);
+
+    return 0;
+}
+
 int wasmig_checkpoint_global_v2(TypedArray globals) {
     FILE *fp = open_image("global.img", "wb");
     if (fp == NULL) {
