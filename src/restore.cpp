@@ -1,6 +1,8 @@
 #include <wasmig/utils.h>
 #include <wasmig/migration.h>
 #include <spdlog/spdlog.h>
+#include <algorithm>
+#include <vector>
 
 namespace {
 
@@ -22,27 +24,39 @@ bool get_file_size(FILE* fp, size_t* out_size) {
     return true;
 }
 
-bool restore_sparse_memory(uint8_t* memory, uint32_t page_count, FILE* memory_fp) {
-    const uint64_t chunk_count = (static_cast<uint64_t>(page_count) * WASM_PAGE_SIZE) / kMemoryChunkSize;
-    while (true) {
-        uint32_t chunk_index = 0;
-        size_t index_read = fread(&chunk_index, sizeof(uint32_t), 1, memory_fp);
-        if (index_read == 0) {
-            return feof(memory_fp) != 0;
-        }
-        if (index_read != 1) {
-            return false;
-        }
-        if (chunk_index >= chunk_count) {
-            spdlog::error("memory image contains out-of-range chunk index {}", chunk_index);
-            return false;
-        }
-
-        uint8_t* chunk = memory + (static_cast<size_t>(chunk_index) * kMemoryChunkSize);
-        if (fread(chunk, sizeof(uint8_t), kMemoryChunkSize, memory_fp) != kMemoryChunkSize) {
-            return false;
-        }
+bool inspect_memory_image(FILE* mem_size_fp, WasmigMemoryImageInfo* out_info) {
+    size_t mem_size_file_size = 0;
+    if (!get_file_size(mem_size_fp, &mem_size_file_size)) {
+        spdlog::error("failed to inspect mem_page_count image size");
+        return false;
     }
+
+    WasmigMemoryImageInfo info = {};
+    info.chunk_size = kMemoryChunkSize;
+
+    if (mem_size_file_size == sizeof(uint32_t)) {
+        if (fread(&info.page_count, sizeof(uint32_t), 1, mem_size_fp) != 1) {
+            spdlog::error("failed to read legacy page_count");
+            return false;
+        }
+    } else if (mem_size_file_size == sizeof(uint32_t) * 2) {
+        if (fread(&info.format, sizeof(uint32_t), 1, mem_size_fp) != 1 ||
+            fread(&info.page_count, sizeof(uint32_t), 1, mem_size_fp) != 1) {
+            spdlog::error("failed to read sparse memory metadata");
+            return false;
+        }
+        if (info.format != kSparseMemoryFormatV1) {
+            spdlog::error("unknown memory image format marker: {}", info.format);
+            return false;
+        }
+        info.sparse_format = true;
+    } else {
+        spdlog::error("unexpected mem_page_count image size: {}", mem_size_file_size);
+        return false;
+    }
+
+    *out_info = info;
+    return true;
 }
 
 }
@@ -59,6 +73,157 @@ void restore_dirty_memory(uint8_t *memory, FILE* memory_fp) {
     }
 }
 
+int wasmig_memory_image_info(WasmigMemoryImageInfo *out_info) {
+    if (!out_info) {
+        spdlog::error("memory image info output is null");
+        return -1;
+    }
+
+    FILE* mem_size_fp = open_image("mem_page_count.img", "rb");
+    if (!mem_size_fp) {
+        spdlog::error("failed to open memory metadata file");
+        return -1;
+    }
+
+    WasmigMemoryImageInfo info = {};
+    const bool ok = inspect_memory_image(mem_size_fp, &info);
+    fclose(mem_size_fp);
+    if (!ok) {
+        return -1;
+    }
+
+    *out_info = info;
+    return 0;
+}
+
+int wasmig_visit_memory_chunks(wasmig_memory_chunk_visitor_t visitor, void *user_data) {
+    if (!visitor) {
+        spdlog::error("memory chunk visitor is null");
+        return -1;
+    }
+
+    FILE* memory_fp = open_image("memory.img", "rb");
+    if (!memory_fp) {
+        spdlog::error("failed to open memory file");
+        return -1;
+    }
+
+    WasmigMemoryImageInfo info = {};
+    if (wasmig_memory_image_info(&info) != 0) {
+        fclose(memory_fp);
+        return -1;
+    }
+
+    size_t total_size = 0;
+    if (__builtin_mul_overflow((size_t)WASM_PAGE_SIZE, (size_t)info.page_count, &total_size)) {
+        spdlog::error("memory size overflow: page_count={}", info.page_count);
+        fclose(memory_fp);
+        return -1;
+    }
+
+    size_t file_size = 0;
+    if (!get_file_size(memory_fp, &file_size)) {
+        spdlog::error("failed to inspect memory image size");
+        fclose(memory_fp);
+        return -1;
+    }
+
+    if (!info.sparse_format) {
+        if (file_size != total_size) {
+            spdlog::error("legacy dense memory image size mismatch: expected {} bytes, got {}", total_size, file_size);
+            fclose(memory_fp);
+            return -1;
+        }
+
+        std::vector<uint8_t> chunk(info.chunk_size);
+        for (size_t offset = 0; offset < total_size; offset += info.chunk_size) {
+            const size_t len = std::min<size_t>(info.chunk_size, total_size - offset);
+            if (fread(chunk.data(), sizeof(uint8_t), len, memory_fp) != len) {
+                spdlog::error("failed to read dense memory chunk at offset {}", offset);
+                fclose(memory_fp);
+                return -1;
+            }
+            if (visitor(static_cast<uint32_t>(offset), chunk.data(), static_cast<uint32_t>(len), user_data) != 0) {
+                fclose(memory_fp);
+                return -1;
+            }
+        }
+        fclose(memory_fp);
+        return 0;
+    }
+
+    const uint64_t chunk_count = (static_cast<uint64_t>(info.page_count) * WASM_PAGE_SIZE) / info.chunk_size;
+    std::vector<uint8_t> chunk(info.chunk_size);
+    while (true) {
+        uint32_t chunk_index = 0;
+        size_t index_read = fread(&chunk_index, sizeof(uint32_t), 1, memory_fp);
+        if (index_read == 0) {
+            fclose(memory_fp);
+            return feof(memory_fp) != 0 ? 0 : -1;
+        }
+        if (index_read != 1) {
+            spdlog::error("failed to read sparse memory chunk index");
+            fclose(memory_fp);
+            return -1;
+        }
+        if (chunk_index >= chunk_count) {
+            spdlog::error("memory image contains out-of-range chunk index {}", chunk_index);
+            fclose(memory_fp);
+            return -1;
+        }
+        if (fread(chunk.data(), sizeof(uint8_t), info.chunk_size, memory_fp) != info.chunk_size) {
+            spdlog::error("failed to read sparse memory chunk {}", chunk_index);
+            fclose(memory_fp);
+            return -1;
+        }
+        if (visitor(chunk_index * info.chunk_size, chunk.data(), info.chunk_size, user_data) != 0) {
+            fclose(memory_fp);
+            return -1;
+        }
+    }
+}
+
+int wasmig_restore_memory_into(uint8_t *dst, size_t dst_size) {
+    if (!dst && dst_size != 0) {
+        spdlog::error("memory restore destination is null");
+        return -1;
+    }
+
+    WasmigMemoryImageInfo info = {};
+    if (wasmig_memory_image_info(&info) != 0) {
+        return -1;
+    }
+
+    size_t total_size = 0;
+    if (__builtin_mul_overflow((size_t)WASM_PAGE_SIZE, (size_t)info.page_count, &total_size)) {
+        spdlog::error("memory size overflow: page_count={}", info.page_count);
+        return -1;
+    }
+    if (dst_size < total_size) {
+        spdlog::error("restore destination is too small: need {}, got {}", total_size, dst_size);
+        return -1;
+    }
+
+    struct RestoreState {
+        uint8_t *dst;
+        size_t dst_size;
+    } state = {dst, dst_size};
+
+    auto visitor = [](uint32_t offset, const uint8_t *data, uint32_t len, void *user_data) -> int {
+        RestoreState *state = static_cast<RestoreState *>(user_data);
+        const size_t end_offset = static_cast<size_t>(offset) + static_cast<size_t>(len);
+        if (end_offset > state->dst_size) {
+            spdlog::error("restore chunk exceeds destination: offset={}, len={}, dst_size={}",
+                          offset, len, state->dst_size);
+            return -1;
+        }
+        memcpy(state->dst + offset, data, len);
+        return 0;
+    };
+
+    return wasmig_visit_memory_chunks(visitor, &state);
+}
+
 Array8 wasmig_restore_memory() {
     // FILE *mem_fp = open_image("memory.img", "wb");
     FILE* memory_fp = open_image("memory.img", "rb");
@@ -72,42 +237,8 @@ Array8 wasmig_restore_memory() {
         return (Array8){0, NULL};
     }
 
-    // restore page_count
-    size_t mem_size_file_size = 0;
-    if (!get_file_size(mem_size_fp, &mem_size_file_size)) {
-        spdlog::error("failed to inspect mem_page_count image size");
-        fclose(memory_fp);
-        fclose(mem_size_fp);
-        return (Array8){0, NULL};
-    }
-
-    uint32_t page_count = 0;
-    bool sparse_format = false;
-    if (mem_size_file_size == sizeof(uint32_t)) {
-        if (fread(&page_count, sizeof(uint32_t), 1, mem_size_fp) != 1) {
-            spdlog::error("failed to read legacy page_count");
-            fclose(memory_fp);
-            fclose(mem_size_fp);
-            return (Array8){0, NULL};
-        }
-    } else if (mem_size_file_size == sizeof(uint32_t) * 2) {
-        uint32_t format = 0;
-        if (fread(&format, sizeof(uint32_t), 1, mem_size_fp) != 1 ||
-            fread(&page_count, sizeof(uint32_t), 1, mem_size_fp) != 1) {
-            spdlog::error("failed to read sparse memory metadata");
-            fclose(memory_fp);
-            fclose(mem_size_fp);
-            return (Array8){0, NULL};
-        }
-        if (format != kSparseMemoryFormatV1) {
-            spdlog::error("unknown memory image format marker: {}", format);
-            fclose(memory_fp);
-            fclose(mem_size_fp);
-            return (Array8){0, NULL};
-        }
-        sparse_format = true;
-    } else {
-        spdlog::error("unexpected mem_page_count image size: {}", mem_size_file_size);
+    WasmigMemoryImageInfo info = {};
+    if (!inspect_memory_image(mem_size_fp, &info)) {
         fclose(memory_fp);
         fclose(mem_size_fp);
         return (Array8){0, NULL};
@@ -115,8 +246,8 @@ Array8 wasmig_restore_memory() {
 
     // overflow check: WASM_PAGE_SIZE * page_count
     size_t total_size;
-    if (__builtin_mul_overflow((size_t)WASM_PAGE_SIZE, (size_t)page_count, &total_size)) {
-        spdlog::error("memory size overflow: page_count={}", page_count);
+    if (__builtin_mul_overflow((size_t)WASM_PAGE_SIZE, (size_t)info.page_count, &total_size)) {
+        spdlog::error("memory size overflow: page_count={}", info.page_count);
         fclose(memory_fp);
         fclose(mem_size_fp);
         return (Array8){0, NULL};
@@ -140,36 +271,13 @@ Array8 wasmig_restore_memory() {
         return (Array8){0, NULL};
     }
 
-    bool restored = false;
-    if (!sparse_format) {
-        if (file_size != total_size) {
-            spdlog::error("legacy dense memory image size mismatch: expected {} bytes, got {}", total_size, file_size);
-            free(memory);
-            fclose(memory_fp);
-            fclose(mem_size_fp);
-            return (Array8){0, NULL};
-        }
-        size_t read_count = fread(memory, sizeof(uint8_t), total_size, memory_fp);
-        restored = (read_count == total_size);
-        if (!restored) {
-            spdlog::error("failed to read dense memory image: expected {} bytes, got {}", total_size, read_count);
-        }
-    } else {
-        restored = restore_sparse_memory(memory, page_count, memory_fp);
-        if (!restored) {
-            spdlog::error("failed to read sparse memory image");
-        }
-    }
-
-    if (!restored) {
-        free(memory);
-        fclose(memory_fp);
-        fclose(mem_size_fp);
-        return (Array8){0, NULL};
-    }
-
     fclose(memory_fp);
     fclose(mem_size_fp);
+
+    if (wasmig_restore_memory_into(memory, total_size) != 0) {
+        free(memory);
+        return (Array8){0, NULL};
+    }
 
     return (Array8){.size = total_size, .contents = memory};
 }

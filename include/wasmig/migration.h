@@ -26,6 +26,19 @@ int wasmig_checkpoint_stack_v2(size_t size, BaseCallStackEntry *call_stack);
 int wasmig_checkpoint_stack_v3(size_t size, BaseCallStackEntry *call_stack);
 int wasmig_checkpoint_stack_v4(size_t size, CallStackEntry *call_stack);
 
+typedef struct {
+    uint32_t format;
+    uint32_t page_count;
+    uint32_t chunk_size;
+    bool sparse_format;
+} WasmigMemoryImageInfo;
+
+typedef int (*wasmig_memory_chunk_visitor_t)(uint32_t offset, const uint8_t *data,
+                                             uint32_t len, void *user_data);
+
+int wasmig_memory_image_info(WasmigMemoryImageInfo *out_info);
+int wasmig_visit_memory_chunks(wasmig_memory_chunk_visitor_t visitor, void *user_data);
+int wasmig_restore_memory_into(uint8_t *dst, size_t dst_size);
 Array8 wasmig_restore_memory();
 Array64 wasmig_restore_global(Array8 types);
 TypedArray wasmig_restore_global_v2();

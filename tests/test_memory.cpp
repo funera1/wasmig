@@ -74,6 +74,28 @@ TEST_F(MemoryCheckpointTest, CheckpointSkipsZero4KBChunksAndRestoreReconstructsM
     free(restored.contents);
 }
 
+TEST_F(MemoryCheckpointTest, SparseCheckpointSupportsMetadataAndDirectRestoreIntoCallerBuffer) {
+    ScopedWorkDir work_dir(test_dir_);
+
+    const uint32_t page_count = 2;
+    std::vector<uint8_t> memory(static_cast<size_t>(page_count) * WASM_PAGE_SIZE, 0);
+    memory[0] = 0x31;
+    memory[4096 + 7] = 0x32;
+    memory[WASM_PAGE_SIZE + 17] = 0x33;
+
+    ASSERT_EQ(wasmig_checkpoint_memory(memory.data(), page_count), 0);
+
+    WasmigMemoryImageInfo info = {};
+    ASSERT_EQ(wasmig_memory_image_info(&info), 0);
+    EXPECT_TRUE(info.sparse_format);
+    EXPECT_EQ(info.page_count, page_count);
+    EXPECT_EQ(info.chunk_size, 4096U);
+
+    std::vector<uint8_t> restored(memory.size(), 0);
+    ASSERT_EQ(wasmig_restore_memory_into(restored.data(), restored.size()), 0);
+    EXPECT_EQ(restored, memory);
+}
+
 TEST_F(MemoryCheckpointTest, RestoreSupportsLegacyDenseMemoryImage) {
     ScopedWorkDir work_dir(test_dir_);
 
@@ -99,6 +121,26 @@ TEST_F(MemoryCheckpointTest, RestoreSupportsLegacyDenseMemoryImage) {
     EXPECT_EQ(std::memcmp(restored.contents, memory.data(), memory.size()), 0);
 
     free(restored.contents);
+}
+
+TEST_F(MemoryCheckpointTest, DenseCheckpointMetadataAndDirectRestoreRemainSupported) {
+    ScopedWorkDir work_dir(test_dir_);
+
+    const uint32_t page_count = 2;
+    std::vector<uint8_t> memory(static_cast<size_t>(page_count) * WASM_PAGE_SIZE, 0);
+    memory[3] = 0x7A;
+    memory[WASM_PAGE_SIZE + 7] = 0xBC;
+
+    ASSERT_EQ(wasmig_checkpoint_memory_all(memory.data(), page_count), 0);
+
+    WasmigMemoryImageInfo info = {};
+    ASSERT_EQ(wasmig_memory_image_info(&info), 0);
+    EXPECT_FALSE(info.sparse_format);
+    EXPECT_EQ(info.page_count, page_count);
+
+    std::vector<uint8_t> restored(memory.size(), 0);
+    ASSERT_EQ(wasmig_restore_memory_into(restored.data(), restored.size()), 0);
+    EXPECT_EQ(restored, memory);
 }
 
 TEST_F(MemoryCheckpointTest, CheckpointMemoryAllWritesDenseImageAndRestoreReconstructsMemory) {
