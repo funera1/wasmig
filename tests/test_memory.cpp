@@ -63,7 +63,7 @@ TEST_F(MemoryCheckpointTest, CheckpointSkipsZero4KBChunksAndRestoreReconstructsM
     ASSERT_EQ(wasmig_checkpoint_memory(memory.data(), page_count), 0);
 
     constexpr size_t kChunkSize = 4096;
-    EXPECT_EQ(file_size(test_dir_ / "memory.img"), static_cast<size_t>(2) * (sizeof(uint32_t) * 2 + kChunkSize));
+    EXPECT_EQ(file_size(test_dir_ / "memory.img"), static_cast<size_t>(2) * (sizeof(uint32_t) + kChunkSize));
     EXPECT_EQ(file_size(test_dir_ / "mem_page_count.img"), sizeof(uint32_t) * 2);
 
     Array8 restored = wasmig_restore_memory();
@@ -72,29 +72,6 @@ TEST_F(MemoryCheckpointTest, CheckpointSkipsZero4KBChunksAndRestoreReconstructsM
     EXPECT_EQ(std::memcmp(restored.contents, memory.data(), memory.size()), 0);
 
     free(restored.contents);
-}
-
-TEST_F(MemoryCheckpointTest, CheckpointCoalescesAdjacentNonZeroChunksIntoSingleExtent) {
-    ScopedWorkDir work_dir(test_dir_);
-
-    const uint32_t page_count = 1;
-    std::vector<uint8_t> memory(static_cast<size_t>(page_count) * WASM_PAGE_SIZE, 0);
-    memory[1] = 0xAA;
-    memory[4096 + 2] = 0xBB;
-
-    ASSERT_EQ(wasmig_checkpoint_memory(memory.data(), page_count), 0);
-
-    constexpr size_t kChunkSize = 4096;
-    EXPECT_EQ(file_size(test_dir_ / "memory.img"), sizeof(uint32_t) * 2 + kChunkSize * 2);
-
-    std::ifstream mem_file("memory.img", std::ios::binary);
-    ASSERT_TRUE(mem_file.is_open());
-    uint32_t start_chunk = 0;
-    uint32_t chunk_count = 0;
-    mem_file.read(reinterpret_cast<char*>(&start_chunk), sizeof(start_chunk));
-    mem_file.read(reinterpret_cast<char*>(&chunk_count), sizeof(chunk_count));
-    EXPECT_EQ(start_chunk, 0U);
-    EXPECT_EQ(chunk_count, 2U);
 }
 
 TEST_F(MemoryCheckpointTest, SparseCheckpointSupportsMetadataAndDirectRestoreIntoCallerBuffer) {

@@ -17,7 +17,6 @@ namespace {
 
 constexpr uint32_t kMemoryChunkSize = 4096;
 constexpr uint32_t kSparseMemoryFormatV1 = 0x4d534731;
-constexpr uint32_t kSparseMemoryFormatV2 = 0x4d534732;
 
 bool is_zero_memory_chunk(const uint8_t* page) {
     for (uint32_t i = 0; i < kMemoryChunkSize; ++i) {
@@ -104,39 +103,23 @@ int wasmig_checkpoint_memory(uint8_t* memory, uint32_t cur_page) {
     }
 
     const size_t total_size = static_cast<size_t>(cur_page) * WASM_PAGE_SIZE;
-    size_t offset = 0;
-    while (offset < total_size) {
+    for (size_t offset = 0; offset < total_size; offset += kMemoryChunkSize) {
         const uint8_t* chunk = memory + offset;
         if (is_zero_memory_chunk(chunk)) {
-            offset += kMemoryChunkSize;
             continue;
         }
 
-        const uint32_t start_chunk_index = static_cast<uint32_t>(offset / kMemoryChunkSize);
-        uint32_t chunk_count = 1;
-        size_t run_end = offset + kMemoryChunkSize;
-        while (run_end < total_size &&
-               !is_zero_memory_chunk(memory + run_end) &&
-               chunk_count < UINT32_MAX) {
-            run_end += kMemoryChunkSize;
-            chunk_count++;
-        }
-
-        const size_t run_size = static_cast<size_t>(chunk_count) * kMemoryChunkSize;
-        if (fwrite(&start_chunk_index, sizeof(uint32_t), 1, mem_fp) != 1 ||
-            fwrite(&chunk_count, sizeof(uint32_t), 1, mem_fp) != 1 ||
-            fwrite(chunk, sizeof(uint8_t), run_size, mem_fp) != run_size) {
-            spdlog::error("failed to write memory extent start_chunk={} chunk_count={}",
-                          start_chunk_index, chunk_count);
+        const uint32_t chunk_index = static_cast<uint32_t>(offset / kMemoryChunkSize);
+        if (fwrite(&chunk_index, sizeof(uint32_t), 1, mem_fp) != 1 ||
+            fwrite(chunk, sizeof(uint8_t), kMemoryChunkSize, mem_fp) != kMemoryChunkSize) {
+            spdlog::error("failed to write memory chunk {}", chunk_index);
             fclose(mem_fp);
             fclose(mem_size_fp);
             return -1;
         }
-
-        offset = run_end;
     }
 
-    if (fwrite(&kSparseMemoryFormatV2, sizeof(uint32_t), 1, mem_size_fp) != 1 ||
+    if (fwrite(&kSparseMemoryFormatV1, sizeof(uint32_t), 1, mem_size_fp) != 1 ||
         fwrite(&cur_page, sizeof(uint32_t), 1, mem_size_fp) != 1) {
         spdlog::error("failed to write memory page count");
         fclose(mem_fp);
