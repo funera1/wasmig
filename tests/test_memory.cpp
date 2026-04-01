@@ -146,45 +146,4 @@ TEST_F(MemoryCheckpointTest, RestoreSupportsLegacyDenseMemoryImage) {
     free(restored.contents);
 }
 
-TEST_F(MemoryCheckpointTest, DenseCheckpointMetadataAndDirectRestoreRemainSupported) {
-    ScopedWorkDir work_dir(test_dir_);
-
-    const uint32_t page_count = 2;
-    std::vector<uint8_t> memory(static_cast<size_t>(page_count) * WASM_PAGE_SIZE, 0);
-    memory[3] = 0x7A;
-    memory[WASM_PAGE_SIZE + 7] = 0xBC;
-
-    ASSERT_EQ(wasmig_checkpoint_memory_all(memory.data(), page_count), 0);
-
-    WasmigMemoryImageInfo info = {};
-    ASSERT_EQ(wasmig_memory_image_info(&info), 0);
-    EXPECT_FALSE(info.sparse_format);
-    EXPECT_EQ(info.page_count, page_count);
-
-    std::vector<uint8_t> restored(memory.size(), 0);
-    ASSERT_EQ(wasmig_restore_memory_into(restored.data(), restored.size()), 0);
-    EXPECT_EQ(restored, memory);
-}
-
-TEST_F(MemoryCheckpointTest, CheckpointMemoryAllWritesDenseImageAndRestoreReconstructsMemory) {
-    ScopedWorkDir work_dir(test_dir_);
-
-    const uint32_t page_count = 2;
-    std::vector<uint8_t> memory(static_cast<size_t>(page_count) * WASM_PAGE_SIZE, 0);
-    memory[3] = 0x7A;
-    memory[WASM_PAGE_SIZE + 7] = 0xBC;
-
-    ASSERT_EQ(wasmig_checkpoint_memory_all(memory.data(), page_count), 0);
-
-    EXPECT_EQ(file_size(test_dir_ / "memory.img"), memory.size());
-    EXPECT_EQ(file_size(test_dir_ / "mem_page_count.img"), sizeof(uint32_t));
-
-    Array8 restored = wasmig_restore_memory();
-    ASSERT_NE(restored.contents, nullptr);
-    ASSERT_EQ(restored.size, memory.size());
-    EXPECT_EQ(std::memcmp(restored.contents, memory.data(), memory.size()), 0);
-
-    free(restored.contents);
-}
-
 }  // namespace

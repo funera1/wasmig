@@ -18,7 +18,6 @@ extern "C" {
 #endif
 
 int wasmig_checkpoint_memory(uint8_t* memory, uint32_t cur_page);
-int wasmig_checkpoint_memory_all(uint8_t* memory, uint32_t cur_page);
 int wasmig_checkpoint_global(uint64_t* values, uint32_t* types, int len);
 int wasmig_checkpoint_global_v2(TypedArray globals);
 int wasmig_checkpoint_pc(uint32_t func_idx, uint32_t offset);
