@@ -31,6 +31,8 @@ bool is_zero_memory_chunk(const uint8_t* page) {
 
 extern "C" {
 
+static FILE *g_program_counter_fp = nullptr;
+
 // TODO: バグってるので修正
 int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
     const int PAGEMAP_LENGTH = 8;
@@ -167,13 +169,22 @@ int wasmig_checkpoint_global(uint64_t* values, uint32_t* types, int len) {
 }
 
 int wasmig_checkpoint_pc(uint32_t func_idx, uint32_t offset) {
-    FILE *fp = open_image("program_counter.img", "wb");
-    if (fp == NULL) {
+    if (g_program_counter_fp == nullptr) {
+        g_program_counter_fp = open_image("program_counter.img", "w+b");
+    }
+    if (g_program_counter_fp == NULL) {
         return -1;
     }
-    fwrite(&func_idx, sizeof(uint32_t), 1, fp);
-    fwrite(&offset, sizeof(uint32_t), 1, fp);
-    fclose(fp);
+
+    rewind(g_program_counter_fp);
+    clearerr(g_program_counter_fp);
+
+    if (fwrite(&func_idx, sizeof(uint32_t), 1, g_program_counter_fp) != 1 ||
+        fwrite(&offset, sizeof(uint32_t), 1, g_program_counter_fp) != 1) {
+        spdlog::error("failed to write program counter");
+        return -1;
+    }
+    fflush(g_program_counter_fp);
 
     return 0;
 }
