@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <cstdint>
+#include <unistd.h>
 #include <wcrn.h>
 
 namespace {
@@ -32,6 +33,7 @@ bool is_zero_memory_chunk(const uint8_t* page) {
 extern "C" {
 
 static FILE *g_program_counter_fp = nullptr;
+static FILE *g_call_stack_fp = nullptr;
 
 // TODO: バグってるので修正
 int write_dirty_memory(uint8_t* memory, uint32_t cur_page) {
@@ -249,18 +251,32 @@ int wasmig_checkpoint_stack_v4(size_t size, CallStackEntry *call_stack) {
     // checkpoint call stack
     CallStack cs = { .size = size, .entries = call_stack };
     Array8 serialized_call_stack = serialize_call_stack(&cs);
-    FILE *fp = open_image("call_stack.img", "wb");
+    if (g_call_stack_fp == nullptr) {
+        g_call_stack_fp = open_image("call_stack.img", "w+b");
+    }
     spdlog::debug("open call stack file");
-    if (fp == NULL) {
+    if (g_call_stack_fp == NULL) {
+        free(serialized_call_stack.contents);
         return -1;
     }
+
+    rewind(g_call_stack_fp);
+    clearerr(g_call_stack_fp);
+    if (ftruncate(fileno(g_call_stack_fp), 0) != 0) {
+        free(serialized_call_stack.contents);
+        return -1;
+    }
+
     uint32_t len = serialized_call_stack.size;
     uint8_t *buf = serialized_call_stack.contents;
-    fwrite(buf, 1, len, fp);
+    if (fwrite(buf, 1, len, g_call_stack_fp) != len) {
+        free(buf);
+        return -1;
+    }
+    fflush(g_call_stack_fp);
     spdlog::debug("write call stack file");
     
     free(buf);
-    fclose(fp);
     
             
     return 0;
